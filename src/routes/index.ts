@@ -1,9 +1,21 @@
 import { Router } from "express";
 
-import employeeRoute from "./nhan-vien";
+import employeeRoute from "./employee";
+import projectRouter from "./project";
+import accountRouter from "./account";
+import departmentRouter from "./department";
+import positionRouter from "./position";
+import resourceRouter from "./resource";
+import statisticRouter from "./statistic";
 
 const router = Router();
 
-router.use("/nhan-vien", employeeRoute);
+router.use("/project", projectRouter);
+router.use("/account", accountRouter);
+router.use("/department", departmentRouter);
+router.use("/employee", employeeRoute);
+router.use("/position", positionRouter);
+router.use("/resource", resourceRouter);
+router.use("/statistic", statisticRouter);
 
 export default router;

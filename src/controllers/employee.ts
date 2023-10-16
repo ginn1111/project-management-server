@@ -1,7 +1,5 @@
-import { Request, Response } from "express";
-
 export const getList = (_: any, res: any) => {
-	res.status(200).json("abcd");
+	res.send("employee");
 };
 export const getDetail = () => {};
 export const addNew = () => {};

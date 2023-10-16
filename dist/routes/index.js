@@ -1,0 +1,22 @@
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const employee_1 = __importDefault(require("./employee"));
+const project_1 = __importDefault(require("./project"));
+const account_1 = __importDefault(require("./account"));
+const department_1 = __importDefault(require("./department"));
+const position_1 = __importDefault(require("./position"));
+const resource_1 = __importDefault(require("./resource"));
+const statistic_1 = __importDefault(require("./statistic"));
+const router = (0, express_1.Router)();
+router.use("/project", project_1.default);
+router.use("/account", account_1.default);
+router.use("/department", department_1.default);
+router.use("/employee", employee_1.default);
+router.use("/position", position_1.default);
+router.use("/resource", resource_1.default);
+router.use("/statistic", statistic_1.default);
+exports.default = router;

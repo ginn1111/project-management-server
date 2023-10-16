@@ -1,0 +1,11 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const nhan_vien_1 = require("../controllers/nhan-vien");
+const employeeRoute = (0, express_1.Router)();
+employeeRoute.get("/", nhan_vien_1.getList);
+employeeRoute.get("/:id", nhan_vien_1.getDetail);
+employeeRoute.post("/add", nhan_vien_1.addNew);
+employeeRoute.delete("/:id/remove", nhan_vien_1.remove);
+employeeRoute.patch("/:id/update", nhan_vien_1.update);
+exports.default = employeeRoute;

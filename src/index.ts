@@ -5,7 +5,14 @@ import bodyParser from "body-parser";
 
 const app = express();
 
-app.use(bodyParser);
+app.use(bodyParser.urlencoded({ extended: false }));
+
+// parse application/json
+app.use(bodyParser.json());
+
+app.get("/health", (_, res) => {
+	res.status(200).json("ok");
+});
 app.use(router);
 
-app.listen(3000, () => console.log("server is running on port 3001"));
+app.listen(8080, () => console.log("server is running on port 8080"));
