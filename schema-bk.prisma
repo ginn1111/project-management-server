@@ -1,0 +1,752 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlserver"
+  url      = env("DATABASE_URL")
+}
+
+model Qualitification {
+  id                String                 @id(clustered: false, map: "PK_BANG_CAP") @db.VarChar(31) @map("ID_BC")
+  name               String                 @db.VarChar(127) @map("TEN_BC")
+  note           String?                @db.VarChar(511) @map("GHI_CHU_BC")
+  employees   QualitificationsOfEmployee[] @map("NHAN_VIEN_BANG_CAP")
+  employeeRoles RolesOfEmployee[] @map("NHAN_VIEN_CHUYEN_MON")
+
+  @@map("BANG_CAP")
+}
+
+model Position {
+  id            String              @id(clustered: false, map: "PK_CHUC_VU") @db.Char(31) @map("ID_CHV")
+  name           String              @db.VarChar(255) @map("TEN_CHV")
+  note       String?             @db.VarChar(511) @map("GHI_CHU_CHV")
+  employees PositionsOfEmployee[] @map("NHAN_VIEN_CHUC_VU")
+  @@map("CHUC_VU")
+}
+
+model Certificate {
+  id             String                @id(clustered: false, map: "PK_CHUNG_CHI") @db.Char(31) @map("ID_CHCH")
+  name            String                @db.VarChar(255) @map("TEN_CHCH")
+  note        String?               @db.VarChar(255) @map("GHI_CHU_CHCH")
+  employees CertificationsOfEmployee[] @map("NHAN_VIEN_CHUNG_CHI")
+
+  @@map("CHUNG_CHI")
+}
+
+model Tool {
+  id                String                 @id(clustered: false, map: "PK_CONG_CU") @db.Char(31) @map("ID_CC")
+  name               String                 @db.VarChar(255) @map("TEN_CC")
+  amount                Int @map("SL_CC")
+  note           String?                @db.VarChar(511) @map("GHI_CHU_CC")
+  isActive         Bytes                  @db.Binary(1) @map("IS_ACTIVE_CC")
+  units       ToolUnit[] @map("CONG_CU_DON_VI")
+  proposes      ProposeTool[] @map("DE_XUAT_CONG_CU")
+  suppliers ToolSupplier[] @map("NHA_CUNG_CAP_CONG_CU")
+
+  @@map("CONG_CU")
+}
+
+model ToolUnit {
+  id                                                   String          @id(clustered: false, map: "PK_CONG_CU_DON_VI") @db.Char(31) @map("ID_CCDV")
+  idUnit                                                     String?         @db.Char(31) @map("ID_DV")
+  idTool                                                     String?         @db.Char(31) @map("ID_CC")
+  isActive                                            Bytes           @db.Binary(1) @map("IS_ACTIVE_CCDV")
+  tool                                                   Tool?        @relation(fields: [ID_CC], references: [ID_CC], onDelete: NoAction, onUpdate: NoAction, map: "FK_CONG_CU__RELATIONS_CONG_CU") @map("CONG_CU")
+  unit                                                    Unit?         @relation(fields: [ID_DV], references: [ID_DV], onDelete: NoAction, onUpdate: NoAction, map: "FK_CONG_CU__RELATIONS_DON_VI") @map("DON_VI")
+  TI_LE_QUY_DOI_TI_LE_QUY_DOI_CON_ID_CCDV__ToCONG_CU_DON_VI RatioOfTransform[] @relation("TI_LE_QUY_DOI_CON_ID_CCDV__ToCONG_CU_DON_VI") @map("TI_LE_QUY_DOI_TI_LE_QUY_DOI_CON_ID_CCDV__ToCONG_CU_DON_VI")
+  TI_LE_QUY_DOI_TI_LE_QUY_DOI_ID_CCDVToCONG_CU_DON_VI       RatioOfTransform[] @relation("TI_LE_QUY_DOI_ID_CCDVToCONG_CU_DON_VI") @map("TI_LE_QUY_DOI_TI_LE_QUY_DOI_ID_CCDVToCONG_CU_DON_VI")
+
+  @@index([ID_CC], map: "RELATIONSHIP_35_FK")
+  @@index([ID_DV], map: "RELATIONSHIP_36_FK")
+  @@map("CONG_CU_DON_VI")
+}
+
+model Task {
+  id              String               @id(clustered: false, map: "PK_CONG_VIEC") @db.Char(31) @map("ID_CV")
+  name             String               @db.VarChar(255) @map("TEN_CV")
+  note         String?              @db.VarChar(511) @map("GHI_CHU_CV")
+  isActive       Bytes                @db.Binary(1) @map("IS_ACTIVE_CV")
+  works TasksOfWork[] @map("DAU_VIEC_CONG_VIEC")
+  history  HistoryOfTask[] @map("LICH_SU_CONG_VIEC")
+
+  @@map("CONG_VIEC")
+}
+
+model WorkEvaluation {
+  id                  String                    @id(clustered: false, map: "PK_DANH_GIA_DAU_VIEC") @db.Char(31) @map("ID_DGDV")
+  idEvaluation                String?                   @db.Char(31) @map("ID_MDDGDV")
+  idEmployeeInWork                  String?                   @db.Char(31) @map("ID_NVDV")
+  idEmployeeInProject                  String?                   @db.VarChar(31) @map("ID_NVDA")
+  date                DateTime?                 @db.DateTime @map("NGAY_DGDV")
+  note             String?                   @db.VarChar(511) @map("GHI_CHU_DGDV")
+  rankWorkEvaluation RankWorkEvaluation? @relation(fields: [ID_MDDGDV], references: [ID_MDDGDV], onDelete: NoAction, onUpdate: NoAction, map: "FK_DANH_GIA_RELATIONS_MUC_DO_D") @map("MUC_DO_DANH_GIA_DAU_VIEC")
+  employeeProject          EmployeesOfProject?          @relation(fields: [ID_NVDA], references: [ID_NVDA], onDelete: NoAction, onUpdate: NoAction, map: "FK_DANH_GIA_RELATIONS_NHAN_VIE") @map("NHAN_VIEN_DU_AN")
+  employeeWork       WorksOfEmployee?       @relation(fields: [ID_NVDV], references: [ID_NVDV], onDelete: NoAction, onUpdate: NoAction, map: "FK_DANH_GIA_RELATIONS_NHAN_VIE4") @map("NHAN_VIEN_DAU_VIEC")
+
+  @@index([ID_NVDV], map: "RELATIONSHIP_67_FK")
+  @@index([ID_MDDGDV], map: "RELATIONSHIP_68_FK")
+  @@index([ID_NVDA], map: "RELATIONSHIP_69_FK")
+  @@map("DANH_GIA_DAU_VIEC")
+}
+
+model EmployeeProjectEvaluation {
+  id               String                 @id(clustered: false, map: "PK_DANH_GIA_NV_DA") @db.VarChar(31) @map("ID_DGNV")
+  idEvaluation           String?                @db.Char(31) @map("ID_MDDGNVDA")
+  idEmployeeProject               String?                @db.VarChar(31) @map("ID_NVDA")
+  idEmployeeDepartment               String?                @db.VarChar(31) @map("ID_NVPB")
+  date           DateTime               @db.DateTime @map("NGAY_DGNVDA")
+  note        String?                @db.VarChar(255) @map("GHI_CHU_DGNVDA")
+  rankProjectEvaluation RankEmployeeProjectEvaluation? @relation(fields: [ID_MDDGNVDA], references: [ID_MDDGNVDA], onDelete: NoAction, onUpdate: NoAction, map: "FK_DANH_GIA_RELATIONS_MUC_DO_D2") @map("MUC_DO_DANH_GIA_NV_DA")
+  employeeDepartment   EmployeesOfDepartment?   @relation(fields: [ID_NVPB], references: [ID_NVPB], onDelete: NoAction, onUpdate: NoAction, map: "FK_DANH_GIA_RELATIONS_NHAN_VIE2") @map("NHAN_VIEN_PHONG_BAN")
+  employeeProject       EmployeesOfProject?       @relation(fields: [ID_NVDA], references: [ID_NVDA], onDelete: NoAction, onUpdate: NoAction, map: "FK_DANH_GIA_RELATIONS_NHAN_VIE3") @map("NHAN_VIEN_DU_AN")
+
+  @@index([ID_NVPB], map: "RELATIONSHIP_21_FK")
+  @@index([ID_NVDA], map: "RELATIONSHIP_22_FK")
+  @@index([ID_MDDGNVDA], map: "RELATIONSHIP_23_FK")
+  @@map("DANH_GIA_NV_DA")
+}
+
+model Work {
+  id         String           @id(clustered: false, map: "PK_DAU_VIEC") @db.Char(31) @map("ID_DVC")
+  name        String           @db.VarChar(255) @map("TEN_DVC")
+  note    String?          @db.VarChar(511) @map("GHI_CHU_DVC")
+  projects WorksOfProject[] @map("DU_AN_DAU_VIEC")
+
+  @@map("DAU_VIEC")
+}
+
+model TasksOfWork {
+  id            String              @id(clustered: false, map: "PK_DAU_VIEC_CONG_VIEC") @db.Char(31) @map("ID_DVCV")
+  idTask              String?             @db.Char(31) @map("ID_CV")
+  idEmployee            String?             @db.Char(31) @map("ID_NVDV")
+  finishDateET    DateTime?           @db.DateTime @map("NGAY_HT_DK_DVCV")
+  finishDate       DateTime?           @db.DateTime @map("NGAY_HT_DVCV")
+  note       String?             @db.VarChar(511) @map("GHI_CHU_DVCV")
+  task          Task?          @relation(fields: [ID_CV], references: [ID_CV], onDelete: NoAction, onUpdate: NoAction, map: "FK_DAU_VIEC_RELATIONS_CONG_VIE") @map("CONG_VIEC")
+  employee WorksOfEmployee? @relation(fields: [ID_NVDV], references: [ID_NVDV], onDelete: NoAction, onUpdate: NoAction, map: "FK_DAU_VIEC_RELATIONS_NHAN_VIE") @map("NHAN_VIEN_DAU_VIEC")
+
+  @@index([ID_NVDV], map: "RELATIONSHIP_65_FK")
+  @@index([ID_CV], map: "RELATIONSHIP_66_FK")
+  @@map("DAU_VIEC_CONG_VIEC")
+}
+
+model ProposeTool {
+  id         String           @id(clustered: false, map: "PK_DE_XUAT_CONG_CU") @db.Char(31) @map("ID_DXCC")
+  idTool           String?          @db.Char(31) @map("ID_CC")
+  amount         Int @map("SL_DXCC")
+  tool         Tool?         @relation(fields: [ID_CC], references: [ID_CC], onDelete: NoAction, onUpdate: NoAction, map: "FK_DE_XUAT__RELATIONS_CONG_CU") @map("CONG_CU")
+
+  @@index([ID_THDXDA], map: "RELATIONSHIP_28_FK")
+  @@index([ID_CC], map: "RELATIONSHIP_29_FK")
+  @@map("DE_XUAT_CONG_CU")
+}
+
+model ProposeProject {
+  id         String            @id(clustered: false, map: "PK_DE_XUAT_DU_AN") @db.VarChar(31) @map("ID_DXDA")
+  idEmployeeProject         String?           @db.VarChar(31) @map("ID_NVDA")
+  idEmployee           String?           @db.VarChar(31) @map("ID_NV")
+  createdDate   DateTime?         @db.DateTime @map("NGAY_TAO_DXDA")
+  reviewingDate DateTime?         @db.DateTime @map("NGAY_DUYET_DXDA")
+  content   String?           @db.VarChar(511) @map("NOI_DUNG_DXDA")
+  note    String?           @db.VarChar(511) @map("GHI_CHU_DXDA")
+  employeeProject EmployeesOfProject?  @relation(fields: [ID_NVDA], references: [ID_NVDA], onDelete: NoAction, onUpdate: NoAction, map: "FK_DE_XUAT__RELATIONS_NHAN_VIE") @map("NHAN_VIEN_DU_AN")
+  employee       Employee?        @relation(fields: [ID_NV], references: [ID_NV], onDelete: NoAction, onUpdate: NoAction, map: "FK_DE_XUAT__RELATIONS_NHAN_VIE2") @map("NHAN_VIEN")
+
+  @@index([ID_NV], map: "RELATIONSHIP_19_FK")
+  @@index([ID_NVDA], map: "RELATIONSHIP_20_FK")
+  @@map("DE_XUAT_DU_AN")
+}
+
+model ProposeIngredient {
+  id         String           @id(clustered: false, map: "PK_DE_XUAT_NGUYEN_LIEU") @db.Char(31) @map("ID_DXNL")
+  idIngredient           String?          @db.Char(31) @map("ID_NL")
+  amount         Int @map("SL_DXNL")
+  ingredient     Ingredient?     @relation(fields: [ID_NL], references: [ID_NL], onDelete: NoAction, onUpdate: NoAction, map: "FK_DE_XUAT__RELATIONS_NGUYEN_L") @map("NGUYEN_LIEU")
+
+  @@index([ID_THDXDA], map: "RELATIONSHIP_33_FK")
+  @@index([ID_NL], map: "RELATIONSHIP_34_FK")
+  @@map("DE_XUAT_NGUYEN_LIEU")
+}
+
+model ProposeSupplies {
+  id         String           @id(clustered: false, map: "PK_DE_XUAT_VAT_TU") @db.Char(31) @map("ID_DXVT")
+  idSupply           String?          @db.Char(31) @map("ID_VT")
+  amount         Int @map("SL_DXVT")
+  supply          Supply?          @relation(fields: [ID_VT], references: [ID_VT], onDelete: NoAction, onUpdate: NoAction, map: "FK_DE_XUAT__RELATIONS_VAT_TU") @map("VAT_TU")
+
+  @@index([ID_VT], map: "RELATIONSHIP_31_FK")
+  @@index([ID_THDXDA], map: "RELATIONSHIP_32_FK")
+  @@map("DE_XUAT_VAT_TU")
+}
+
+model Unit {
+  id              String               @id(clustered: false, map: "PK_DON_VI") @db.Char(31) @map("ID_DV")
+  name             String               @db.VarChar(255) @map("TEN_DV")
+  note         String?              @db.VarChar(511) @map("GHI_CHU_DV")
+  isActive       Bytes                @db.Binary(1) @map("IS_ACTIVE_DV")
+  toolUnits     ToolUnit[] @map("CONG_CU_DON_VI")
+  ingredientUnits IngredientUnit[] @map("NGUYEN_LIEU_DON_VI")
+  supplyUnits      SupplyUnit[] @map("VAT_TU_DON_VI")
+
+  @@map("DON_VI")
+}
+
+model Project {
+  id              String             @id(clustered: false, map: "PK_DU_AN") @db.Char(31) @map("ID_DA")
+  name             String             @db.VarChar(255) @map("TEN_DA")
+  createdDate        DateTime           @db.DateTime @map("NGAY_TAO_DA")
+  startDate    DateTime?          @db.DateTime @map("NGAY_BAT_DAU_DA")
+  finishDateET DateTime?          @db.DateTime @map("NGAY_KT_DU_KIEN_DA")
+  finishDate   DateTime?          @db.DateTime @map("NGAY_KET_THUC_DA")
+  note         String?            @db.VarChar(511) @map("GHI_CHU_DA")
+  works     WorksOfProject[] @map("DU_AN_DAU_VIEC")
+  departments    DepartmentOfProject[] @map("DU_AN_PHONG_BAN")
+  customers   CustomersOfProject[] @map("KHACH_HANG_DU_AN")
+  employees    EmployeesOfProject[] @map("NHAN_VIEN_DU_AN")
+
+  @@map("DU_AN")
+}
+
+model WorksOfProject {
+  id           String               @id(clustered: false, map: "PK_DU_AN_DAU_VIEC") @db.Char(31) @map("ID_DA_DV")
+  idProject              String?              @db.Char(31) @map("ID_DA")
+  idWork             String?              @db.Char(31) @map("ID_DVC")
+  createdDate     DateTime             @db.DateTime @map("NGAY_TAO_DA_DV")
+  finishDate       DateTime?            @db.DateTime @map("NGAY_HT_DADV")
+  finishDateET    DateTime?            @db.DateTime @map("NGAY_HT_DK_DADV")
+  note       String?              @db.VarChar(511) @map("GHI_CHU_DADV")
+  work           Work?            @relation(fields: [ID_DVC], references: [ID_DVC], onDelete: NoAction, onUpdate: NoAction, map: "FK_DU_AN_DA_RELATIONS_DAU_VIEC") @map("DAU_VIEC")
+  project              Project?               @relation(fields: [ID_DA], references: [ID_DA], onDelete: NoAction, onUpdate: NoAction, map: "FK_DU_AN_DA_RELATIONS_DU_AN") @map("DU_AN")
+  employees WorksOfEmployee[] @map("NHAN_VIEN_DAU_VIEC")
+
+  @@index([ID_DA], map: "RELATIONSHIP_61_FK")
+  @@index([ID_DVC], map: "RELATIONSHIP_62_FK")
+  @@map("DU_AN_DAU_VIEC")
+}
+
+model DepartmentOfProject {
+  id            String     @id(clustered: false, map: "PK_DU_AN_PHONG_BAN") @db.Char(31) @map("ID_DA_PB")
+  idProject               String?    @db.Char(31) @map("ID_DA")
+  idDepartment               String?    @db.VarChar(31) @map("ID_PB")
+  startDate DateTime   @db.DateTime @map("NGAY_THAM_GIA_DA_PB")
+  endDate DateTime?  @db.DateTime @map("NGAY_KET_THUC_DA_PB")
+  note       String?    @db.VarChar(511) @map("GHI_CHU_DA_PB")
+  project               Project?     @relation(fields: [ID_DA], references: [ID_DA], onDelete: NoAction, onUpdate: NoAction, map: "FK_DU_AN_PH_RELATIONS_DU_AN") @map("DU_AN")
+  department           Department? @relation(fields: [ID_PB], references: [ID_PB], onDelete: NoAction, onUpdate: NoAction, map: "FK_DU_AN_PH_RELATIONS_PHONG_BA") @map("PHONG_BAN")
+
+  @@index([ID_DA], map: "RELATIONSHIP_80_FK")
+  @@index([ID_PB], map: "RELATIONSHIP_81_FK")
+  @@map("DU_AN_PHONG_BAN")
+}
+
+model ReviewingEmployee {
+  id                                           String               @id(clustered: false, map: "PK_DUYET_NHAN_VIEN") @db.VarChar(31) @map("ID_DNV")
+  idEmployee                                            String?              @db.VarChar(31) @map("ID_NV")
+  NHA_ID_NV__                                      String?              @db.VarChar(31)
+  idDepartment                                          String?              @db.VarChar(31) @map("ID_NVPB")
+  date                                 DateTime?            @db.DateTime @map("NGAY_DE_XUAT_DNV")
+  reviewingDate                                   DateTime?            @db.DateTime @map("NGAY_DUYET_DNV")
+  employeeDepartment                              EmployeesOfDepartment? @relation(fields: [ID_NVPB], references: [ID_NVPB], onDelete: NoAction, onUpdate: NoAction, map: "FK_DUYET_NH_RELATIONS_NHAN_VIE") @map("NHAN_VIEN_PHONG_BAN")
+  NHAN_VIEN_DUYET_NHAN_VIEN_ID_NVToNHAN_VIEN       Employee?           @relation("DUYET_NHAN_VIEN_ID_NVToNHAN_VIEN", fields: [ID_NV], references: [ID_NV], onDelete: NoAction, onUpdate: NoAction, map: "FK_DUYET_NH_RELATIONS_NHAN_VIE2") @map("NHAN_VIEN_DUYET_NHAN_VIEN_ID_NVToNHAN_VIEN")
+  NHAN_VIEN_DUYET_NHAN_VIEN_NHA_ID_NV__ToNHAN_VIEN Employee?           @relation("DUYET_NHAN_VIEN_NHA_ID_NV__ToNHAN_VIEN", fields: [NHA_ID_NV__], references: [ID_NV], onDelete: NoAction, onUpdate: NoAction, map: "FK_DUYET_NH_RELATIONS_NHAN_VIE3") @map("NHAN_VIEN_DUYET_NHAN_VIEN_NHA_ID_NV__ToNHAN_VIEN")
+  employeeProject                                  EmployeesOfProject[] @map("NHAN_VIEN_DU_AN")
+
+  @@index([ID_NVPB], map: "RELATIONSHIP_16_FK")
+  @@index([NHA_ID_NV__], map: "RELATIONSHIP_DE_XUAT_FK")
+  @@index([ID_NV], map: "RELATIONSHIP_DUYET_FK")
+  @@map("DUYET_NHAN_VIEN")
+}
+
+model District {
+  id      String      @id(clustered: false, map: "PK_HUYEN") @db.Char(31) @map("ID_HUYEN")
+  idProvince       String?     @db.Char(31) @map("ID_TINH")
+  code    Int @map("CODE_HUYEN")
+  name     String      @db.VarChar(255) @map("TEN_HUYEN")
+  note String?     @db.VarChar(511) @map("GHI_CHU_HUYEN")
+  province          Province?       @relation(fields: [ID_TINH], references: [ID_TINH], onDelete: NoAction, onUpdate: NoAction, map: "FK_HUYEN_RELATIONS_TINH") @map("TINH")
+  employee     Employee[] @map("NHAN_VIEN")
+
+  @@index([ID_TINH], map: "RELATIONSHIP_47_FK")
+  @@map("HUYEN")
+}
+
+model Customer {
+  id            String             @id(clustered: false, map: "PK_KHACH_HANG") @db.Char(31) @map("ID_KH")
+  name           String?            @db.VarChar(255) @map("TEN_KH")
+  address       String?            @db.VarChar(255) @map("DIA_CHI_KH")
+  phone    String?            @db.VarChar(23) @map("DIEN_THOAI_KH")
+  fax           String?            @db.VarChar(23) @map("FAX_KH")
+  email         String?            @db.VarChar(255) @map("EMAIL_KH")
+  note       String?            @db.VarChar(511) @map("GHI_CHU_KH")
+  customers CustomersOfProject[] @map("KHACH_HANG_DU_AN")
+
+  @@map("KHACH_HANG")
+}
+
+model CustomersOfProject {
+  id        String      @id(clustered: false, map: "PK_KHACH_HANG_DU_AN") @db.Char(31) @map("ID_KHDA")
+  idProject          String?     @db.Char(31) @map("ID_DA")
+  idCustomer          String?     @db.Char(31) @map("ID_KH")
+  createdDate DateTime    @db.DateTime @map("NGAY_TAO_KH_DA")
+  finishDate  DateTime?   @db.DateTime @map("NGAY_BAN_GIAO")
+  isRemove       Bytes       @db.Binary(1) @map("HUY_KHDA") 
+  note   String?     @db.VarChar(511) @map("GHI_CHU_KHDA")
+  project          Project?      @relation(fields: [ID_DA], references: [ID_DA], onDelete: NoAction, onUpdate: NoAction, map: "FK_KHACH_HA_RELATIONS_DU_AN") @map("DU_AN")
+  customer     Customer? @relation(fields: [ID_KH], references: [ID_KH], onDelete: NoAction, onUpdate: NoAction, map: "FK_KHACH_HA_RELATIONS_KHACH_HA") @map("KHACH_HANG")
+
+  @@index([ID_KH], map: "RELATIONSHIP_1_FK")
+  @@index([ID_DA], map: "RELATIONSHIP_2_FK")
+  @@map("KHACH_HANG_DU_AN")
+}
+
+model HistoryOfTask {
+  id       String     @id(clustered: false, map: "PK_LICH_SU_CONG_VIEC") @db.Char(31) @map("ID_LSCV")
+  idTask         String?    @db.Char(31) @map("ID_CV")
+  date DateTime?  @db.DateTime @map("NGAY_TAO_LSCV")
+  content String?    @db.VarChar(511) @map("NOI_DUNG_LSCV")
+  note  String?    @db.VarChar(511) @map("GHI_CHU_LSCV")
+  task     Task? @relation(fields: [ID_CV], references: [ID_CV], onDelete: NoAction, onUpdate: NoAction, map: "FK_LICH_SU__RELATIONS_CONG_VIE") @map("CONG_VIEC")
+
+  @@index([ID_CV], map: "RELATIONSHIP_79_FK")
+  @@map("LICH_SU_CONG_VIEC")
+}
+
+model HistoryOfWork {
+  id            String              @id(clustered: false, map: "PK_LICH_SU_DAU_VIEC") @db.Char(31) @map("ID_LSDV")
+  idEmployee            String?             @db.Char(31) @map("ID_NVDV")
+  createdDate      DateTime?           @db.DateTime @map("NGAY_TAO_LSDV")
+  content      String?             @db.VarChar(511) @map("NOI_DUNG_LSDV")
+  note       String?             @db.VarChar(511) @map("GHI_CHU_LSDV")
+  employees WorksOfEmployee? @relation(fields: [ID_NVDV], references: [ID_NVDV], onDelete: NoAction, onUpdate: NoAction, map: "FK_LICH_SU__RELATIONS_NHAN_VIE") @map("NHAN_VIEN_DAU_VIEC")
+
+  @@index([ID_NVDV], map: "RELATIONSHIP_78_FK")
+  @@map("LICH_SU_DAU_VIEC")
+}
+
+model RankWorkEvaluation {
+  id         String              @id(clustered: false, map: "PK_MUC_DO_DANH_GIA_DAU_VIEC") @db.Char(31) @map("ID_MDDGDV")
+  name        String              @db.VarChar(255) @map("TEN_MDDGDV")
+  note    String?             @db.VarChar(511) @map("GHI_CHU_MDDGDV")
+  workEvaluations WorkEvaluation[] @map("DANH_GIA_DAU_VIEC")
+
+  @@map("MUC_DO_DANH_GIA_DAU_VIEC")
+}
+
+model RankEmployeeProjectEvaluation {
+  id    String           @id(clustered: false, map: "PK_MUC_DO_DANH_GIA_NV_DA") @db.Char(31) @map("ID_MDDGNVDA")
+  name    String           @db.VarChar(255) @map("TEN_MDGNVDA")
+  employeeProjectEvaluation EmployeeProjectEvaluation[] @map("DANH_GIA_NV_DA")
+
+  @@map("MUC_DO_DANH_GIA_NV_DA")
+}
+
+model Ingredient {
+  id                    String                     @id(clustered: false, map: "PK_NGUYEN_LIEU") @db.Char(31) @map("ID_NL")
+  name                   String                     @db.VarChar(255) @map("TEN_NL")
+  amount                    Int @map("SL_NL")
+  note               String?                    @db.VarChar(511) @map("GHI_CHU_NL")
+  isActive             Bytes                      @db.Binary(1) @map("IS_ACTIVE_NL")
+  proposeIngredients      ProposeIngredient[] @map("DE_XUAT_NGUYEN_LIEU")
+  ingredientunits       IngredientUnit[] @map("NGUYEN_LIEU_DON_VI")
+  suppliers IngredientSupplier[] @map("NHA_CUNG_CAP_NGUYEN_LIEU")
+
+  @@map("NGUYEN_LIEU")
+}
+
+model IngredientUnit {
+  id                                                       String          @id(clustered: false, map: "PK_NGUYEN_LIEU_DON_VI") @db.Char(31) @map("ID_NLDV")
+  idIngredient                                                         String?         @db.Char(31) @map("ID_NL")
+  idUnit                                                         String?         @db.Char(31) @map("ID_DV")
+  isActive                                                Bytes           @db.Binary(1) @map("IS_ACTIVE_NLDV")
+  unit                                                        Unit?         @relation(fields: [ID_DV], references: [ID_DV], onDelete: NoAction, onUpdate: NoAction, map: "FK_NGUYEN_L_RELATIONS_DON_VI") @map("DON_VI")
+  ingredient                                                   Ingredient?    @relation(fields: [ID_NL], references: [ID_NL], onDelete: NoAction, onUpdate: NoAction, map: "FK_NGUYEN_L_RELATIONS_NGUYEN_L") @map("NGUYEN_LIEU")
+  TI_LE_QUY_DOI_TI_LE_QUY_DOI_NGU_ID_NLDV__ToNGUYEN_LIEU_DON_VI RatioOfTransform[] @relation("TI_LE_QUY_DOI_NGU_ID_NLDV__ToNGUYEN_LIEU_DON_VI")
+  TI_LE_QUY_DOI_TI_LE_QUY_DOI_ID_NLDVToNGUYEN_LIEU_DON_VI       RatioOfTransform[] @relation("TI_LE_QUY_DOI_ID_NLDVToNGUYEN_LIEU_DON_VI")
+
+  @@index([ID_DV], map: "RELATIONSHIP_39_FK")
+  @@index([ID_NL], map: "RELATIONSHIP_40_FK")
+
+  @@map("NGUYEN_LIEU_DON_VI")
+}
+
+model Supplier {
+  id                   String                     @id(clustered: false, map: "PK_NHA_CUNG_CAP") @db.Char(31) @map("ID_NCC")
+  name                  String                     @db.VarChar(255) @map("TEN_NCC")
+  phone           String?                    @db.VarChar(15) @map("DIEN_THOAI_NCC")
+  address              String?                    @db.VarChar(255) @map("DIA_CHI_NCC")
+  note              String?                    @db.VarChar(511) @map("GHI_CHU_NCC")
+  email                String?                    @db.VarChar(255) @map("EMAIL_NCC")
+  toolSuppliers     ToolSupplier[] @map("NHA_CUNG_CAP_CONG_CU")
+  ingredientSuppliers IngredientSupplier[] @map("NHA_CUNG_CAP_NGUYEN_LIEU")
+  supplySuppliers      SupplySupplier[] @map("NHA_CUNG_CAP_VAT_TU")
+
+  @@map("NHA_CUNG_CAP")
+}
+
+model ToolSupplier {
+  id      String        @id(clustered: false, map: "PK_NHA_CUNG_CAP_CONG_CU") @db.Char(31) @map("ID_NCCCC")
+  idSupplier        String?       @db.Char(31) @map("ID_NCC")
+  idTool         String?       @db.Char(31) @map("ID_CC")
+  note String?       @db.VarChar(511) @map("GHI_CHU_NCCCC")
+  tool       Tool?      @relation(fields: [ID_CC], references: [ID_CC], onDelete: NoAction, onUpdate: NoAction, map: "FK_NHA_CUNG_RELATIONS_CONG_CU") @map("CONG_CU")
+  supplier  Supplier? @relation(fields: [ID_NCC], references: [ID_NCC], onDelete: NoAction, onUpdate: NoAction, map: "FK_NHA_CUNG_RELATIONS_NHA_CUNG2") @map("NHA_CUNG_CAP")
+
+  @@index([ID_NCC], map: "RELATIONSHIP_55_FK")
+  @@index([ID_CC], map: "RELATIONSHIP_58_FK")
+  @@map("NHA_CUNG_CAP_CONG_CU")
+}
+
+model IngredientSupplier {
+  id      String        @id(clustered: false, map: "PK_NHA_CUNG_CAP_NGUYEN_LIEU") @db.Char(31) @map("ID_NCCNL")
+  idSupplier        String?       @db.Char(31) @map("ID_NCC")
+  idIngredient         String?       @db.Char(31) @map("ID_NL")
+  note String?       @db.VarChar(511) @map("GHI_CHU_NCCNL")
+  ingredient   Ingredient?  @relation(fields: [ID_NL], references: [ID_NL], onDelete: NoAction, onUpdate: NoAction, map: "FK_NHA_CUNG_RELATIONS_NGUYEN_L") @map("NGUYEN_LIEU")
+  supplier  Supplier? @relation(fields: [ID_NCC], references: [ID_NCC], onDelete: NoAction, onUpdate: NoAction, map: "FK_NHA_CUNG_RELATIONS_NHA_CUNG3") @map("NHA_CUNG_CAP")
+
+  @@index([ID_NCC], map: "RELATIONSHIP_57_FK")
+  @@index([ID_NL], map: "RELATIONSHIP_60_FK")
+  @@map("NHA_CUNG_CAP_NGUYEN_LIEU")
+}
+
+model SupplySupplier {
+  id      String        @id(clustered: false, map: "PK_NHA_CUNG_CAP_VAT_TU") @db.Char(31) @map("ID_NCCVT")
+  idSupplier        String?       @db.Char(31) @map("ID_NCC")
+  idSupply         String?       @db.Char(31) @map("ID_VT")
+  note String?       @db.VarChar(511) @map("GHI_CHU_NCCVT")
+  supplier  Supplier? @relation(fields: [ID_NCC], references: [ID_NCC], onDelete: NoAction, onUpdate: NoAction, map: "FK_NHA_CUNG_RELATIONS_NHA_CUNG") @map("NHA_CUNG_CAP")
+  supply        Supply?       @relation(fields: [ID_VT], references: [ID_VT], onDelete: NoAction, onUpdate: NoAction, map: "FK_NHA_CUNG_RELATIONS_VAT_TU") @map("VAT_TU")
+
+  @@index([ID_NCC], map: "RELATIONSHIP_56_FK")
+  @@index([ID_VT], map: "RELATIONSHIP_59_FK")
+  @@map("NHA_CUNG_CAP_VAT_TU")
+}
+
+model Employee {
+  id                                                  String                  @id(clustered: false, map: "PK_NHAN_VIEN") @db.VarChar(31) @map("ID_NV")
+  idDistrict                                               String?                 @db.Char(31) @map("ID_HUYEN")
+  idProvince                                                  String?                 @db.Char(31) @map("ID_TP")
+  fullName                                              String?                 @db.VarChar(127) @map("HO_TEN_NV")
+  address                                             String?                 @db.VarChar(127) @map("DIA_CHI_NV")
+  phone                                          String?                 @db.VarChar(23) @map("DIEN_THOAI_NV")
+  note                                             String?                 @db.VarChar(511) @map("GHI_CHU_NV")
+  gender                                           String                  @db.VarChar(5) @map("GIOI_TINH_NV")
+  email                                               String?                 @db.VarChar(255) @map("EMAIL_NV")
+  isActive                                           Bytes                   @db.Binary(1) @map("IS_ACTIVE_NV")
+  proposeProject                                          ProposeProject[] @map("DE_XUAT_DU_AN")
+  DUYET_NHAN_VIEN_DUYET_NHAN_VIEN_ID_NVToNHAN_VIEN       ReviewingEmployee[]       @relation("DUYET_NHAN_VIEN_ID_NVToNHAN_VIEN")
+  DUYET_NHAN_VIEN_DUYET_NHAN_VIEN_NHA_ID_NV__ToNHAN_VIEN ReviewingEmployee[]       @relation("DUYET_NHAN_VIEN_NHA_ID_NV__ToNHAN_VIEN")
+  district                                                  District?                  @relation(fields: [ID_HUYEN], references: [ID_HUYEN], onDelete: NoAction, onUpdate: NoAction, map: "FK_NHAN_VIE_RELATIONS_HUYEN") @map("HUYEN")
+  city                                              City?              @relation(fields: [ID_TP], references: [ID_TP], onDelete: NoAction, onUpdate: NoAction, map: "FK_NHAN_VIE_RELATIONS_THANH_PH") @map("THANH_PHO")
+  qualitifications                                     QualitificationsOfEmployee[] @map("NHAN_VIEN_BANG_CAP")
+  positions                                      PositionsOfEmployee[] @map("NHAN_VIEN_CHUC_VU")
+  certificates                                    CertificationsOfEmployee[] @map("NHAN_VIEN_CHUNG_CHI")
+  projects                                        EmployeesOfProject[] @map("NHAN_VIEN_DU_AN")
+  departments                                    EmployeesOfDepartment[] @map("NHAN_VIEN_PHONG_BAN")
+  permissionProjects                                  PermissionProjectOfEmployee[] @map("NHAN_VIEN_QUYEN_DU_AN")
+  account                                    AccountEmployee[] @map("TAI_KHOAN_NHAN_VIEN")
+
+  @@index([ID_HUYEN], map: "RELATIONSHIP_49_FK")
+  @@index([ID_TP], map: "RELATIONSHIP_50_FK")
+  @@map("NHAN_VIEN")
+}
+
+model QualitificationsOfEmployee {
+  id       String     @id(clustered: false, map: "PK_NHAN_VIEN_BANG_CAP") @db.VarChar(31) @map("ID_NVBC")
+  idQualitification         String?    @db.VarChar(31) @map("ID_BC")
+  idEmployee         String?    @db.VarChar(31) @map("ID_NV")
+  date DateTime?  @db.DateTime @map("NGAY_CAP_NVBC")
+  note  String?    @db.VarChar(511) @map("GHI_CHU_NVBC")
+  qualitification      Qualitification?  @relation(fields: [ID_BC], references: [ID_BC], onDelete: NoAction, onUpdate: NoAction, map: "FK_NHAN_VIE_RELATIONS_BANG_CAP") @map("BANG_CAP")
+  employee     Employee? @relation(fields: [ID_NV], references: [ID_NV], onDelete: NoAction, onUpdate: NoAction, map: "FK_NHAN_VIE_RELATIONS_NHAN_VIE3") @map("NHAN_VIEN")
+
+  @@index([ID_NV], map: "RELATIONSHIP_6_FK")
+  @@index([ID_BC], map: "RELATIONSHIP_7_FK")
+  @@map("NHAN_VIEN_BANG_CAP")
+}
+
+model PositionsOfEmployee {
+  id       String          @id(clustered: false, map: "PK_NHAN_VIEN_CHUC_VU") @db.Char(31) @map("ID_NVCV")
+  idEmployee         String?         @db.VarChar(31) @map("ID_NV")
+  idPosition        String?         @db.Char(31) @map("ID_CHV")
+  startDate  DateTime?       @db.DateTime @map("NGAY_BD_NVCV")
+  endData  DateTime?       @db.DateTime @map("NGAY_KT_NVCV")
+  note  String?         @db.VarChar(511) @map("GHI_CHU_NVCV")
+  position       Position?        @relation(fields: [ID_CHV], references: [ID_CHV], onDelete: NoAction, onUpdate: NoAction, map: "FK_NHAN_VIE_RELATIONS_CHUC_VU") @map("CHUC_VU")
+  employee     Employee?      @relation(fields: [ID_NV], references: [ID_NV], onDelete: NoAction, onUpdate: NoAction, map: "FK_NHAN_VIE_RELATIONS_NHAN_VIE8") @map("NHAN_VIEN")
+  permissionPosition PermissionsPosition[] @map("QUYEN_CHUC_VU")
+
+  @@index([ID_CHV], map: "RELATIONSHIP_70_FK")
+  @@index([ID_NV], map: "RELATIONSHIP_71_FK")
+  @@map("NHAN_VIEN_CHUC_VU")
+}
+
+model CertificationsOfEmployee {
+  id          String     @id(clustered: false, map: "PK_NHAN_VIEN_CHUNG_CHI") @db.Char(31) @map("ID_NV_CC")
+  idEmployee             String?    @db.VarChar(31) @map("ID_NV")
+  idCertification           String?    @db.Char(31) @map("ID_CHCH")
+  date     DateTime?  @db.DateTime @map("NGAY_CAP_NVCC")
+  expiredDate DateTime?  @db.DateTime @map("NGAY_HET_HAN_NVCC")
+  note      String?    @db.VarChar(511) @map("GHI_CHU_NVCC")
+  certification         Certificate? @relation(fields: [ID_CHCH], references: [ID_CHCH], onDelete: NoAction, onUpdate: NoAction, map: "FK_NHAN_VIE_RELATIONS_CHUNG_CH") @map("CHUNG_CHI")
+  employee         Employee? @relation(fields: [ID_NV], references: [ID_NV], onDelete: NoAction, onUpdate: NoAction, map: "FK_NHAN_VIE_RELATIONS_NHAN_VIE6") @map("NHAN_VIEN")
+
+  @@index([ID_NV], map: "RELATIONSHIP_24_FK")
+  @@index([ID_CHCH], map: "RELATIONSHIP_25_FK")
+  @@map("NHAN_VIEN_CHUNG_CHI")
+}
+
+model RolesOfEmployee {
+  id             String               @id(clustered: false, map: "PK_NHAN_VIEN_CHUYEN_MON") @db.VarChar(31) @map("ID_NVCM")
+  idEmployee             String?              @db.VarChar(31) @map("ID_NVPB")
+  idQualitification               String?              @db.VarChar(31) @map("ID_BC")
+  startDate   DateTime?            @db.DateTime @map("NGAY_BAT_DAU_NVCM")
+  endDate  DateTime?            @db.DateTime @map("NGAY_KET_THUC_NVCM")
+  note        String?              @db.VarChar(511) @map("GHI_CHU_NVCM")
+  qualitification            Qualitification?            @relation(fields: [ID_BC], references: [ID_BC], onDelete: NoAction, onUpdate: NoAction, map: "FK_NHAN_VIE_RELATIONS_BANG_CAP2") @map("BANG_CAP")
+  employee EmployeesOfDepartment? @relation(fields: [ID_NVPB], references: [ID_NVPB], onDelete: NoAction, onUpdate: NoAction, map: "FK_NHAN_VIE_RELATIONS_NHAN_VIE2") @map("NHAN_VIEN_PHONG_BAN")
+
+  @@index([ID_BC], map: "RELATIONSHIP_8_FK")
+  @@index([ID_NVPB], map: "RELATIONSHIP_9_FK")
+  @@map("NHAN_VIEN_CHUYEN_MON")
+}
+
+model WorksOfEmployee {
+  id                  String                     @id(clustered: false, map: "PK_NHAN_VIEN_DAU_VIEC") @db.Char(31) @map("ID_NVDV")
+  idEmployee                  String?                    @db.VarChar(31) @map("ID_NVDA")
+  idWork                 String?                    @db.Char(31) @map("ID_DA_DV")
+  note             String?                    @db.VarChar(511) @map("GHI_CHU_NVDV")
+  workEvaluation        WorkEvaluation[] @map("DANH_GIA_DAU_VIEC")
+  tasksOfWork       TasksOfWork[] @map("DAU_VIEC_CONG_VIEC")
+  historyOfWork         HistoryOfWork[] @map("LICH_SU_DAU_VIEC")
+  work           WorksOfProject?            @relation(fields: [ID_DA_DV], references: [ID_DA_DV], onDelete: NoAction, onUpdate: NoAction, map: "FK_NHAN_VIE_RELATIONS_DU_AN_DA") @map("DU_AN_DAU_VIEC")
+  employee          EmployeesOfProject?           @relation(fields: [ID_NVDA], references: [ID_NVDA], onDelete: NoAction, onUpdate: NoAction, map: "FK_NHAN_VIE_RELATIONS_NHAN_VIE7") @map("NHAN_VIEN_DU_AN")
+  permissionsWork PermissionWorksOfEmployee[] @map("NHAN_VIEN_QUYEN_DAU_VIEC")
+
+  @@index([ID_NVDA], map: "RELATIONSHIP_63_FK")
+  @@index([ID_DA_DV], map: "RELATIONSHIP_64_FK")
+  @@map("NHAN_VIEN_DAU_VIEC")
+}
+
+model EmployeesOfProject {
+  id                                                    String               @id(clustered: false, map: "PK_NHAN_VIEN_DU_AN") @db.VarChar(31) @map("ID_NVDA")
+  NHA_ID_NVDA__                                              String?              @db.VarChar(31)
+  idProject                                                      String?              @db.Char(31) @map("ID_DA")
+  idReviewingEmployee                                                     String?              @db.VarChar(31) @map("ID_DNV")
+  idEmployee                                                      String?              @db.VarChar(31) @map("ID_NV")
+  startDate                                          DateTime?            @db.DateTime @map("NGAY_BAT_DAU_NVDA")
+  endDate                                         DateTime?            @db.DateTime @map("NGAY_KET_THUC_NVDA")
+  note                                               String?              @db.VarChar(511) @map("GHI_CHU_NVDA")
+  workEvaluations                                          WorkEvaluation[] @map("DANH_GIA_DAU_VIEC")
+  employeeProjectEvaluations                                             EmployeeProjectEvaluation[]
+  proposeProject                                              ProposeProject[]
+  worksOfEmployees                                         WorksOfEmployee[]
+  Project                                                      Project?               @relation(fields: [ID_DA], references: [ID_DA], onDelete: NoAction, onUpdate: NoAction, map: "FK_NHAN_VIE_RELATIONS_DU_AN") @map("DU_AN")
+  reviewingEmployee                                            ReviewingEmployee?     @relation(fields: [ID_DNV], references: [ID_DNV], onDelete: NoAction, onUpdate: NoAction, map: "FK_NHAN_VIE_RELATIONS_DUYET_NH") @map("DUYET_NHAN_VIEN")
+  employee                                                  Employee?           @relation(fields: [ID_NV], references: [ID_NV], onDelete: NoAction, onUpdate: NoAction, map: "FK_NHAN_VIE_RELATIONS_NHAN_VIE4") @map("NHAN_VIEN")
+  employeeOfProject                                            EmployeesOfProject?     @relation("NHAN_VIEN_DU_ANToNHAN_VIEN_DU_AN", fields: [NHA_ID_NVDA__], references: [ID_NVDA], onDelete: NoAction, onUpdate: NoAction, map: "FK_NHAN_VIE_RELATIONS_NHAN_VIE5")
+  other_NHAN_VIEN_DU_AN                                      EmployeesOfProject[]    @relation("NHAN_VIEN_DU_ANToNHAN_VIEN_DU_AN")
+
+  @@index([ID_DA], map: "RELATIONSHIP_10_FK")
+  @@index([ID_NV], map: "RELATIONSHIP_11_FK")
+  @@index([ID_DNV], map: "RELATIONSHIP_15_FK")
+  @@index([NHA_ID_NVDA__], map: "RELATIONSHIP_TRUONG_DA_FK")
+  @@map("NHAN_VIEN_DU_AN")
+}
+
+model EmployeesOfDepartment {
+  id                   String                 @id(clustered: false, map: "PK_NHAN_VIEN_PHONG_BAN") @db.VarChar(31) @map("ID_NVPB")
+  idEmployee                     String?                @db.VarChar(31) @map("ID_NV")
+  NHA_ID_NVPB__             String?                @db.VarChar(31)
+  idDepartment                     String?                @db.VarChar(31) @map("ID_PB")
+  startDate              DateTime?              @db.DateTime @map("NGAY_BD_NVPB")
+  endDate              DateTime?              @db.DateTime @map("NGAY_KT_NVPB")
+  note              String?                @db.VarChar(511) @map("GHI_CHU_NVPB")
+  employeeProjectEvaluation            EmployeeProjectEvaluation[] @map("DANH_GIA_NV_DA")
+  reviewingEmployee           ReviewingEmployee[] @map("DUYET_NHAN_VIEN")
+  roleOfEmployees      RolesOfEmployee[] @map("NHAN_VIEN_CHUYEN_MON")
+  employee                 Employee?             @relation(fields: [ID_NV], references: [ID_NV], onDelete: NoAction, onUpdate: NoAction, map: "FK_NHAN_VIE_R_NV_PN_NHAN_VIE") @map("NHAN_VIEN")
+  headOfDepartment       EmployeesOfDepartment?   @relation("NHAN_VIEN_PHONG_BANToNHAN_VIEN_PHONG_BAN", fields: [NHA_ID_NVPB__], references: [ID_NVPB], onDelete: NoAction, onUpdate: NoAction, map: "FK_NHAN_VIE_R_TP_NHAN_VIE") @map("NHAN_VIEN_PHONG_BAN")
+  other_NHAN_VIEN_PHONG_BAN EmployeesOfDepartment[]  @relation("NHAN_VIEN_PHONG_BANToNHAN_VIEN_PHONG_BAN")
+  department                 Department?             @relation(fields: [ID_PB], references: [ID_PB], onDelete: NoAction, onUpdate: NoAction, map: "FK_NHAN_VIE_RELATIONS_PHONG_BA") @map("PHONG_BAN")
+
+  @@index([ID_NV], map: "RELATIONSHIP_3_FK")
+  @@index([ID_PB], map: "RELATIONSHIP_4_FK")
+  @@index([NHA_ID_NVPB__], map: "RELATIONSHIP_TP_FK")
+  @@map("NHAN_VIEN_PHONG_BAN")
+}
+
+model PermissionWorksOfEmployee {
+  ID_NVQDV           String              @id(clustered: false, map: "PK_NHAN_VIEN_QUYEN_DAU_VIEC") @db.Char(31)
+  ID_NVDV            String?             @db.Char(31)
+  ID_QDV             String?             @db.Char(31)
+  GHI_CHU_NVQDV      String?             @db.VarChar(511)
+  worksOfEmployee WorksOfEmployee? @relation(fields: [ID_NVDV], references: [ID_NVDV], onDelete: NoAction, onUpdate: NoAction, map: "FK_NHAN_VIE_RELATIONS_NHAN_VIE") @map("NHAN_VIEN_DAU_VIEC")
+  permissionsWork     PermissionsWork?     @relation(fields: [ID_QDV], references: [ID_QDV], onDelete: NoAction, onUpdate: NoAction, map: "FK_NHAN_VIE_RELATIONS_QUYEN_DA") @map("QUYEN_DAU_VIEC")
+
+  @@index([ID_NVDV], map: "RELATIONSHIP_76_FK")
+  @@index([ID_QDV], map: "RELATIONSHIP_77_FK")
+  @@map("NHAN_VIEN_QUYEN_DAU_VIEC")
+}
+
+model PermissionProjectOfEmployee {
+  id      String       @id(clustered: false, map: "PK_NHAN_VIEN_QUYEN_DU_AN") @db.Char(31) @map("ID_NVQDA")
+  idPermissionProject        String?      @db.Char(31) @map("ID_QDA")
+  idEmployee         String?      @db.VarChar(31) @map("ID_NV")
+  note String?      @db.VarChar(511) @map("GHI_CHU_NVQDA")
+  employee     Employee? @map("NHAN_VIEN")   @relation(fields: [ID_NV], references: [ID_NV], onDelete: NoAction, onUpdate: NoAction, map: "FK_NHAN_VIE_RELATIONS_NHAN_VIE9")
+  permissionsProject   PermissionsProject? @map("QUYEN_DU_AN") @relation(fields: [ID_QDA], references: [ID_QDA], onDelete: NoAction, onUpdate: NoAction, map: "FK_NHAN_VIE_RELATIONS_QUYEN_DU")
+
+  @@index([ID_NV], map: "RELATIONSHIP_74_FK")
+  @@index([ID_QDA], map: "RELATIONSHIP_75_FK")
+  @@map("NHAN_VIEN_QUYEN_DU_AN")
+}
+
+model Department {
+  id               String                @id(clustered: false, map: "PK_PHONG_BAN") @db.VarChar(31) @map("ID_PB")
+  name              String?               @db.VarChar(127) @map("TEN_PB")
+  phone       String?               @db.VarChar(23) @map("DIEN_THOAI_PB")
+  note          String?               @db.VarChar(255) @map("GHI_CHU_PB")
+  projects     DepartmentOfProject[] @map("DU_AN_PHONG_BAN")
+  employee EmployeesOfDepartment[] @map("NHAN_VIEN_PHONG_BAN")
+
+  @@map("PHONG_BAN")
+}
+
+model Permission {
+  id      String          @id(clustered: false, map: "PK_QUYEN") @db.Char(31) @map("ID_QUYEN")
+  name     String          @db.VarChar(255) @map("TEN_QUYEN")
+  note String?         @db.VarChar(511) @map("GHI_CHU_QUYEN")
+  permissionsPermission PermissionsPosition[] @map("QUYEN_CHUC_VU")
+
+  @@map("QUYEN")
+}
+
+model PermissionsPosition {
+  id           String             @id(clustered: false, map: "PK_QUYEN_CHUC_VU") @db.Char(31) @map("ID_QCHV")
+  idEmployee           String?            @db.Char(31) @map("ID_NVCV")
+  idPermission          String?            @db.Char(31) @map("ID_QUYEN")
+  note      String?            @db.VarChar(511) @map("GHI_CHU_QCHV")
+  positionsOfEmployee PositionsOfEmployee? @relation(fields: [ID_NVCV], references: [ID_NVCV], onDelete: NoAction, onUpdate: NoAction, map: "FK_QUYEN_CH_RELATIONS_NHAN_VIE") @map("NHAN_VIEN_CHUC_VU")
+  permission             Permission?             @relation(fields: [ID_QUYEN], references: [ID_QUYEN], onDelete: NoAction, onUpdate: NoAction, map: "FK_QUYEN_CH_RELATIONS_QUYEN") @map("QUYEN")
+
+  @@index([ID_QUYEN], map: "RELATIONSHIP_72_FK")
+  @@index([ID_NVCV], map: "RELATIONSHIP_73_FK")
+  @@map("QUYEN_CHUC_VU")
+}
+
+model PermissionsWork {
+  id                   String                     @id(clustered: false, map: "PK_QUYEN_DAU_VIEC") @db.Char(31) @map("ID_QDV")
+  name                  String                     @db.VarChar(255) @map("TEN_QDV")
+  note              String?                    @db.VarChar(511) @map("GHI_CHU_QDV")
+  worksOfEmployees WorksOfEmployee[] @map("NHAN_VIEN_QUYEN_DAU_VIEC")
+  @@map("QUYEN_DAU_VIEC")
+}
+
+model PermissionsProject {
+  id                String                  @id(clustered: false, map: "PK_QUYEN_DU_AN") @db.Char(31) @map("ID_QDA")
+  name               String                  @db.VarChar(255) @map("TEN_QDA")
+  note           String?                 @db.VarChar(511) @map("GHI_CHU_QDA")
+  permissionProjectOfEmployees PermissionProjectOfEmployee[] @map("NHAN_VIEN_QUYEN_DU_AN")
+
+  @@map("QUYEN_DU_AN")
+}
+
+model Account {
+  username            String                @id(clustered: false, map: "PK_TAI_KHOAN") @db.VarChar(255) @map("USERNAME")
+  password            String                @db.Char(255) @map("MAT_KHAU")
+  isActive        Bytes?                @db.Binary(1) @map("IS_ACTIVE_TK")
+  employees AccountEmployee[] @map("TAI_KHOAN_NHAN_VIEN")
+
+  @@map("TAI_KHOAN")
+}
+
+model AccountEmployee {
+  id       String     @id(clustered: false, map: "PK_TAI_KHOAN_NHAN_VIEN") @db.Char(31) @map("ID_TKNV")
+  idEmployee         String?    @db.VarChar(31) @map("ID_NV")
+  username      String?    @db.VarChar(255) @map("USERNAME")
+  createdDate DateTime   @db.DateTime @map("NGAY_TAO_TKNV")
+  employee     Employee? @relation(fields: [ID_NV], references: [ID_NV], onDelete: NoAction, onUpdate: NoAction, map: "FK_TAI_KHOA_RELATIONS_NHAN_VIE") @map("NHAN_VIEN")
+  account     Account? @relation(fields: [USERNAME], references: [USERNAME], onDelete: NoAction, onUpdate: NoAction, map: "FK_TAI_KHOA_RELATIONS_TAI_KHOA") @map("TAI_KHOAN")
+
+  @@index([USERNAME], map: "RELATIONSHIP_51_FK")
+  @@index([ID_NV], map: "RELATIONSHIP_52_FK")
+  @@map("TAI_KHOAN_NHAN_VIEN")
+}
+
+model City {
+  id      String      @id(clustered: false, map: "PK_THANH_PHO") @db.Char(31) @map("ID_TP")
+  idProvince    String?     @db.Char(31) @map("ID_TINH")
+  code    Int @map("CODE_TP")
+  name     String      @db.VarChar(255) @map("TEN_TP")
+  note String?     @db.VarChar(511) @map("GHI_CHU_TP")
+  employee  Employee[] @map("NHAN_VIEN")
+  province       Province?       @relation(fields: [ID_TINH], references: [ID_TINH], onDelete: NoAction, onUpdate: NoAction, map: "FK_THANH_PH_RELATIONS_TINH") @map("TINH")
+
+  @@index([ID_TINH], map: "RELATIONSHIP_48_FK")
+@@map("THANH_PHO")
+}
+
+
+model RatioOfTransform {
+  id                                                            String              @id(clustered: false, map: "PK_TI_LE_QUY_DOI") @db.Char(31) @map("ID_TLQD")
+  idSupplyUnit                                                            String?             @db.Char(31) @map("ID_VTDV")
+  idIngredientUnit                                                            String?             @db.Char(31) @map("ID_NLDV")
+  idToolUnit                                                            String?             @db.Char(31) @map("ID_CCDV")
+  VAT_ID_VTDV__                                                      String?             @db.Char(31)
+  CON_ID_CCDV__                                                      String?             @db.Char(31)
+  NGU_ID_NLDV__                                                      String?             @db.Char(31)
+  ratio                                                              Decimal             @db.Decimal(10, 3) @map("TI_LE")
+  note                                                       String?             @db.VarChar(511) @map("GHI_CHU_TLQD")
+  toolUnit         ToolUnit?     @relation("TI_LE_QUY_DOI_CON_ID_CCDV__ToCONG_CU_DON_VI", fields: [CON_ID_CCDV__], references: [ID_CCDV], onDelete: NoAction, onUpdate: NoAction, map: "FK_TI_LE_QU_RELATIONS_CONG_CU_") @map("CONG_CU_DON_VI_TI_LE_QUY_DOI_CON_ID_CCDV__ToCONG_CU_DON_VI")
+  toolUnit2               ToolUnit?     @relation("TI_LE_QUY_DOI_ID_CCDVToCONG_CU_DON_VI", fields: [ID_CCDV], references: [ID_CCDV], onDelete: NoAction, onUpdate: NoAction, map: "FK_TI_LE_QU_RELATIONS_CONG_CU_2") @map("CONG_CU_DON_VI_TI_LE_QUY_DOI_ID_CCDVToCONG_CU_DON_VI")
+  ingredientUnit IngredientUnit? @relation("TI_LE_QUY_DOI_NGU_ID_NLDV__ToNGUYEN_LIEU_DON_VI", fields: [NGU_ID_NLDV__], references: [ID_NLDV], onDelete: NoAction, onUpdate: NoAction, map: "FK_TI_LE_QU_RELATIONS_NGUYEN_L") @map("NGUYEN_LIEU_DON_VI_TI_LE_QUY_DOI_NGU_ID_NLDV__ToNGUYEN_LIEU_DON_VI")
+  ingredientUnit2       IngredientUnit? @relation("TI_LE_QUY_DOI_ID_NLDVToNGUYEN_LIEU_DON_VI", fields: [ID_NLDV], references: [ID_NLDV], onDelete: NoAction, onUpdate: NoAction, map: "FK_TI_LE_QU_RELATIONS_NGUYEN_L2") @map("NGUYEN_LIEU_DON_VI_TI_LE_QUY_DOI_ID_NLDVToNGUYEN_LIEU_DON_VI")
+  supplyUnit           SupplyUnit?      @relation("TI_LE_QUY_DOI_VAT_ID_VTDV__ToVAT_TU_DON_VI", fields: [VAT_ID_VTDV__], references: [ID_VTDV], onDelete: NoAction, onUpdate: NoAction, map: "FK_TI_LE_QU_RELATIONS_VAT_TU_D") @map("VAT_TU_DON_VI_TI_LE_QUY_DOI_VAT_ID_VTDV__ToVAT_TU_DON_VI")
+  supplyUnit2                 SupplyUnit?      @relation("TI_LE_QUY_DOI_ID_VTDVToVAT_TU_DON_VI", fields: [ID_VTDV], references: [ID_VTDV], onDelete: NoAction, onUpdate: NoAction, map: "FK_TI_LE_QU_RELATIONS_VAT_TU_D2") @map("VAT_TU_DON_VI_TI_LE_QUY_DOI_ID_VTDVToVAT_TU_DON_VI")
+  @@index([ID_CCDV], map: "RELATIONSHIP_41_FK")
+  @@index([CON_ID_CCDV__], map: "RELATIONSHIP_42_FK")
+  @@index([ID_VTDV], map: "RELATIONSHIP_43_FK")
+  @@index([VAT_ID_VTDV__], map: "RELATIONSHIP_44_FK")
+  @@index([ID_NLDV], map: "RELATIONSHIP_45_FK")
+  @@index([NGU_ID_NLDV__], map: "RELATIONSHIP_46_FK")
+  @@map("TI_LE_QUY_DOI")
+}
+
+model Province {
+  id      String      @id(clustered: false, map: "PK_TINH") @db.Char(31) @map("ID_TINH")
+  code    Int @map("CODE_TINH")
+  name     String      @db.VarChar(255) @map("TEN_TINH")
+  note String?     @db.VarChar(511) @map("GHI_CHU_TINH")
+  district        District[] @map("HUYEN")
+  city    City[] @map("THANH_PHO")
+  @@map("TINH")
+}
+
+model Supply {
+  id               String                @id(clustered: false, map: "PK_VAT_TU") @db.Char(31) @map("ID_VT")
+  name              String                @db.VarChar(255) @map("TEN_VT")
+  amount               Int @map("SL_VL")
+  note          String?               @db.VarChar(511) @map("GHI_CHU_VT")
+  isActive        Bytes                 @db.Binary(1) @map("IS_ACTIVE_VT")
+  proposeSupplies      ProposeSupplies[] @map("DE_XUAT_VAT_TU")
+  supplySuppliers SupplySupplier[] @map("NHA_CUNG_CAP_VAT_TU")
+  supplyUnits       SupplyUnit[] @map("VAT_TU_DON_VI")
+  @@map("VAT_TU")
+}
+
+model SupplyUnit {
+  id                                                  String          @id(clustered: false, map: "PK_VAT_TU_DON_VI") @db.Char(31) @map("ID_VTDV")
+  idUnit                                                    String?         @db.Char(31) @map("ID_DV")
+  idSupply                                                    String?         @db.Char(31) @map("ID_VT")
+  isActive                                           Bytes           @db.Binary(1) @map("IS_ACTIVE_VTDV")
+  TI_LE_QUY_DOI_TI_LE_QUY_DOI_VAT_ID_VTDV__ToVAT_TU_DON_VI RatioOfTransform[] @relation("TI_LE_QUY_DOI_VAT_ID_VTDV__ToVAT_TU_DON_VI")
+  TI_LE_QUY_DOI_TI_LE_QUY_DOI_ID_VTDVToVAT_TU_DON_VI       RatioOfTransform[] @relation("TI_LE_QUY_DOI_ID_VTDVToVAT_TU_DON_VI")
+  unit                                                   Unit?         @relation(fields: [ID_DV], references: [ID_DV], onDelete: NoAction, onUpdate: NoAction, map: "FK_VAT_TU_D_RELATIONS_DON_VI") @map("DON_VI")
+  supply                                                   Supply?         @relation(fields: [ID_VT], references: [ID_VT], onDelete: NoAction, onUpdate: NoAction, map: "FK_VAT_TU_D_RELATIONS_VAT_TU") @map("VAT_TU")
+
+  @@index([ID_DV], map: "RELATIONSHIP_37_FK")
+  @@index([ID_VT], map: "RELATIONSHIP_38_FK")
+  @@map("VAT_TU_DON_VI")
+}
