@@ -1,13 +1,18 @@
 import express from "express";
-import todoRouter from "./routes/todo";
 import router from "./routes";
 import bodyParser from "body-parser";
+import dotenv from "dotenv";
+import cookieParser from "cookie-parser";
+import cors from "cors";
+
+dotenv.config();
 
 const app = express();
 
+app.use(cors({ credentials: true }));
+app.use(cookieParser());
 app.use(bodyParser.urlencoded({ extended: false }));
 
-// parse application/json
 app.use(bodyParser.json());
 
 app.get("/health", (_, res) => {

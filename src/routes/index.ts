@@ -7,6 +7,7 @@ import departmentRouter from "./department";
 import positionRouter from "./position";
 import resourceRouter from "./resource";
 import statisticRouter from "./statistic";
+// import { verifyToken } from "../middlewares/authorization";
 
 const router = Router();
 
