@@ -42,7 +42,7 @@ model Tool {
   name             String            @map("TEN_CC") @db.VarChar(255)
   amount           Int               @map("SL_CC")
   note             String?           @map("GHI_CHU_CC") @db.VarChar(511)
-  isActive         Bytes             @map("IS_ACTIVE_CC") @db.Binary(1)
+  isActive         Boolean             @map("IS_ACTIVE_CC") @db.Bit() @default(true)
   units            ToolUnit[]
   proposes         ProposeTool[]
   projectResources ProjectResource[]
@@ -55,7 +55,7 @@ model ToolUnit {
   id                                                        String             @id(clustered: false, map: "PK_CONG_CU_DON_VI") @map("ID_CCDV") @db.Char(31)
   idUnit                                                    String?            @map("ID_DV") @db.Char(31)
   idTool                                                    String?            @map("ID_CC") @db.Char(31)
-  isActive                                                  Bytes              @map("IS_ACTIVE_CCDV") @db.Binary(1)
+  isActive                                                  Boolean              @map("IS_ACTIVE_CCDV") @db.Bit() @default(true)
   tool                                                      Tool?              @relation(fields: [idTool], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_CONG_CU__RELATIONS_CONG_CU")
   unit                                                      Unit?              @relation(fields: [idUnit], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_CONG_CU__RELATIONS_DON_VI")
   TI_LE_QUY_DOI_TI_LE_QUY_DOI_CON_ID_CCDV__ToCONG_CU_DON_VI RatioOfTransform[] @relation("TI_LE_QUY_DOI_CON_ID_CCDV__ToCONG_CU_DON_VI")
@@ -70,7 +70,7 @@ model Task {
   id              String           @id(clustered: false, map: "PK_CONG_VIEC") @map("ID_CV") @db.Char(31)
   name            String           @map("TEN_CV") @db.VarChar(255)
   note            String?          @map("GHI_CHU_CV") @db.VarChar(511)
-  isActive        Bytes            @map("IS_ACTIVE_CV") @db.Binary(1)
+  isActive        Boolean            @map("IS_ACTIVE_CV") @db.Bit() @default(true)
   resourceOfTasks ResourceOfTask[]
   works           TasksOfWork[]
   history         HistoryOfTask[]
@@ -186,7 +186,7 @@ model Unit {
   id              String           @id(clustered: false, map: "PK_DON_VI") @map("ID_DV") @db.Char(31)
   name            String           @map("TEN_DV") @db.VarChar(255)
   note            String?          @map("GHI_CHU_DV") @db.VarChar(511)
-  isActive        Bytes            @map("IS_ACTIVE_DV") @db.Binary(1)
+  isActive        Boolean            @map("IS_ACTIVE_DV") @db.Bit() @default(true)
   toolUnits       ToolUnit[]
   ingredientUnits IngredientUnit[]
   supplyUnits     SupplyUnit[]
@@ -350,7 +350,7 @@ model Ingredient {
   name               String               @map("TEN_NL") @db.VarChar(255)
   amount             Int                  @map("SL_NL")
   note               String?              @map("GHI_CHU_NL") @db.VarChar(511)
-  isActive           Bytes                @map("IS_ACTIVE_NL") @db.Binary(1)
+  isActive           Boolean                @map("IS_ACTIVE_NL") @db.Bit() @default(true)
   proposeIngredients ProposeIngredient[]
   projectResources   ProjectResource[]
   ingredientunits    IngredientUnit[]
@@ -363,7 +363,7 @@ model IngredientUnit {
   id                                                            String             @id(clustered: false, map: "PK_NGUYEN_LIEU_DON_VI") @map("ID_NLDV") @db.Char(31)
   idIngredient                                                  String?            @map("ID_NL") @db.Char(31)
   idUnit                                                        String?            @map("ID_DV") @db.Char(31)
-  isActive                                                      Bytes              @map("IS_ACTIVE_NLDV") @db.Binary(1)
+  isActive                                                      Boolean              @map("IS_ACTIVE_NLDV") @db.Bit() @default(true)
   unit                                                          Unit?              @relation(fields: [idUnit], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_NGUYEN_L_RELATIONS_DON_VI")
   ingredient                                                    Ingredient?        @relation(fields: [idIngredient], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_NGUYEN_L_RELATIONS_NGUYEN_L")
   TI_LE_QUY_DOI_TI_LE_QUY_DOI_NGU_ID_NLDV__ToNGUYEN_LIEU_DON_VI RatioOfTransform[] @relation("TI_LE_QUY_DOI_NGU_ID_NLDV__ToNGUYEN_LIEU_DON_VI")
@@ -436,7 +436,7 @@ model Employee {
   note                                                   String?                      @map("GHI_CHU_NV") @db.VarChar(511)
   gender                                                 String                       @map("GIOI_TINH_NV") @db.VarChar(5)
   email                                                  String?                      @map("EMAIL_NV") @db.VarChar(255)
-  isActive                                               Bytes                        @map("IS_ACTIVE_NV") @db.Binary(1)
+  isActive                                               Boolean                        @map("IS_ACTIVE_NV") @db.Bit() @default(true)
   proposeProject                                         ProposeProject[]
   DUYET_NHAN_VIEN_DUYET_NHAN_VIEN_ID_NVToNHAN_VIEN       ReviewingEmployee[]          @relation("DUYET_NHAN_VIEN_ID_NVToNHAN_VIEN")
   DUYET_NHAN_VIEN_DUYET_NHAN_VIEN_NHA_ID_NV__ToNHAN_VIEN ReviewingEmployee[]          @relation("DUYET_NHAN_VIEN_NHA_ID_NV__ToNHAN_VIEN")
@@ -661,7 +661,7 @@ model PermissionsProject {
 model Account {
   username  String            @id(clustered: false, map: "PK_TAI_KHOAN") @map("USERNAME") @db.VarChar(255)
   password  String            @map("MAT_KHAU") @db.Char(255)
-  isActive  Bytes?            @map("IS_ACTIVE_TK") @db.Binary(1)
+  isActive  Boolean            @map("IS_ACTIVE_TK") @db.Bit() @default(true)
   employees AccountEmployee[]
 
   @@map("TAI_KHOAN")
@@ -735,7 +735,7 @@ model Supply {
   name             String            @map("TEN_VT") @db.VarChar(255)
   amount           Int               @map("SL_VL")
   note             String?           @map("GHI_CHU_VT") @db.VarChar(511)
-  isActive         Bytes             @map("IS_ACTIVE_VT") @db.Binary(1)
+  isActive         Boolean             @map("IS_ACTIVE_VT") @db.Bit() @default(true)
   proposeSupplies  ProposeSupplies[]
   projectResources ProjectResource[]
   supplySuppliers  SupplySupplier[]
@@ -748,7 +748,7 @@ model SupplyUnit {
   id                                                       String             @id(clustered: false, map: "PK_VAT_TU_DON_VI") @map("ID_VTDV") @db.Char(31)
   idUnit                                                   String?            @map("ID_DV") @db.Char(31)
   idSupply                                                 String?            @map("ID_VT") @db.Char(31)
-  isActive                                                 Bytes              @map("IS_ACTIVE_VTDV") @db.Binary(1)
+  isActive                                                 Boolean              @map("IS_ACTIVE_VTDV") @db.Bit() @default(true)
   TI_LE_QUY_DOI_TI_LE_QUY_DOI_VAT_ID_VTDV__ToVAT_TU_DON_VI RatioOfTransform[] @relation("TI_LE_QUY_DOI_VAT_ID_VTDV__ToVAT_TU_DON_VI")
   TI_LE_QUY_DOI_TI_LE_QUY_DOI_ID_VTDVToVAT_TU_DON_VI       RatioOfTransform[] @relation("TI_LE_QUY_DOI_ID_VTDVToVAT_TU_DON_VI")
   unit                                                     Unit?              @relation(fields: [idUnit], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_VAT_TU_D_RELATIONS_DON_VI")
