@@ -4,6 +4,7 @@ import { generateId } from "../utils/generate-id";
 import { Response } from "express";
 import { isEmpty } from "lodash";
 
+const PREFIX_KEY = "EMPL";
 const prismaClient = new PrismaClient();
 
 export const getList = async (req: IEmployeeRequest, res: any) => {
@@ -103,7 +104,7 @@ export const update = async (req: IEmployeeRequest, res: Response) => {
 
 	try {
 		if (!id || isEmpty(bodyData)) {
-			return res.status(422).send();
+			return res.status(422).json("invalid parameters");
 		}
 		const employee = await prismaClient.employee.findUnique({
 			where: {
@@ -138,7 +139,7 @@ export const addNew = async (req: IEmployeeRequest, res: Response) => {
 		const employee = await prismaClient.employee.create({
 			data: {
 				...(req.body as Employee),
-				id: generateId("EMPL"),
+				id: generateId(PREFIX_KEY),
 				birthday: req.body?.birthday
 					? new Date(req.body.birthday).toISOString()
 					: null,
@@ -155,20 +156,36 @@ export const getDetail = async (req: IEmployeeRequest, res: Response) => {
 	const { id } = req.params;
 	try {
 		if (!id) {
-			return res.status(422);
+			return res.status(422).json("invalid parameters");
 		}
 		const employee = await prismaClient.employee.findFirst({
 			where: {
 				id,
 			},
 			include: {
-				departments: true,
-				certificates: true,
-				qualitifications: true,
-				projects: true,
+				departments: {
+					include: {
+						department: true,
+					},
+				},
+				certificates: {
+					include: {
+						certification: true,
+					},
+				},
+				qualifications: {
+					include: {
+						qualification: true,
+					},
+				},
+				projects: {
+					include: {
+						project: true,
+					},
+				},
 				ward: {
 					include: {
-						ditrict: {
+						district: {
 							include: {
 								province: true,
 							},
