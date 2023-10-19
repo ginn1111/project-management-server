@@ -23,6 +23,9 @@ export const getListByEmployee = async (
 				include: {
 					department: true,
 				},
+				orderBy: {
+					startDate: "desc",
+				},
 			});
 		return res.json(departmentOfEmployee);
 	} catch (error) {
