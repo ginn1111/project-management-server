@@ -1,5 +1,5 @@
 import { faker } from "@faker-js/faker";
-import { Certificate, PrismaClient } from "@prisma/client";
+import { PrismaClient } from "@prisma/client";
 import { Response, Router } from "express";
 import { addNew, getDetail, getList, update } from "../controllers/certificate";
 import { generateId } from "../utils/generate-id";
@@ -7,7 +7,7 @@ import { generateId } from "../utils/generate-id";
 const prismaClient = new PrismaClient();
 const certificateRouter = Router();
 
-certificateRouter.get("/", getList);
+certificateRouter.get("/:id/employee", getList);
 certificateRouter.get("/:id", getDetail);
 certificateRouter.post("/add", addNew);
 certificateRouter.patch("/:id/update", update);

@@ -13,7 +13,7 @@ import { generateId } from "../utils/generate-id";
 const prismaClient = new PrismaClient();
 const qualificationRouter = Router();
 
-qualificationRouter.get("/", getList);
+qualificationRouter.get("/:id/employee", getList);
 qualificationRouter.get("/:id", getDetail);
 qualificationRouter.post("/add", addNew);
 qualificationRouter.patch("/:id/update", update);

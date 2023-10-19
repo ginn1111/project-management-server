@@ -8,50 +8,21 @@ const PREFIX_KEY = "QUAL";
 const prismaClient = new PrismaClient();
 
 export const getList = async (req: IQualificationRequest, res: Response) => {
-	let { page, limit, search = "" } = req.query ?? {};
-	const _page = !isNaN(page as unknown as number) ? parseInt(page!) : 0;
-	const _limit = !isNaN(limit as any) ? parseInt(limit!) : 10;
-
-	const totalItems = await prismaClient.qualification.count({
+	const { id } = req.params;
+	const qualifications = await prismaClient.qualificationsOfEmployee.findMany({
 		where: {
-			OR: [
+			AND: [
 				{
-					name: {
-						endsWith: search,
-					},
-				},
-				{
-					name: {
-						startsWith: search,
-					},
-				},
-			],
-		},
-	});
-
-	const qualifications = await prismaClient.qualification.findMany({
-		take: _limit,
-		skip: _page * _limit,
-		where: {
-			OR: [
-				{
-					name: {
-						endsWith: search,
-					},
-				},
-				{
-					name: {
-						startsWith: search,
-					},
+					idEmployee: id,
 				},
 			],
 		},
 		include: {
-			qualificationsOfEmployee: true,
-			rolesOfEmployee: true,
+			qualification: true,
 		},
 	});
-	return res.status(200).json({ qualifications, totalItems });
+
+	return res.status(200).json(qualifications);
 };
 
 export const update = async (req: IQualificationRequest, res: Response) => {

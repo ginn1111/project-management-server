@@ -8,49 +8,17 @@ const PREFIX_KEY = "CERT";
 const prismaClient = new PrismaClient();
 
 export const getList = async (req: ICertificateRequest, res: Response) => {
-	let { page, limit, search = "" } = req.query ?? {};
-	const _page = !isNaN(page as unknown as number) ? parseInt(page!) : 0;
-	const _limit = !isNaN(limit as any) ? parseInt(limit!) : 10;
+	const { id } = req.params;
 
-	const totalItems = await prismaClient.certificate.count({
-		where: {
-			OR: [
-				{
-					name: {
-						endsWith: search,
-					},
-				},
-				{
-					name: {
-						startsWith: search,
-					},
-				},
-			],
-		},
-	});
-
-	const certificates = await prismaClient.certificate.findMany({
-		take: _limit,
-		skip: _page * _limit,
+	const certificates = await prismaClient.certificationsOfEmployee.findMany({
 		include: {
-			certificatesOfEmployee: true,
+			certification: true,
 		},
 		where: {
-			OR: [
-				{
-					name: {
-						endsWith: search,
-					},
-				},
-				{
-					name: {
-						startsWith: search,
-					},
-				},
-			],
+			idEmployee: id,
 		},
 	});
-	return res.status(200).json({ certificates, totalItems });
+	return res.status(200).json(certificates);
 };
 
 export const update = async (req: ICertificateRequest, res: Response) => {
