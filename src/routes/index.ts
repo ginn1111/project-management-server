@@ -12,6 +12,8 @@ import positionRouter from "./position";
 import projectRouter from "./project";
 import resourceRouter from "./resource";
 import statisticRouter from "./statistic";
+import certificateRouter from "./certificate";
+import qualificationRouter from "./qualification";
 // import { verifyToken } from "../middlewares/authorization";
 
 const router = Router();
@@ -19,6 +21,8 @@ const router = Router();
 router.use("/project", projectRouter);
 router.use("/account", accountRouter);
 router.use("/department", departmentRouter);
+router.use("/certificate", certificateRouter);
+router.use("/qualification", qualificationRouter);
 router.use("/employee", employeeRoute);
 router.use("/position", positionRouter);
 router.use("/resource", resourceRouter);
