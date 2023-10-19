@@ -612,8 +612,9 @@ model Department {
   name     String?                 @map("TEN_PB") @db.NVarChar(127)
   phone    String?                 @map("DIEN_THOAI_PB") @db.NVarChar(23)
   note     String?                 @map("GHI_CHU_PB") @db.NVarChar(255)
-  projects DepartmentOfProject[]
-  employee EmployeesOfDepartment[]
+  isActive Boolean  @map("IS_ACTIVE_PB") @db.Bit() @default(true)
+  projectsOfDepartment DepartmentOfProject[]
+  employeesOfDepartment EmployeesOfDepartment[]
 
   @@map("PHONG_BAN")
 }
