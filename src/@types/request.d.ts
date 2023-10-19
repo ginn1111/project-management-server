@@ -3,6 +3,7 @@ import {
 	Department,
 	Employee,
 	Qualification,
+	QualificationsOfEmployee,
 } from "@prisma/client";
 import { Request } from "express";
 
@@ -16,9 +17,9 @@ interface ICertificateRequest<T = any> extends Request {
 	body?: Partial<Certificate> & T;
 }
 
-interface IQualificationRequest extends Request {
+interface IQualificationRequest<T = any> extends Request {
 	query?: QueryParams;
-	body?: Partial<Qualification>;
+	body?: Partial<Qualification & QualificationsOfEmployee> & any;
 }
 interface IDepartmentRequest extends Request {
 	query?: QueryParams;
