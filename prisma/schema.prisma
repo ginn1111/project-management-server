@@ -235,7 +235,7 @@ model DepartmentOfProject {
   startDate    DateTime    @map("NGAY_THAM_GIA_DA_PB") @db.DateTime
   endDate      DateTime?   @map("NGAY_KET_THUC_DA_PB") @db.DateTime
   note         String?     @map("GHI_CHU_DA_PB") @db.NVarChar(511)
-  amount        Int?
+  amount       Int?
   project      Project?    @relation(fields: [idProject], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_DU_AN_PH_RELATIONS_DU_AN")
   department   Department? @relation(fields: [idDepartment], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_DU_AN_PH_RELATIONS_PHONG_BA")
 
@@ -268,7 +268,8 @@ model District {
   code       Int       @map("CODE_HUYEN")
   name       String    @map("TEN_HUYEN") @db.NVarChar(255)
   province   Province? @relation(fields: [idProvince], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_HUYEN_RELATIONS_TINH")
-  ward         Ward[]
+  ward       Ward[]
+  employees Employee[]
 
   @@index([idProvince], map: "RELATIONSHIP_47_FK")
   @@map("HUYEN")
@@ -427,10 +428,14 @@ model SupplySupplier {
 
 model Employee {
   id                                                     String                       @id(clustered: false, map: "PK_NHAN_VIEN") @map("ID_NV") @db.Char(31)
-  idWard                                                  String?                      @db.Char(31)
+  idWard                                                 String?                      @map("ID_XA") @db.Char(31)
+  idDistrict                                             String?                      @map("ID_HUYEN") @db.Char(31)
+  idProvince                                             String?                      @map("ID_TINH") @db.Char(31)
+  identifyNumber                                         String?                      @map("CCCD") @db.VarChar(20)
   fullName                                               String?                      @map("HO_TEN_NV") @db.NVarChar(127)
   address                                                String?                      @map("DIA_CHI_NV") @db.NVarChar(127)
   phone                                                  String?                      @map("DIEN_THOAI_NV") @db.NVarChar(23)
+  birthday                                               DateTime?                    @map("NGAY_SINH") @db.Date()
   note                                                   String?                      @map("GHI_CHU_NV") @db.NVarChar(511)
   gender                                                 String                       @map("GIOI_TINH_NV") @db.NVarChar(5)
   email                                                  String?                      @map("EMAIL_NV") @db.NVarChar(255)
@@ -438,7 +443,8 @@ model Employee {
   proposeProject                                         ProposeProject[]
   DUYET_NHAN_VIEN_DUYET_NHAN_VIEN_ID_NVToNHAN_VIEN       ReviewingEmployee[]          @relation("DUYET_NHAN_VIEN_ID_NVToNHAN_VIEN")
   DUYET_NHAN_VIEN_DUYET_NHAN_VIEN_NHA_ID_NV__ToNHAN_VIEN ReviewingEmployee[]          @relation("DUYET_NHAN_VIEN_NHA_ID_NV__ToNHAN_VIEN")
-  ward                                                     Ward?                        @relation(fields: [idWard], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_NHAN_VIEN_XA")
+  ward                                                   Ward?                        @relation(fields: [idWard], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_NHAN_VIEN_XA")
+  district District? @relation(fields: [idDistrict], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_NHAN_VIEN_HUYEN")
   qualitifications                                       QualitificationsOfEmployee[]
   positions                                              PositionsOfEmployee[]
   certificates                                           CertificationsOfEmployee[]
@@ -770,12 +776,12 @@ model ResourceOfTask {
 }
 
 model Ward {
-  id        String     @id(map: "PK_XA") @map("ID_XA") @db.Char(31)
-  code      Int        @map("CODE_XA")
-  name      String     @map("TEN_XA") @db.NVarChar(127)
-  idDistrict  String?    @db.Char(31) @map("ID_HUYEN")
-  employees Employee[]
-  ditrict     District?  @relation(fields: [idDistrict], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_XA_HUYEN")
+  id         String     @id(map: "PK_XA") @map("ID_XA") @db.Char(31)
+  code       Int        @map("CODE_XA")
+  name       String     @map("TEN_XA") @db.NVarChar(127)
+  idDistrict String?    @map("ID_HUYEN") @db.Char(31)
+  employees  Employee[]
+  ditrict    District?  @relation(fields: [idDistrict], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_XA_HUYEN")
 
   @@map("XA")
 }

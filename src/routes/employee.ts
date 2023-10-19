@@ -18,6 +18,7 @@ employeeRouter.get("/:id", getDetail);
 employeeRouter.post("/add", addNew);
 employeeRouter.delete("/:id/remove", remove);
 employeeRouter.patch("/:id/update", update);
+
 employeeRouter.post("/random-emp", async (_, res: Response) => {
 	const randomEmpList = Array(20)
 		.fill(0)

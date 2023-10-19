@@ -7,22 +7,99 @@ import { isEmpty } from "lodash";
 const prismaClient = new PrismaClient();
 
 export const getList = async (req: IEmployeeRequest, res: any) => {
-	const { page, limit } = req.query ?? {};
-	const _page = page ? parseInt(page!) : 0;
-	const _limit = limit ? parseInt(limit!) : 10;
+	let { page, limit, search = "" } = req.query ?? {};
+	const _page = !isNaN(page as unknown as number) ? parseInt(page!) : 0;
+	const _limit = !isNaN(limit as any) ? parseInt(limit!) : 10;
 
-	const employees = await prismaClient.employee.findMany({
-		take: _limit,
-		skip: _page * _limit,
+	const totalItems = await prismaClient.employee.count({
+		where: {
+			AND: [{ isActive: true }],
+			OR: [
+				{
+					fullName: {
+						endsWith: search,
+					},
+				},
+				{
+					fullName: {
+						startsWith: search,
+					},
+				},
+				{
+					identifyNumber: {
+						endsWith: search,
+					},
+				},
+				{
+					identifyNumber: {
+						startsWith: search,
+					},
+				},
+				{
+					phone: {
+						endsWith: search,
+					},
+				},
+				{
+					phone: {
+						startsWith: search,
+					},
+				},
+			],
+		},
 		orderBy: {
 			fullName: "desc",
 		},
 	});
-	return res.status(200).json(employees);
+
+	const employees = await prismaClient.employee.findMany({
+		take: _limit,
+		skip: _page * _limit,
+		where: {
+			AND: [{ isActive: true }],
+			OR: [
+				{
+					fullName: {
+						endsWith: search,
+					},
+				},
+				{
+					fullName: {
+						startsWith: search,
+					},
+				},
+				{
+					identifyNumber: {
+						endsWith: search,
+					},
+				},
+				{
+					identifyNumber: {
+						startsWith: search,
+					},
+				},
+				{
+					phone: {
+						endsWith: search,
+					},
+				},
+				{
+					phone: {
+						startsWith: search,
+					},
+				},
+			],
+		},
+		orderBy: {
+			fullName: "desc",
+		},
+	});
+	return res.status(200).json({ employees, totalItems });
 };
 export const update = async (req: IEmployeeRequest, res: Response) => {
 	const { id } = req.params;
 	const bodyData = req.body;
+	console.log(bodyData);
 
 	try {
 		if (!id || isEmpty(bodyData)) {
@@ -35,9 +112,16 @@ export const update = async (req: IEmployeeRequest, res: Response) => {
 		});
 
 		if (!isEmpty(employee)) {
-			const { id, ..._updatedEmployee } = Object.assign({}, employee, bodyData);
+			const { id, birthday, ..._updatedEmployee } = Object.assign(
+				{},
+				employee,
+				bodyData,
+			);
 			const updatedEmployee = await prismaClient.employee.update({
-				data: _updatedEmployee,
+				data: {
+					..._updatedEmployee,
+					birthday: birthday ? new Date(birthday).toISOString() : undefined,
+				},
 				where: {
 					id,
 				},
@@ -55,6 +139,9 @@ export const addNew = async (req: IEmployeeRequest, res: Response) => {
 			data: {
 				...(req.body as Employee),
 				id: generateId("EMPL"),
+				birthday: req.body?.birthday
+					? new Date(req.body.birthday).toISOString()
+					: null,
 			},
 		});
 		return res.status(200).json(employee);
@@ -75,8 +162,19 @@ export const getDetail = async (req: IEmployeeRequest, res: Response) => {
 				id,
 			},
 			include: {
+				departments: true,
 				certificates: true,
 				qualitifications: true,
+				projects: true,
+				ward: {
+					include: {
+						ditrict: {
+							include: {
+								province: true,
+							},
+						},
+					},
+				},
 			},
 		});
 
