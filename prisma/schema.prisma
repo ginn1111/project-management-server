@@ -13,7 +13,7 @@ model Qualification {
   note          String?                      @map("GHI_CHU_BC") @db.NVarChar(511)
   url           String?                      @map("URL_BC") @db.NVarChar(Max)
   employees     QualificationsOfEmployee[]
-  employeeRoles RolesOfEmployee[]
+  rolesOfEmployee RolesOfEmployee[]
 
   @@map("BANG_CAP")
 }
@@ -22,7 +22,7 @@ model Position {
   id        String                @id(clustered: false, map: "PK_CHUC_VU") @map("ID_CHV") @db.Char(31)
   name      String                @map("TEN_CHV") @db.NVarChar(255)
   note      String?               @map("GHI_CHU_CHV") @db.NVarChar(511)
-  employees PositionsOfEmployee[]
+  positionsOfEmployee PositionsOfEmployee[]
 
   @@map("CHUC_VU")
 }
@@ -32,7 +32,7 @@ model Certificate {
   name      String                     @map("TEN_CHCH") @db.NVarChar(255)
   note      String?                    @map("GHI_CHU_CHCH") @db.NVarChar(255)
   url       String?                    @map("URL_CHCH") @db.NVarChar(Max)
-  employees CertificationsOfEmployee[]
+  certificatesOfEmployee CertificationsOfEmployee[]
 
   @@map("CHUNG_CHI")
 }
@@ -45,7 +45,7 @@ model Tool {
   isActive         Boolean           @default(true) @map("IS_ACTIVE_CC")
   units            ToolUnit[]
   proposes         ProposeTool[]
-  projectResources ProjectResource[]
+  resourceOfProject ProjectResource[]
   suppliers        ToolSupplier[]
 
   @@map("CONG_CU")
@@ -547,7 +547,7 @@ model EmployeesOfProject {
   employeeProjectEvaluations EmployeeProjectEvaluation[]
   proposeProject             ProposeProject[]
   worksOfEmployees           WorksOfEmployee[]
-  Project                    Project?                      @relation(fields: [idProject], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_NHAN_VIE_RELATIONS_DU_AN")
+  project                    Project?                      @relation(fields: [idProject], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_NHAN_VIE_RELATIONS_DU_AN")
   reviewingEmployee          ReviewingEmployee?            @relation(fields: [idReviewingEmployee], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_NHAN_VIE_RELATIONS_DUYET_NH")
   employee                   Employee?                     @relation(fields: [idEmployee], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_NHAN_VIE_RELATIONS_NHAN_VIE4")
   employeeOfProject          EmployeesOfProject?           @relation("NHAN_VIEN_DU_ANToNHAN_VIEN_DU_AN", fields: [NHA_ID_NVDA__], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_NHAN_VIE_RELATIONS_NHAN_VIE5")
