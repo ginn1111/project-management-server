@@ -1,7 +1,9 @@
 import {
 	Certificate,
+	CertificationsOfEmployee,
 	Department,
 	Employee,
+	EmployeesOfDepartment,
 	Qualification,
 	QualificationsOfEmployee,
 } from "@prisma/client";
@@ -14,14 +16,14 @@ interface IEmployeeRequest extends Request {
 
 interface ICertificateRequest<T = any> extends Request {
 	query?: QueryParams;
-	body?: Partial<Certificate> & T;
+	body?: Partial<Certificate & CertificationsOfEmployee> & T;
 }
 
 interface IQualificationRequest<T = any> extends Request {
 	query?: QueryParams;
 	body?: Partial<Qualification & QualificationsOfEmployee> & any;
 }
-interface IDepartmentRequest extends Request {
+interface IDepartmentRequest<T = any> extends Request {
 	query?: QueryParams;
-	body?: Partial<Department>;
+	body?: Partial<Department & EmployeesOfDepartment>;
 }

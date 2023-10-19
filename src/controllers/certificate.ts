@@ -32,6 +32,9 @@ export const getList = async (req: ICertificateRequest, res: Response) => {
 	const certificates = await prismaClient.certificate.findMany({
 		take: _limit,
 		skip: _page * _limit,
+		include: {
+			certificatesOfEmployee: true,
+		},
 		where: {
 			OR: [
 				{
@@ -52,6 +55,7 @@ export const getList = async (req: ICertificateRequest, res: Response) => {
 
 export const update = async (req: ICertificateRequest, res: Response) => {
 	const { id } = req.params;
+	const { note, date, expiredDate, ...restBody } = req.body;
 	try {
 		if (!id || isEmpty(req.body)) {
 			return res.status(422).json("invalid parameters");
@@ -60,15 +64,16 @@ export const update = async (req: ICertificateRequest, res: Response) => {
 			where: {
 				id,
 			},
+			include: {
+				certificatesOfEmployee: true,
+			},
 		});
 
 		if (!isEmpty(certificate)) {
-			const { ..._updatedCertificate } = Object.assign(
-				{},
-				certificate,
-				...req.body,
-			);
-			const updatedEmployee = await prismaClient.certificate.update({
+			const { certificatesOfEmployee, ...rest } = certificate;
+			const _updatedCertificate = Object.assign({}, rest, restBody);
+
+			const updatedCertificate = await prismaClient.certificate.update({
 				data: {
 					..._updatedCertificate,
 				},
@@ -76,7 +81,23 @@ export const update = async (req: ICertificateRequest, res: Response) => {
 					id,
 				},
 			});
-			return res.status(200).json(updatedEmployee);
+
+			const certRelation = certificatesOfEmployee[0];
+			const _updateRelation = Object.assign(certRelation, {
+				date: date ? new Date(date).toISOString() : certRelation.date,
+				expiredDate: expiredDate
+					? new Date(expiredDate).toISOString()
+					: certRelation.expiredDate,
+				note,
+			});
+			const updatedRelation =
+				await prismaClient.certificationsOfEmployee.update({
+					data: _updateRelation,
+					where: {
+						id: certificatesOfEmployee[0].id,
+					},
+				});
+			return res.status(200).json({ updatedCertificate, updatedRelation });
 		}
 	} catch (error) {
 		console.log(error);
@@ -120,6 +141,9 @@ export const getDetail = async (req: ICertificateRequest, res: Response) => {
 		const certificate = await prismaClient.certificate.findFirst({
 			where: {
 				id,
+			},
+			include: {
+				certificatesOfEmployee: true,
 			},
 		});
 
