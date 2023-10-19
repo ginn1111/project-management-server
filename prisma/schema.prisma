@@ -10,9 +10,8 @@ datasource db {
 model Qualification {
   id            String                       @id(clustered: false, map: "PK_BANG_CAP") @map("ID_BC") @db.Char(31)
   name          String                       @map("TEN_BC") @db.NVarChar(127)
-  note          String?                      @map("GHI_CHU_BC") @db.NVarChar(511)
   url           String?                      @map("URL_BC") @db.NVarChar(Max)
-  employees     QualificationsOfEmployee[]
+  qualificationsOfEmployee     QualificationsOfEmployee[]
   rolesOfEmployee RolesOfEmployee[]
 
   @@map("BANG_CAP")
@@ -30,7 +29,6 @@ model Position {
 model Certificate {
   id        String                     @id(clustered: false, map: "PK_CHUNG_CHI") @map("ID_CHCH") @db.Char(31)
   name      String                     @map("TEN_CHCH") @db.NVarChar(255)
-  note      String?                    @map("GHI_CHU_CHCH") @db.NVarChar(255)
   url       String?                    @map("URL_CHCH") @db.NVarChar(Max)
   certificatesOfEmployee CertificationsOfEmployee[]
 
@@ -503,17 +501,17 @@ model CertificationsOfEmployee {
 
 model RolesOfEmployee {
   id                String                 @id(clustered: false, map: "PK_NHAN_VIEN_CHUYEN_MON") @map("ID_NVCM") @db.Char(31)
-  idEmployee        String?                @map("ID_NVPB") @db.Char(31)
+  idDepartmentEmp        String?                @map("ID_NVPB") @db.Char(31)
   idQualification String?                @map("ID_BC") @db.Char(31)
   roleName          String?                @map("TEN_CM") @db.NVarChar(127)
   startDate         DateTime?              @map("NGAY_BAT_DAU_NVCM") @db.DateTime
   endDate           DateTime?              @map("NGAY_KET_THUC_NVCM") @db.DateTime
   note              String?                @map("GHI_CHU_NVCM") @db.NVarChar(511)
   qualification   Qualification?       @relation(fields: [idQualification], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_NHAN_VIE_RELATIONS_BANG_CAP2")
-  employee          EmployeesOfDepartment? @relation(fields: [idEmployee], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_NHAN_VIE_RELATIONS_NHAN_VIE2")
+  employee          EmployeesOfDepartment? @relation(fields: [idDepartmentEmp], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_NHAN_VIE_RELATIONS_NHAN_VIE2")
 
   @@index([idQualification], map: "RELATIONSHIP_8_FK")
-  @@index([idEmployee], map: "RELATIONSHIP_9_FK")
+  @@index([idDepartmentEmp], map: "RELATIONSHIP_9_FK")
   @@map("NHAN_VIEN_CHUYEN_MON")
 }
 
