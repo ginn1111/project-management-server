@@ -76,19 +76,33 @@ export const addNew = async (
 	req: ICertificateRequest<{ idEmployee: string }>,
 	res: Response,
 ) => {
-	const { id, name, idEmployee, ...restBody } = req.body ?? {};
+	const {
+		id: _,
+		url,
+		name,
+		idEmployee,
+		date,
+		expiredDate,
+		...restBody
+	} = req.body ?? {};
 	try {
 		if (!name || !idEmployee) {
 			return res.status(422).json("invalid parameters");
 		}
 		const certificate = await prismaClient.certificate.create({
 			data: {
-				...restBody,
 				name: name,
 				id: generateId(PREFIX_KEY),
+				url,
 				certificatesOfEmployee: {
-					connect: {
-						id: idEmployee,
+					create: {
+						id: generateId("CEEM"),
+						idEmployee: idEmployee,
+						date: date ? new Date(date).toISOString() : null,
+						expiredDate: expiredDate
+							? new Date(expiredDate).toISOString()
+							: null,
+						...restBody,
 					},
 				},
 			},

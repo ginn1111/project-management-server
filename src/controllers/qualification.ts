@@ -27,6 +27,7 @@ export const getList = async (req: IQualificationRequest, res: Response) => {
 
 export const update = async (req: IQualificationRequest, res: Response) => {
 	const { id } = req.params;
+
 	try {
 		if (!id || isEmpty(req.body)) {
 			return res.status(422).json("invalid parameters");
@@ -80,21 +81,22 @@ export const addNew = async (
 	req: IQualificationRequest<{ idEmployee: string }>,
 	res: Response,
 ) => {
-	const { id, date, name, idEmployee, ...restBody } = req.body ?? {};
+	const { id: _, date, name, url, idEmployee, ...restBody } = req.body ?? {};
 	try {
-		if (!name || !idEmployee || !date) {
+		if (!name || !idEmployee) {
 			return res.status(422).json("invalid parameters");
 		}
 		const qualification = await prismaClient.qualification.create({
 			data: {
-				...restBody,
 				name: name,
 				id: generateId(PREFIX_KEY),
+				url,
 				qualificationsOfEmployee: {
 					create: {
 						id: generateId("QAEM"),
 						idEmployee,
-						date: new Date(date).toISOString(),
+						date: date ? new Date(date).toISOString() : null,
+						...restBody,
 					},
 				},
 			},
