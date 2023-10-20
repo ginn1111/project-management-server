@@ -21,6 +21,7 @@ model Position {
   id        String                @id(clustered: false, map: "PK_CHUC_VU") @map("ID_CHV") @db.Char(31)
   name      String                @map("TEN_CHV") @db.NVarChar(255)
   note      String?               @map("GHI_CHU_CHV") @db.NVarChar(511)
+  isActive Boolean @map("IS_ACTIVE_CHV") @db.Bit() @default(true)
   positionsOfEmployee PositionsOfEmployee[]
 
   @@map("CHUC_VU")
@@ -473,7 +474,7 @@ model PositionsOfEmployee {
   idEmployee         String?               @map("ID_NV") @db.Char(31)
   idPosition         String?               @map("ID_CHV") @db.Char(31)
   startDate          DateTime?             @map("NGAY_BD_NVCV") @db.DateTime
-  endData            DateTime?             @map("NGAY_KT_NVCV") @db.DateTime
+  endDate            DateTime?             @map("NGAY_KT_NVCV") @db.DateTime
   note               String?               @map("GHI_CHU_NVCV") @db.NVarChar(511)
   position           Position?             @relation(fields: [idPosition], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_NHAN_VIE_RELATIONS_CHUC_VU")
   employee           Employee?             @relation(fields: [idEmployee], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_NHAN_VIE_RELATIONS_NHAN_VIE8")

@@ -4,6 +4,8 @@ import {
 	Department,
 	Employee,
 	EmployeesOfDepartment,
+	Position,
+	PositionsOfEmployee,
 	Qualification,
 	QualificationsOfEmployee,
 } from "@prisma/client";
@@ -26,4 +28,9 @@ interface IQualificationRequest<T = any> extends Request {
 interface IDepartmentRequest<T = any> extends Request {
 	query?: QueryParams;
 	body?: Partial<Department & EmployeesOfDepartment>;
+}
+
+interface IPositionRequest<T = any> extends Request {
+	query?: QueryParams;
+	body?: Partial<Position & PositionsOfEmployee>;
 }

@@ -178,6 +178,11 @@ export const getDetail = async (req: IEmployeeRequest, res: Response) => {
 						qualification: true,
 					},
 				},
+				positions: {
+					include: {
+						position: true,
+					},
+				},
 				projects: {
 					include: {
 						project: true,
