@@ -111,7 +111,7 @@ model ProposeProject {
   id                      String                    @id(clustered: false, map: "PK_DE_XUAT_DU_AN") @map("ID_DXDA") @db.Char(31)
   idProject               String?                   @map("ID_DA") @db.Char(31)
   idDeEmp                 String?                   @map("ID_NVPB") @db.Char(31)
-  createdDate             DateTime?                 @map("NGAY_TAO_DXDA") @db.DateTime
+  createdDate             DateTime                  @map("NGAY_TAO_DXDA") @db.DateTime
   content                 String?                   @map("NOI_DUNG_DXDA") @db.NVarChar(511)
   project                 Project?                  @relation(fields: [idProject], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_DE_XUAT_DU_AN_DU_AN")
   employeesOfDepartment   EmployeesOfDepartment?    @relation(fields: [idDeEmp], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_DE_XUAT_DU_AN_NHAN_VIEN_PHONG_BAN_1")
@@ -216,12 +216,12 @@ model CustomersOfProject {
 }
 
 model HistoryOfTask {
-  id      String    @id(clustered: false, map: "PK_LICH_SU_CONG_VIEC") @map("ID_LSCV") @db.Char(31)
-  idTask  String?   @map("ID_CV") @db.Char(31)
-  date    DateTime? @map("NGAY_TAO_LSCV") @db.DateTime
-  content String?   @map("NOI_DUNG_LSCV") @db.NVarChar(511)
-  note    String?   @map("GHI_CHU_LSCV") @db.NVarChar(511)
-  task    Task?     @relation(fields: [idTask], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_LICH_SU__RELATIONS_CONG_VIE")
+  id      String   @id(clustered: false, map: "PK_LICH_SU_CONG_VIEC") @map("ID_LSCV") @db.Char(31)
+  idTask  String?  @map("ID_CV") @db.Char(31)
+  date    DateTime @map("NGAY_TAO_LSCV") @db.DateTime
+  content String?  @map("NOI_DUNG_LSCV") @db.NVarChar(511)
+  note    String?  @map("GHI_CHU_LSCV") @db.NVarChar(511)
+  task    Task?    @relation(fields: [idTask], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_LICH_SU__RELATIONS_CONG_VIE")
 
   @@index([idTask], map: "RELATIONSHIP_79_FK")
   @@map("LICH_SU_CONG_VIEC")
@@ -230,7 +230,7 @@ model HistoryOfTask {
 model HistoryOfWork {
   id          String           @id(clustered: false, map: "PK_LICH_SU_DAU_VIEC") @map("ID_LSDV") @db.Char(31)
   idEmployee  String?          @map("ID_NVDV") @db.Char(31)
-  createdDate DateTime?        @map("NGAY_TAO_LSDV") @db.DateTime
+  createdDate DateTime         @map("NGAY_TAO_LSDV") @db.DateTime
   content     String?          @map("NOI_DUNG_LSDV") @db.NVarChar(511)
   note        String?          @map("GHI_CHU_LSDV") @db.NVarChar(511)
   employees   WorksOfEmployee? @relation(fields: [idEmployee], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_LICH_SU__RELATIONS_NHAN_VIE")
@@ -278,7 +278,7 @@ model Employee {
   positions      PositionsOfEmployee[]
   certificates   CertificationsOfEmployee[]
   departments    EmployeesOfDepartment[]
-  accounts       AccountEmployee[]
+  account      Account[]
 
   @@index([idWard], map: "RELATIONSHIP_49_FK")
   @@map("NHAN_VIEN")
@@ -486,26 +486,15 @@ model PermissionsProject {
 }
 
 model Account {
-  username           String            @id(clustered: false, map: "PK_TAI_KHOAN") @map("USERNAME") @db.NVarChar(255)
-  password           String            @map("MAT_KHAU") @db.NVarChar(255)
-  isActive           Boolean           @default(true) @map("IS_ACTIVE_TK")
-  note               String?           @map("GHI_CHU_TK") @db.NVarChar(511)
-  accountsOfEmployee AccountEmployee[]
+  username  String    @id(clustered: false, map: "PK_TAI_KHOAN") @map("USERNAME") @db.NVarChar(255)
+  password  String    @map("MAT_KHAU") @db.NVarChar(255)
+  idEmployee     String?   @db.Char(31)  @map("ID_NV")
+  isActive  Boolean   @default(true) @map("IS_ACTIVE_TK")
+  note      String?   @map("GHI_CHU_TK") @db.NVarChar(511)
+  employee Employee? @relation(fields: [idEmployee], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_TAI_KHOAN_NHAN_VIEN")
 
+ @@unique([idEmployee], name: "CK_ID_EMP")
   @@map("TAI_KHOAN")
-}
-
-model AccountEmployee {
-  id          String    @id(clustered: false, map: "PK_TAI_KHOAN_NHAN_VIEN") @map("ID_TKNV") @db.Char(31)
-  idEmployee  String?   @map("ID_NV") @db.Char(31)
-  username    String?   @map("USERNAME") @db.NVarChar(255)
-  createdDate DateTime  @map("NGAY_TAO_TKNV") @db.DateTime
-  employee    Employee? @relation(fields: [idEmployee], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_TAI_KHOA_RELATIONS_NHAN_VIE")
-  account     Account?  @relation(fields: [username], references: [username], onDelete: NoAction, onUpdate: NoAction, map: "FK_TAI_KHOA_RELATIONS_TAI_KHOA")
-
-  @@index([username], map: "RELATIONSHIP_51_FK")
-  @@index([idEmployee], map: "RELATIONSHIP_52_FK")
-  @@map("TAI_KHOAN_NHAN_VIEN")
 }
 
 model Province {
@@ -555,9 +544,9 @@ model Ward {
 }
 
 model StatePropose {
-  id                       String                     @id(map: "PK_TRANG_THAI_DX") @map("ID_TTDX") @db.Char(31)
-  name                     String                     @map("TEN_TTDX") @db.NVarChar(127)
-  note                     String?                    @map("GHI_CHU_TTDX") @db.NVarChar(511)
+  id                        String                     @id(map: "PK_TRANG_THAI_DX") @map("ID_TTDX") @db.Char(31)
+  name                      String                     @map("TEN_TTDX") @db.NVarChar(127)
+  note                      String?                    @map("GHI_CHU_TTDX") @db.NVarChar(511)
   reviewingsProposeProject  ReviewingProposeProject[]
   reviewingsProposeResource ReviewingProposeResource[]
 
