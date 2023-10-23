@@ -50,7 +50,7 @@ export const getList = async (req: IDepartmentRequest, res: Response) => {
 				OR: [
 					{
 						name: {
-							endsWith: search,
+							contains: search,
 						},
 					},
 
@@ -75,7 +75,7 @@ export const getList = async (req: IDepartmentRequest, res: Response) => {
 				OR: [
 					{
 						name: {
-							endsWith: search,
+							contains: search,
 						},
 					},
 
@@ -189,14 +189,25 @@ export const addNew = async (req: IDepartmentRequest, res: Response) => {
 };
 
 export const addToEmployee = async (
-	req: IDepartmentRequest<{ idEmp: string }>,
+	req: IDepartmentRequest<{ idEmp: string; idOld: string }>,
 	res: Response,
 ) => {
 	const { id, idEmp } = req.params;
-	const { startDate, endDate, ...restBody } = req.body ?? {};
+	const { idOld, ...restBody } = req.body ?? {};
 
 	try {
 		if (!id || !idEmp) return res.status(422).json("invalid parameters");
+
+		if (idOld) {
+			await prismaClient.employeesOfDepartment.update({
+				where: {
+					id: idOld,
+				},
+				data: {
+					endDate: new Date().toISOString(),
+				},
+			});
+		}
 
 		const createdDepartmentOfEmployee =
 			await prismaClient.employeesOfDepartment.create({
@@ -204,9 +215,8 @@ export const addToEmployee = async (
 					id: generateId("EMDE"),
 					idDepartment: id,
 					idEmployee: idEmp,
+					startDate: new Date().toISOString(),
 					...restBody,
-					startDate: startDate ? new Date(startDate).toISOString() : null,
-					endDate: endDate ? new Date(endDate).toISOString() : null,
 				},
 			});
 

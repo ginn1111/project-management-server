@@ -16,15 +16,10 @@ export const getList = async (req: IAccountRequest, res: Response) => {
 	try {
 		const totalItems = await prismaClient.account.count({
 			where: {
-				AND: [
-					{
-						isActive: true,
-					},
-				],
 				OR: [
 					{
 						username: {
-							endsWith: search,
+							contains: search,
 						},
 					},
 
@@ -42,19 +37,15 @@ export const getList = async (req: IAccountRequest, res: Response) => {
 			skip: _page * _limit,
 			select: {
 				username: true,
-				employees: true,
 				isActive: true,
+				note: true,
+				employee: true,
 			},
 			where: {
-				AND: [
-					{
-						isActive: true,
-					},
-				],
 				OR: [
 					{
 						username: {
-							endsWith: search,
+							contains: search,
 						},
 					},
 
@@ -74,53 +65,53 @@ export const getList = async (req: IAccountRequest, res: Response) => {
 	}
 };
 
-export const changPwd = async (
-	req: IAccountRequest<{ oldPwd: string }>,
-	res: Response,
-) => {
-	const { oldPwd, password, username } = req.body ?? {};
+// export const changPwd = async (
+// 	req: IAccountRequest<{ oldPwd: string }>,
+// 	res: Response,
+// ) => {
+// 	const { oldPwd, password, username } = req.body ?? {};
 
-	try {
-		if (!oldPwd || !password || !username) {
-			return res.status(422).json("invalid parameters");
-		}
+// 	try {
+// 		if (!oldPwd || !password || !username) {
+// 			return res.status(422).json("invalid parameters");
+// 		}
 
-		const account = await prismaClient.account.findUnique({
-			where: {
-				username,
-			},
-		});
+// 		const account = await prismaClient.account.findUnique({
+// 			where: {
+// 				username,
+// 			},
+// 		});
 
-		if (isEmpty(account))
-			return res.status(409).json("Tài khoản không tồn tại!");
+// 		if (isEmpty(account))
+// 			return res.status(409).json("Tài khoản không tồn tại!");
 
-		const isEqualPwd = await bcrypt.compare(oldPwd, account.password);
+// 		const isEqualPwd = await bcrypt.compare(oldPwd, account.password);
 
-		if (!isEqualPwd) return res.status(409).json("Mật khẩu cũ không đúng");
+// 		if (!isEqualPwd) return res.status(409).json("Mật khẩu cũ không đúng");
 
-		const newHashPwd = await bcrypt.hash(password, ROUND_SALT);
+// 		const newHashPwd = await bcrypt.hash(password, ROUND_SALT);
 
-		const updatedAccount = await prismaClient.account.update({
-			where: {
-				username,
-			},
-			data: {
-				password: newHashPwd,
-			},
-		});
+// 		const updatedAccount = await prismaClient.account.update({
+// 			where: {
+// 				username,
+// 			},
+// 			data: {
+// 				password: newHashPwd,
+// 			},
+// 		});
 
-		return res.json(omit(updatedAccount, "password"));
-	} catch (error) {
-		console.log(error);
-		return res.status(500).json(error);
-	}
-};
+// 		return res.json(omit(updatedAccount, "password"));
+// 	} catch (error) {
+// 		console.log(error);
+// 		return res.status(500).json(error);
+// 	}
+// };
 
 export const addNew = async (
 	req: IAccountRequest<{ idEmployee: string }>,
 	res: Response,
 ) => {
-	const { username, password } = req.body ?? {};
+	const { username, password, ...rest } = req.body ?? {};
 	try {
 		if (!username || !password) {
 			return res.status(422).json("invalid parameters");
@@ -140,6 +131,7 @@ export const addNew = async (
 			data: {
 				username,
 				password: bcryptPwd,
+				...rest,
 			},
 		});
 		return res.status(200).json(omit(account, "password"));
@@ -149,9 +141,42 @@ export const addNew = async (
 	}
 };
 
+export const update = async (req: IAccountRequest, res: Response) => {
+	const { password, username, note } = req.body ?? {};
+	try {
+		if (!(note || password) || !username)
+			return res.status(422).json("invalid parameters");
+
+		const account = await prismaClient.account.findFirst({
+			where: {
+				username,
+			},
+		});
+
+		if (isEmpty(account)) return res.status(422).json("invalid parameters");
+
+		const newHahsPwd = password ? await bcrypt.hash(password, ROUND_SALT) : "";
+
+		const _updatedAccount = Object.assign({}, account, {
+			note: note || account?.note,
+			password: newHahsPwd || account?.password,
+		});
+
+		const updatedAccount = await prismaClient.account.update({
+			where: {
+				username,
+			},
+			data: _updatedAccount,
+		});
+		return res.json(updatedAccount);
+	} catch (error) {
+		console.log(error);
+		return res.status(500).json(error);
+	}
+};
+
 export const getDetail = async (req: IAccountRequest, res: Response) => {
 	const { username } = req.body ?? {};
-	console.log(username);
 	try {
 		if (!username) {
 			return res.status(422).json("invalid parameters");
@@ -159,9 +184,6 @@ export const getDetail = async (req: IAccountRequest, res: Response) => {
 		const account = await prismaClient.account.findUnique({
 			where: {
 				username,
-			},
-			include: {
-				employees: true,
 			},
 		});
 
@@ -177,24 +199,35 @@ export const getDetail = async (req: IAccountRequest, res: Response) => {
 
 export const addToEmployee = async (req: IAccountRequest, res: Response) => {
 	const { id } = req.params;
-	const { username } = req.body ?? {};
+	const { username, password, ...restBody } = req.body ?? {};
 
 	try {
 		if (!username || !id) return res.status(422).json("invalid parameters");
 
-		const updatedAccount = await prismaClient.accountEmployee.create({
-			data: {
-				id: generateId("ACEM"),
-				createdDate: new Date().toISOString(),
-				idEmployee: id,
-				username,
+		const existAccount = await prismaClient.account.findFirst({
+			where: {
+				AND: [{ username, idEmployee: id }],
 			},
 		});
 
-		return res.json(updatedAccount);
+		if (!isEmpty(existAccount))
+			return res
+				.status(409)
+				.json("Mỗi nhân viên chỉ sử dụng được một tài khoản");
+
+		const newAccount = await prismaClient.account.create({
+			data: {
+				username,
+				password,
+				idEmployee: id,
+				...restBody,
+			},
+		});
+
+		return res.json(newAccount);
 	} catch (error) {
 		console.log(error);
-		return res.status(500).json(error);
+		return res.status(500).json("Lỗi hệ thống, vui lòng liên hệ với quản trị!");
 	}
 };
 

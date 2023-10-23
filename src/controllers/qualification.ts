@@ -1,8 +1,8 @@
 import { PrismaClient } from "@prisma/client";
 import { Response } from "express";
-import { isEmpty, pick } from "lodash";
-import { generateId } from "../utils/generate-id";
+import { isEmpty } from "lodash";
 import { IQualificationRequest } from "../@types/request";
+import { generateId } from "../utils/generate-id";
 
 const PREFIX_KEY = "QUAL";
 const prismaClient = new PrismaClient();
@@ -18,7 +18,11 @@ export const getList = async (req: IQualificationRequest, res: Response) => {
 			],
 		},
 		include: {
-			qualification: true,
+			qualification: {
+				include: {
+					rolesOfEmployee: true,
+				},
+			},
 		},
 	});
 
@@ -120,6 +124,7 @@ export const getDetail = async (req: IQualificationRequest, res: Response) => {
 			},
 			include: {
 				qualificationsOfEmployee: true,
+				rolesOfEmployee: true,
 			},
 		});
 
@@ -131,9 +136,68 @@ export const getDetail = async (req: IQualificationRequest, res: Response) => {
 };
 
 export const addRole = async (req: IQualificationRequest, res: Response) => {
-	const { id } = req.params;
+	const { idEmp, id } = req.params;
+	const { note, roleName } = req.body ?? {};
 	try {
-	} catch (error) {}
+		if (!idEmp || !id || !roleName)
+			return res.status(422).json("invalid parameters");
+
+		const departmentOfEmp = await prismaClient.employeesOfDepartment.findFirst({
+			where: {
+				idEmployee: idEmp,
+				endDate: null,
+			},
+		});
+
+		if (isEmpty(departmentOfEmp))
+			return res.status(409).json("Phòng ban không tồn tại!");
+
+		// if the qualification is exist a role is the same department
+		// -> this will auto set endDate to the startDate of new role!
+		const existRoleNotEnd = await prismaClient.rolesOfEmployee.findFirst({
+			where: {
+				AND: [
+					{
+						idDepartmentEmp: departmentOfEmp.id,
+					},
+					{
+						idQualification: id,
+					},
+					{
+						endDate: null,
+					},
+				],
+			},
+		});
+
+		// update the endDate of exist role in the same department and qualification
+		if (!isEmpty(existRoleNotEnd)) {
+			await prismaClient.rolesOfEmployee.update({
+				data: {
+					endDate: new Date().toISOString(),
+				},
+				where: {
+					id: existRoleNotEnd.id,
+				},
+			});
+		}
+
+		const newRole = await prismaClient.rolesOfEmployee.create({
+			data: {
+				id: generateId("ROLE"),
+				idDepartmentEmp: departmentOfEmp.id,
+				idQualification: id,
+				startDate: new Date().toISOString(),
+				note,
+				roleName,
+			},
+		});
+
+		return res.json(newRole);
+	} catch (error) {
+		console.log(error);
+		return res.status(500).json(error);
+	}
 };
 
 export const endRole = async (req: IQualificationRequest, res: Response) => {};

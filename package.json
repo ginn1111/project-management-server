@@ -4,7 +4,11 @@
 	"main": "index.js",
 	"license": "MIT",
 	"scripts": {
-		"dev": "nodemon ./dist/index.js && npx tsc --watch "
+		"dev": "nodemon ./dist/index.js && npx tsc --watch ",
+		"prisma:gen": "npx prisma generate",
+		"prisma:db-push": "npx prisma db push",
+		"prisma:db-pull": "npx prisma db pull",
+		"prisma:fmt": "npx prisma format"
 	},
 	"dependencies": {
 		"@faker-js/faker": "^8.2.0",

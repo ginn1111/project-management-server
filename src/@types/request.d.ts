@@ -33,7 +33,7 @@ interface IQualificationRequest<T = any> extends Request {
 }
 interface IDepartmentRequest<T = any> extends Request {
 	query?: QueryParams;
-	body?: Partial<Department & EmployeesOfDepartment>;
+	body?: Partial<Department & EmployeesOfDepartment & T>;
 }
 
 interface IPositionRequest<T = any> extends Request {

@@ -6,10 +6,9 @@ import { ROUND_SALT } from "../constants/authentication";
 import {
 	active,
 	addNew,
-	addToEmployee,
-	changPwd,
 	getDetail,
 	getList,
+	update,
 } from "../controllers/account";
 
 const prismaClient = new PrismaClient();
@@ -17,10 +16,10 @@ const accountRouter = Router();
 
 accountRouter.get("/", getList);
 accountRouter.post("/detail", getDetail);
-accountRouter.post("/:id/employee", addToEmployee);
+// accountRouter.post("/:id/employee", addToEmployee);
 accountRouter.post("/add", addNew);
 accountRouter.post("/active", active);
-accountRouter.patch("/update", changPwd);
+accountRouter.patch("/update", update);
 
 accountRouter.post("/random-account", async (_, res: Response) => {
 	const bcryptPwd = await bcrypt.hash("Thuandz123", ROUND_SALT);

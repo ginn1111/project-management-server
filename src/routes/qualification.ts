@@ -17,7 +17,7 @@ qualificationRouter.get("/:id/employee", getList);
 qualificationRouter.get("/:id", getDetail);
 qualificationRouter.post("/add", addNew);
 qualificationRouter.patch("/:id/update", update);
-qualificationRouter.post("/:id/role", addRole);
+qualificationRouter.post("/:id/role/:idEmp", addRole);
 
 qualificationRouter.post("/random-qualification", async (_, res: Response) => {
 	const createdQualification = await prismaClient.qualification.create({

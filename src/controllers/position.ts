@@ -51,7 +51,7 @@ export const getList = async (req: IPositionRequest, res: Response) => {
 				OR: [
 					{
 						name: {
-							endsWith: search,
+							contains: search,
 						},
 					},
 
@@ -76,7 +76,7 @@ export const getList = async (req: IPositionRequest, res: Response) => {
 				OR: [
 					{
 						name: {
-							endsWith: search,
+							contains: search,
 						},
 					},
 
@@ -197,19 +197,42 @@ export const addToEmployee = async (
 	res: Response,
 ) => {
 	const { id, idEmp } = req.params;
-	const { startDate, endDate, ...restBody } = req.body ?? {};
+	const bodyData = req.body ?? {};
 
 	try {
 		if (!id || !idEmp) return res.status(422).json("invalid parameters");
+
+		const positionOfEmp = await prismaClient.positionsOfEmployee.findFirst({
+			where: {
+				idEmployee: idEmp,
+				endDate: null,
+			},
+			include: {
+				position: true,
+			},
+		});
+
+		if (id === positionOfEmp?.position?.id)
+			return res.status(409).json("Chức vụ mới không thể là chức vụ hiện tại");
+
+		if (!isEmpty(positionOfEmp)) {
+			await prismaClient.positionsOfEmployee.update({
+				where: {
+					id: positionOfEmp?.id,
+				},
+				data: {
+					endDate: new Date().toISOString(),
+				},
+			});
+		}
 
 		const positionOfEmployee = await prismaClient.positionsOfEmployee.create({
 			data: {
 				id: generateId("POEM"),
 				idPosition: id,
 				idEmployee: idEmp,
-				startDate: startDate ? new Date(startDate).toISOString() : null,
-				endDate: endDate ? new Date(endDate).toISOString() : null,
-				...restBody,
+				startDate: new Date().toISOString(),
+				...bodyData,
 			},
 		});
 

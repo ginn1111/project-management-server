@@ -2,7 +2,7 @@ import { Employee, PrismaClient } from "@prisma/client";
 import { IEmployeeRequest } from "../@types/request";
 import { generateId } from "../utils/generate-id";
 import { Response } from "express";
-import { isEmpty } from "lodash";
+import { isEmpty, omit } from "lodash";
 
 const PREFIX_KEY = "EMPL";
 const prismaClient = new PrismaClient();
@@ -18,32 +18,17 @@ export const getList = async (req: IEmployeeRequest, res: any) => {
 			OR: [
 				{
 					fullName: {
-						endsWith: search,
-					},
-				},
-				{
-					fullName: {
-						startsWith: search,
+						contains: search,
 					},
 				},
 				{
 					identifyNumber: {
-						endsWith: search,
-					},
-				},
-				{
-					identifyNumber: {
-						startsWith: search,
+						contains: search,
 					},
 				},
 				{
 					phone: {
-						endsWith: search,
-					},
-				},
-				{
-					phone: {
-						startsWith: search,
+						contains: search,
 					},
 				},
 			],
@@ -56,37 +41,38 @@ export const getList = async (req: IEmployeeRequest, res: any) => {
 	const employees = await prismaClient.employee.findMany({
 		take: _limit,
 		skip: _page * _limit,
+		include: {
+			account: true,
+			departments: {
+				include: {
+					department: true,
+				},
+			},
+			positions: {
+				include: {
+					position: true,
+				},
+			},
+			ward: true,
+			district: true,
+			province: true,
+		},
 		where: {
 			AND: [{ isActive: true }],
 			OR: [
 				{
 					fullName: {
-						endsWith: search,
-					},
-				},
-				{
-					fullName: {
-						startsWith: search,
+						contains: search,
 					},
 				},
 				{
 					identifyNumber: {
-						endsWith: search,
-					},
-				},
-				{
-					identifyNumber: {
-						startsWith: search,
+						contains: search,
 					},
 				},
 				{
 					phone: {
-						endsWith: search,
-					},
-				},
-				{
-					phone: {
-						startsWith: search,
+						contains: search,
 					},
 				},
 			],
@@ -99,8 +85,7 @@ export const getList = async (req: IEmployeeRequest, res: any) => {
 };
 export const update = async (req: IEmployeeRequest, res: Response) => {
 	const { id } = req.params;
-	const bodyData = req.body;
-	console.log(bodyData);
+	const bodyData = omit(req.body, ["accounts", "departments"]) ?? {};
 
 	try {
 		if (!id || isEmpty(bodyData)) {
@@ -175,17 +160,16 @@ export const getDetail = async (req: IEmployeeRequest, res: Response) => {
 				},
 				qualifications: {
 					include: {
-						qualification: true,
+						qualification: {
+							include: {
+								rolesOfEmployee: true,
+							},
+						},
 					},
 				},
 				positions: {
 					include: {
 						position: true,
-					},
-				},
-				projects: {
-					include: {
-						project: true,
 					},
 				},
 				ward: {
