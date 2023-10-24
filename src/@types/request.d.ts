@@ -9,8 +9,10 @@ import {
 	Ingredient,
 	Position,
 	PositionsOfEmployee,
+	Project,
 	Qualification,
 	QualificationsOfEmployee,
+	Resource,
 	Supply,
 	Tool,
 	ToolSupplier,
@@ -56,4 +58,12 @@ interface IIngredientRequest<T = any> extends Request {
 interface ISupplyRequest<T = any> extends Request {
 	query?: QueryParams;
 	body?: Partial<Supply>;
+}
+interface IProjectRequest<T = any> extends Request {
+	query?: QueryParams & { dateStart: string; dateEnd: string };
+	body?: Partial<Project>;
+}
+interface IResourceRequest<T = any> extends Request {
+	query?: QueryParams;
+	body?: Partial<Resource>;
 }
