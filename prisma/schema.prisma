@@ -592,7 +592,7 @@ model ReviewingProposeProject {
   id               String          @id(map: "PK_DUYET_DXDA") @map("ID_DDXDA") @db.Char(31)
   idProposeProject String?         @map("ID_DXDA") @db.Char(31)
   idState          String?         @map("ID_TTDX") @db.Char(31)
-  reviewingDate    DateTime        @map("NGAY_DUYET") @db.DateTime
+  reviewingDate    DateTime?        @map("NGAY_DUYET") @db.DateTime
   note             String?         @map("GHI_CHU_DDXDA") @db.NVarChar(511)
   proposeProject   ProposeProject? @relation(fields: [idProposeProject], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_DUYET_DXDA_DE_XUAT_DU_AN")
   statePropose     StatePropose?   @relation(fields: [idState], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_DUYET_DXDA_TRANG_THAI_DX_1")

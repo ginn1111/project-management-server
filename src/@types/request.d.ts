@@ -10,9 +10,11 @@ import {
 	Position,
 	PositionsOfEmployee,
 	Project,
+	ProposeProject,
 	Qualification,
 	QualificationsOfEmployee,
 	Resource,
+	ReviewingProposeProject,
 	Supply,
 	Tool,
 	ToolSupplier,
@@ -60,10 +62,20 @@ interface ISupplyRequest<T = any> extends Request {
 	body?: Partial<Supply>;
 }
 interface IProjectRequest<T = any> extends Request {
-	query?: QueryParams & { dateStart: string; dateEnd: string };
-	body?: Partial<Project>;
+	query?: QueryParams & { dateStart?: string; dateEnd?: string };
+	body?: Partial<Project & T>;
 }
 interface IResourceRequest<T = any> extends Request {
 	query?: QueryParams;
 	body?: Partial<Resource>;
+}
+
+interface IProposeProject<T = any> extends Request {
+	query?: QueryParams;
+	body?: Partial<ProposeProject & T>;
+}
+
+interface IReviewProposeProject<T = any> extends Request {
+	query?: QueryParams;
+	body?: Partial<ReviewingProposeProject & T>;
 }

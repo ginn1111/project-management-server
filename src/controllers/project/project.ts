@@ -1,7 +1,8 @@
 import { Response } from "express";
 import { IProjectRequest } from "../../@types/request";
 import { PrismaClient } from "@prisma/client";
-import { isNaN } from "lodash";
+import { isEmpty, isNaN } from "lodash";
+import { generateId } from "../../utils/generate-id";
 
 const prismaClient = new PrismaClient();
 
@@ -67,12 +68,56 @@ export const getList = async (req: IProjectRequest, res: Response) => {
 					},
 				],
 			},
+			orderBy: {
+				startDate: "desc",
+			},
 		});
 
 		return res.json({ projects, totalItems });
 	} catch (error) {
 		console.log(error);
 		return res.status(500).json("Lỗi hệ thống, vui lòng liên hệ quản lý!");
+	}
+};
+export const addNew = async (
+	req: IProjectRequest<{ departments: string[] }>,
+	res: Response,
+) => {
+	const { name, startDate, finishDateET, departments, note } = req.body ?? {};
+
+	try {
+		if (!name || isEmpty(req.body)) {
+			return res.status(422).json("invalid parameters ");
+		}
+
+		const createdProj = await prismaClient.project.create({
+			data: {
+				id: generateId("PROJ"),
+				name,
+				createdDate: new Date().toISOString(),
+				startDate: startDate ? new Date(startDate).toISOString() : undefined,
+				finishDateET: finishDateET
+					? new Date(finishDateET).toISOString()
+					: undefined,
+				note,
+			},
+		});
+
+		if (departments?.length) {
+			await prismaClient.departmentOfProject.createMany({
+				data: departments.map((department) => ({
+					id: generateId("DEPR"),
+					idDepartment: department,
+					idProject: createdProj.id,
+					createdDate: new Date().toISOString(),
+				})),
+			});
+		}
+
+		return res.json(createdProj);
+	} catch (error) {
+		console.log(error);
+		return res.status(500).json((error as Error).message ?? "Server error");
 	}
 };
 export const update = async (req: IProjectRequest, res: Response) => {};
