@@ -1,7 +1,12 @@
 import { faker } from "@faker-js/faker";
 import { PrismaClient } from "@prisma/client";
 import { Response, Router } from "express";
-import { getList, update } from "../../controllers/project/project";
+import {
+	detail,
+	getList,
+	getListByDepartment,
+	update,
+} from "../../controllers/project/project";
 import { generateId } from "../../utils/generate-id";
 import { addNew } from "../../controllers/project/project";
 
@@ -10,6 +15,8 @@ const primaClient = new PrismaClient();
 const projectRouter = Router();
 
 projectRouter.get("/", getList);
+projectRouter.get("/:idDepartment/department", getListByDepartment);
+projectRouter.get("/:id", detail);
 projectRouter.post("/add", addNew);
 projectRouter.patch("/:id/update", update);
 projectRouter.post("/random", async (_, res: Response) => {

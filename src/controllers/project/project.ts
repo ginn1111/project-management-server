@@ -188,4 +188,90 @@ export const update = async (req: IProjectRequest, res: Response) => {
 		return res.status(500).json((error as Error).message ?? "Server error");
 	}
 };
-export const detail = async (req: IProjectRequest, res: Response) => {};
+export const detail = async (req: IProjectRequest, res: Response) => {
+	const { id } = req.params;
+	try {
+		if (!id) return res.status(422).json("invalid parameters");
+		const project = await prismaClient.project.findFirst({
+			where: {
+				id,
+			},
+			include: {
+				worksOfProject: {
+					include: {
+						work: true,
+						worksOfEmployee: {
+							include: {
+								historyOfWork: true,
+								employee: true,
+								permissionsWork: {
+									include: {
+										permissionWork: true,
+									},
+								},
+								tasksOfWork: {
+									include: {
+										task: {
+											include: {
+												history: true,
+												resourceOfTasks: {
+													include: {
+														resource: true,
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+				projectResources: {
+					include: {
+						resource: true,
+					},
+				},
+				proposeProject: {
+					include: {
+						reviewingProposeProject: {
+							include: {
+								proposeProject: true,
+								statePropose: true,
+							},
+						},
+					},
+				},
+			},
+		});
+
+		return res.json(project);
+	} catch (error) {
+		console.log(error);
+		return res.status(500).json((error as Error).message ?? "Server error");
+	}
+};
+
+export const getListByDepartment = async (
+	req: IProjectRequest<{ idDepartment: string }>,
+	res: Response,
+) => {
+	const { idDepartment } = req.params;
+
+	try {
+		const projectsOfDepartment = await prismaClient.project.findMany({
+			where: {
+				departments: {
+					some: {
+						idDepartment,
+					},
+				},
+			},
+		});
+
+		return res.json(projectsOfDepartment);
+	} catch (error) {
+		console.log(error);
+		return res.status(500).json((error as Error).message ?? "Server error");
+	}
+};

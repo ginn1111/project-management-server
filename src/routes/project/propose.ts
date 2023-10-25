@@ -1,6 +1,11 @@
 import { Router } from "express";
 import { Response } from "express";
-import { getDetail, propose, review } from "../../controllers/project/propose";
+import {
+	getDetail,
+	getList,
+	propose,
+	review,
+} from "../../controllers/project/propose";
 import { generateId } from "../../utils/generate-id";
 import { PrismaClient } from "@prisma/client";
 
@@ -8,6 +13,7 @@ const prismaClient = new PrismaClient();
 
 const proposeRouter = Router();
 
+proposeRouter.get("/list", getList);
 proposeRouter.post("/", propose);
 proposeRouter.post("/:id/review", review);
 proposeRouter.get("/:id/review", getDetail);

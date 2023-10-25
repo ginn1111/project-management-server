@@ -76,6 +76,6 @@ interface IProposeProject<T = any> extends Request {
 }
 
 interface IReviewProposeProject<T = any> extends Request {
-	query?: QueryParams;
+	query?: QueryParams & { idProject?: string };
 	body?: Partial<ReviewingProposeProject & T>;
 }
