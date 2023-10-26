@@ -1,14 +1,16 @@
-import { Response, Router } from "express";
-import { getList } from "../controllers/resource";
-import { PrismaClient, Resource } from "@prisma/client";
-import { generateId } from "../utils/generate-id";
 import { faker } from "@faker-js/faker";
+import { PrismaClient } from "@prisma/client";
+import { Response, Router } from "express";
+import { addNew, getList, update } from "../controllers/resource";
+import { generateId } from "../utils/generate-id";
 
 const prismaClient = new PrismaClient();
 
 const resourceRouter = Router();
 
 resourceRouter.get("/", getList);
+resourceRouter.patch("/:id", update);
+resourceRouter.post("/add", addNew);
 resourceRouter.post("/random", async (_, res: Response) => {
 	const resourceType = [
 		{

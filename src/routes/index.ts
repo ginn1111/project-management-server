@@ -14,10 +14,13 @@ import resourceRouter from "./resource";
 import statisticRouter from "./statistic";
 import certificateRouter from "./certificate";
 import qualificationRouter from "./qualification";
-// import { verifyToken } from "../middlewares/authorization";
+import authenticationRouter from "./authentication";
+import { verifyToken } from "../middlewares/authorization";
+import { getResourceType } from "../controllers/utils/resource-type";
 
 const router = Router();
 
+router.use("/authentication", authenticationRouter);
 router.use("/project", projectRouter);
 router.use("/account", accountRouter);
 router.use("/department", departmentRouter);
@@ -28,6 +31,7 @@ router.use("/position", positionRouter);
 router.use("/resource", resourceRouter);
 router.use("/statistic", statisticRouter);
 
+router.get("/utils/resource-type", getResourceType);
 router.get("/utils/provinces", getProvinces);
 router.get("/utils/districts/:id", getDistricts);
 router.get("/utils/wards/:id", getWards);

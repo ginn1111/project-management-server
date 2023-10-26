@@ -4,7 +4,6 @@ import { Response } from "express";
 import { isEmpty, isNil, omit } from "lodash";
 import { IAccountRequest } from "../@types/request";
 import { ROUND_SALT } from "../constants/authentication";
-import { generateId } from "../utils/generate-id";
 
 const prismaClient = new PrismaClient();
 

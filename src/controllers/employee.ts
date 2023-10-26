@@ -85,7 +85,7 @@ export const getList = async (req: IEmployeeRequest, res: any) => {
 };
 export const update = async (req: IEmployeeRequest, res: Response) => {
 	const { id } = req.params;
-	const bodyData = omit(req.body, ["accounts", "departments"]) ?? {};
+	const bodyData = omit(req.body, ["account", "departments"]) ?? {};
 
 	try {
 		if (!id || isEmpty(bodyData)) {
