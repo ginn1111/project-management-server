@@ -63,7 +63,11 @@ interface ISupplyRequest<T = any> extends Request {
 	body?: Partial<Supply>;
 }
 interface IProjectRequest<T = any> extends Request {
-	query?: QueryParams & { dateStart?: string; dateEnd?: string };
+	query?: QueryParams & {
+		startDate?: string;
+		finishDateET?: string;
+		idDepartment?: string;
+	};
 	body?: Partial<Project & T>;
 }
 interface IResourceRequest<T = any> extends Request {

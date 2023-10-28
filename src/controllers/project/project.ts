@@ -1,13 +1,20 @@
-import { Response } from "express";
-import { IProjectRequest } from "../../@types/request";
 import { PrismaClient } from "@prisma/client";
-import { intersection, isEmpty, isNaN, omit } from "lodash";
+import { Response } from "express";
+import { intersection, isEmpty, isNaN, isNull, omit } from "lodash";
+import { IProjectRequest } from "../../@types/request";
 import { generateId } from "../../utils/generate-id";
 
 const prismaClient = new PrismaClient();
 
 export const getList = async (req: IProjectRequest, res: Response) => {
-	let { page, limit, search = "", dateStart, dateEnd } = req.query ?? {};
+	let {
+		page,
+		limit,
+		search = "",
+		startDate,
+		finishDateET,
+		idDepartment,
+	} = req.query ?? {};
 	const _page = !isNaN(page as unknown as number) ? parseInt(page!) : NaN;
 	const _limit = !isNaN(limit as any) ? parseInt(limit!) : NaN;
 
@@ -17,23 +24,27 @@ export const getList = async (req: IProjectRequest, res: Response) => {
 				? { take: _limit, skip: _page * _limit }
 				: {}),
 			where: {
-				OR: [
+				AND: [
 					{
 						name: {
 							contains: search,
 						},
 					},
 					{
-						startDate: {
-							lte: dateStart ? new Date(dateStart) : undefined,
-							gte: dateEnd ? new Date(dateEnd) : undefined,
-						},
-					},
-					{
-						finishDate: {
-							lte: dateStart ? new Date(dateStart) : undefined,
-							gte: dateEnd ? new Date(dateEnd) : undefined,
-						},
+						OR: [
+							{
+								startDate: {
+									gte: startDate ? new Date(startDate) : undefined,
+									lte: finishDateET ? new Date(finishDateET) : undefined,
+								},
+							},
+							{
+								finishDateET: {
+									gte: startDate ? new Date(startDate) : undefined,
+									lte: finishDateET ? new Date(finishDateET) : undefined,
+								},
+							},
+						],
 					},
 				],
 			},
@@ -44,32 +55,47 @@ export const getList = async (req: IProjectRequest, res: Response) => {
 				? { take: _limit, skip: _page * _limit }
 				: {}),
 			include: {
-				departments: true,
+				departments: {
+					include: {
+						department: true,
+					},
+				},
 				customers: true,
 			},
 			where: {
-				OR: [
+				AND: [
 					{
 						name: {
 							contains: search,
 						},
 					},
 					{
-						startDate: {
-							lte: dateStart ? new Date(dateStart) : undefined,
-							gte: dateEnd ? new Date(dateEnd) : undefined,
-						},
-					},
-					{
-						finishDate: {
-							lte: dateStart ? new Date(dateStart) : undefined,
-							gte: dateEnd ? new Date(dateEnd) : undefined,
-						},
+						OR: [
+							{
+								startDate: {
+									gte: startDate ? new Date(startDate) : undefined,
+									lte: finishDateET ? new Date(finishDateET) : undefined,
+								},
+							},
+							{
+								finishDateET: {
+									gte: startDate ? new Date(startDate) : undefined,
+									lte: finishDateET ? new Date(finishDateET) : undefined,
+								},
+							},
+							{
+								departments: {
+									some: {
+										idDepartment: idDepartment || undefined,
+									},
+								},
+							},
+						],
 					},
 				],
 			},
 			orderBy: {
-				startDate: "desc",
+				createdDate: "desc",
 			},
 		});
 
@@ -178,7 +204,14 @@ export const update = async (req: IProjectRequest, res: Response) => {
 								},
 							},
 					  }
-					: undefined),
+					: {
+							// Donot allow remove when update
+							// departments: {
+							// 	deleteMany: existProject.departments.map(({ id }) => ({
+							// 		id,
+							// 	})),
+							// },
+					  }),
 			},
 		});
 
@@ -270,6 +303,110 @@ export const getListByDepartment = async (
 		});
 
 		return res.json(projectsOfDepartment);
+	} catch (error) {
+		console.log(error);
+		return res.status(500).json((error as Error).message ?? "Server error");
+	}
+};
+
+export const addResource = async (
+	req: IProjectRequest<{ resource: { id: string; amount: number }[] }>,
+	res: Response,
+) => {
+	const { id } = req.params;
+	const { resource } = req.body ?? {};
+	try {
+		if (!id || !resource?.length)
+			return res.status(422).json("invalid parameter");
+
+		const resourceIndex = resource.reduce(
+			(acc, res) => {
+				acc[res.id] = res.amount;
+				return acc;
+			},
+			{} as Record<string, number>,
+		);
+
+		const resourceInProject = await Promise.all(
+			resource.map(({ id: idResource }) =>
+				prismaClient.projectResource.findFirst({
+					where: { idResource, idProject: id },
+				}),
+			),
+		);
+
+		// will add amount to exist
+		const existResourceInProject = resourceInProject.filter(Boolean);
+
+		// will create a relation
+		const nonExistResourceInProject = resourceInProject.reduce(
+			(acc, rAndPr, idx) => {
+				if (isNull(rAndPr)) {
+					acc.push(resource[idx]);
+				}
+				return acc;
+			},
+			[] as { id: string; amount: number }[],
+		);
+
+		const resourceFind = await Promise.all(
+			resource.map(({ id }) => {
+				return prismaClient.resource.findFirst({ where: { id } });
+			}),
+		);
+
+		await prismaClient.$transaction(
+			async (tx) => {
+				console.log("start transaction");
+				if (nonExistResourceInProject?.length) {
+					await tx.projectResource.createMany({
+						data: nonExistResourceInProject.map(
+							({ id: idResource, amount }) => {
+								return {
+									id: generateId("REPR"),
+									idProject: id,
+									idResource,
+									amount,
+								};
+							},
+						),
+					});
+				}
+
+				if (existResourceInProject?.length) {
+					await Promise.all(
+						existResourceInProject.map(async (r) => {
+							console.log(r);
+							return await tx.projectResource.update({
+								where: {
+									id: r!.id,
+								},
+								data: {
+									amount: r!.amount + resourceIndex[r!.idResource!],
+								},
+							});
+						}),
+					);
+				}
+
+				await Promise.all(
+					resourceFind.map((r) => {
+						return tx.resource.update({
+							where: {
+								id: r!.id,
+							},
+							data: {
+								amount: r!.amount - resourceIndex[r!.id],
+							},
+						});
+					}),
+				);
+			},
+			{
+				timeout: 20000,
+			},
+		);
+		return res.json("Thêm nguồn lực thành công");
 	} catch (error) {
 		console.log(error);
 		return res.status(500).json((error as Error).message ?? "Server error");
