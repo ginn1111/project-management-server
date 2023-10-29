@@ -20,14 +20,11 @@ export const getList = async (req: IProjectRequest, res: Response) => {
 
 	try {
 		const totalItems = await prismaClient.project.count({
-			...(!isNaN(_page) && !isNaN(_limit)
-				? { take: _limit, skip: _page * _limit }
-				: {}),
 			where: {
 				AND: [
 					{
 						name: {
-							contains: search,
+							contains: search || undefined,
 						},
 					},
 					{
@@ -42,6 +39,17 @@ export const getList = async (req: IProjectRequest, res: Response) => {
 								finishDateET: {
 									gte: startDate ? new Date(startDate) : undefined,
 									lte: finishDateET ? new Date(finishDateET) : undefined,
+								},
+							},
+							{
+								departments: {
+									...(idDepartment
+										? {
+												some: {
+													idDepartment: idDepartment || undefined,
+												},
+										  }
+										: {}),
 								},
 							},
 						],
@@ -66,7 +74,7 @@ export const getList = async (req: IProjectRequest, res: Response) => {
 				AND: [
 					{
 						name: {
-							contains: search,
+							contains: search || undefined,
 						},
 					},
 					{
@@ -85,9 +93,13 @@ export const getList = async (req: IProjectRequest, res: Response) => {
 							},
 							{
 								departments: {
-									some: {
-										idDepartment: idDepartment || undefined,
-									},
+									...(idDepartment
+										? {
+												some: {
+													idDepartment: idDepartment || undefined,
+												},
+										  }
+										: {}),
 								},
 							},
 						],
@@ -102,7 +114,7 @@ export const getList = async (req: IProjectRequest, res: Response) => {
 		return res.json({ projects, totalItems });
 	} catch (error) {
 		console.log(error);
-		return res.status(500).json("Lỗi hệ thống, vui lòng liên hệ quản lý!");
+		return res.status(500).json("Server error");
 	}
 };
 export const addNew = async (
