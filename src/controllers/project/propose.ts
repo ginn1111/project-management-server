@@ -1,5 +1,9 @@
 import { Response } from "express";
-import { IProposeProject, IReviewProposeProject } from "../../@types/request";
+import {
+	IProjectResourceRequest,
+	IProposeProject,
+	IReviewProposeProject,
+} from "../../@types/request";
 import { PrismaClient } from "@prisma/client";
 import { isEmpty } from "lodash";
 import { generateId } from "../../utils/generate-id";
@@ -264,6 +268,68 @@ export const getList = async (req: IReviewProposeProject, res: Response) => {
 		});
 
 		return res.json({ reviewProposes, totalItems });
+	} catch (error) {
+		console.log(error);
+		return res.status(500).json((error as Error).message ?? "Server error");
+	}
+};
+
+// propose resource
+export const getListProposeResource = async (
+	req: IProjectResourceRequest,
+	res: Response,
+) => {
+	const { id } = req.params;
+	const { page, limit } = req.query ?? {};
+	const _page = !isNaN(page as unknown as number) ? parseInt(page!) : NaN;
+	const _limit = !isNaN(limit as any) ? parseInt(limit!) : NaN;
+
+	try {
+		const totalItems = await prismaClient.reviewingProposeResource.count({
+			where: {
+				proposeResource: {
+					employeesOfProject: {
+						idProject: id,
+					},
+				},
+			},
+		});
+
+		const proposeResource =
+			await prismaClient.reviewingProposeResource.findMany({
+				...(!isNaN(_page) && !isNaN(_limit)
+					? { take: _limit, skip: _page * _limit }
+					: {}),
+				where: {
+					proposeResource: {
+						employeesOfProject: {
+							idProject: id,
+						},
+					},
+				},
+				include: {
+					state: true,
+					proposeResource: {
+						include: {
+							resource: true,
+							employeesOfProject: {
+								include: {
+									proposeProject: {
+										include: {
+											employeesOfDepartment: {
+												include: {
+													employee: true,
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			});
+		return res.json({ proposeResource, totalItems });
 	} catch (error) {
 		console.log(error);
 		return res.status(500).json((error as Error).message ?? "Server error");

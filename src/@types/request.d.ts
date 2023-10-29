@@ -6,19 +6,24 @@ import {
 	Department,
 	Employee,
 	EmployeesOfDepartment,
+	EmployeesOfProject,
 	Ingredient,
 	Position,
 	PositionsOfEmployee,
 	Project,
+	ProjectResource,
 	ProposeProject,
+	ProposeResource,
 	Qualification,
 	QualificationsOfEmployee,
 	Resource,
 	ResourceType,
 	ReviewingProposeProject,
+	ReviewingProposeResource,
 	Supply,
 	Tool,
 	ToolSupplier,
+	WorksOfProject,
 } from "@prisma/client";
 import { Request } from "express";
 
@@ -89,4 +94,22 @@ interface IAuthenticationRequest<T = any> extends Request {
 }
 interface IResourceTypeRequest<T = any> extends Request {
 	body?: Partial<ResourceType & T>;
+}
+
+interface IWorkProjectRequest<T = any> extends Request {
+	query?: QueryParams;
+	body?: Partial<WorksOfProject & T>;
+}
+
+interface IEmployeeProjectRequest<T = any> extends Request {
+	query?: QueryParams;
+	body?: Partial<EmployeesOfProject & T>;
+}
+interface IProjectResourceRequest<T = any> extends Request {
+	query?: QueryParams;
+	body?: Partial<ProjectResource & T>;
+}
+interface IProposeReviewRSProject<T = any> extends Request {
+	query?: QueryParams;
+	body?: Partial<ReviewingProposeResource & T>;
 }

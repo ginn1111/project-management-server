@@ -4,7 +4,8 @@
 	"main": "index.js",
 	"license": "MIT",
 	"scripts": {
-		"dev": "nodemon ./dist/index.js && npx tsc --watch ",
+		"ts:watch": "tsc --watch",
+		"dev": "nodemon ./dist/index.js ",
 		"prisma:gen": "npx prisma generate",
 		"prisma:db-push": "npx prisma db push",
 		"prisma:db-pull": "npx prisma db pull",

@@ -3,6 +3,7 @@ import { Response } from "express";
 import {
 	getDetail,
 	getList,
+	getListProposeResource,
 	propose,
 	review,
 } from "../../controllers/project/propose";
@@ -38,5 +39,8 @@ proposeRouter.post("/random/state-propose", async (_, res: Response) => {
 
 	return res.json("ok");
 });
+
+// propose resource
+proposeRouter.get("/resource/:id/review", getListProposeResource);
 
 export default proposeRouter;
