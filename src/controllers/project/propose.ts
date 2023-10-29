@@ -256,6 +256,11 @@ export const getList = async (req: IReviewProposeProject, res: Response) => {
 					},
 				},
 			},
+			orderBy: {
+				proposeProject: {
+					createdDate: "desc",
+				},
+			},
 		});
 
 		return res.json({ reviewProposes, totalItems });

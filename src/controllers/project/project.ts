@@ -369,7 +369,6 @@ export const addResource = async (
 
 		await prismaClient.$transaction(
 			async (tx) => {
-				console.log("start transaction");
 				if (nonExistResourceInProject?.length) {
 					await tx.projectResource.createMany({
 						data: nonExistResourceInProject.map(
