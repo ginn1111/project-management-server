@@ -95,7 +95,7 @@ model TasksOfWork {
   id            String           @id(clustered: false, map: "PK_DAU_VIEC_CONG_VIEC") @map("ID_DVCV") @db.Char(31)
   idTask        String?          @map("ID_CV") @db.Char(31)
   idEmployee    String?          @map("ID_NVDV") @db.Char(31)
-  percentOfDone Float            @map("MUC_DO_HT")
+  percentOfDone Float?           @map("MUC_DO_HT")
   finishDateET  DateTime?        @map("NGAY_HT_DK_DVCV") @db.DateTime
   finishDate    DateTime?        @map("NGAY_HT_DVCV") @db.DateTime
   note          String?          @map("GHI_CHU_DVCV") @db.NVarChar(511)
@@ -145,7 +145,7 @@ model WorksOfProject {
   id              String            @id(clustered: false, map: "PK_DU_AN_DAU_VIEC") @map("ID_DADV") @db.Char(31)
   idProject       String?           @map("ID_DA") @db.Char(31)
   idWork          String?           @map("ID_DVC") @db.Char(31)
-  createdDate     DateTime          @map("NGAY_TAO_DADV") @db.DateTime
+  startDate    DateTime          @db.DateTime @map("NGAY_BD_DADV")
   finishDate      DateTime?         @map("NGAY_HT_DADV") @db.DateTime
   finishDateET    DateTime?         @map("NGAY_HT_DK_DADV") @db.DateTime
   note            String?           @map("GHI_CHU_DADV") @db.NVarChar(511)

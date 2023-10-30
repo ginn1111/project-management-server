@@ -1,8 +1,9 @@
 import { Router } from "express";
-import { getList } from "../../controllers/project/work";
+import { getList, add } from "../../controllers/project/work";
 
 const workRouter = Router();
 
 workRouter.get("/:id", getList);
+workRouter.post("/:id/create", add);
 
 export default workRouter;

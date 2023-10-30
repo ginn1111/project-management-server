@@ -24,7 +24,7 @@ export const getList = async (req: IProjectResourceRequest, res: Response) => {
 				idProject: id,
 			},
 			include: {
-				resource: true,
+				resource: { include: { resourceType: true } },
 				resourceOfTasks: {
 					include: {
 						resource: true,
