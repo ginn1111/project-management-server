@@ -1,13 +1,14 @@
+import { PrismaClient } from "@prisma/client";
 import { Response } from "express";
+import { isEmpty } from "lodash";
 import {
 	IProjectResourceRequest,
 	IProposeProject,
+	IProposeResourceRequest,
 	IReviewProposeProject,
 } from "../../@types/request";
-import { PrismaClient } from "@prisma/client";
-import { isEmpty } from "lodash";
-import { generateId } from "../../utils/generate-id";
 import { StatePropose } from "../../constants/review";
+import { generateId } from "../../utils/generate-id";
 
 const prismaClient = new PrismaClient();
 
@@ -78,7 +79,7 @@ export const propose = async (
 		}
 
 		const pendingState = stateProposes.find(
-			(state) => state.name === "Đợi duyệt",
+			(state) => state.name === StatePropose.Pending,
 		);
 
 		// if employee has a pending propose
@@ -311,7 +312,6 @@ export const getListProposeResource = async (
 					state: true,
 					proposeResource: {
 						include: {
-							resource: true,
 							employeesOfProject: {
 								include: {
 									proposeProject: {
@@ -333,5 +333,102 @@ export const getListProposeResource = async (
 	} catch (error) {
 		console.log(error);
 		return res.status(500).json((error as Error).message ?? "Server error");
+	}
+};
+
+export const addProposeResource = async (
+	req: IProposeResourceRequest<{ resource: { id: string; amount: number }[] }>,
+	res: Response,
+) => {
+	try {
+		const { idEmpProject } = req.params;
+		const { resource, description } = req.body ?? {};
+
+		if (!idEmpProject || !resource?.length)
+			return res.status(422).json("invalid parameter");
+
+		const resourceIndex = resource.reduce(
+			(acc, res) => {
+				acc[res.id] = res.amount;
+				return acc;
+			},
+			{} as Record<string, number>,
+		);
+
+		const stateProposes = await prismaClient.statePropose.findMany();
+
+		if (!stateProposes?.length) {
+			return res
+				.status(500)
+				.json("Có lỗi xảy ra, không tìm thấy trạng thái của đề xuất");
+		}
+
+		const pendingState = stateProposes.find(
+			(state) => state.name === StatePropose.Pending,
+		);
+
+		const resourceFind = await Promise.all(
+			resource.map(({ id }) => {
+				return prismaClient.resource.findFirst({ where: { id } });
+			}),
+		);
+
+		await prismaClient.$transaction(async (tx) => {
+			// create new review propose with state is pending
+			const newPropose = await tx.proposeResource.create({
+				data: {
+					id: generateId("PRPR"),
+					description,
+					idEmpProject,
+					reviewingProposeResource: {
+						create: {
+							id: generateId("RVPR"),
+							idState: pendingState?.id!,
+						},
+					},
+				},
+			});
+
+			// add many resource in resource propose
+			await tx.resourcesPropose.createMany({
+				data: resource.map(({ id: idResource, amount }) => {
+					return {
+						id: generateId("REPR"),
+						idResource,
+						idProposeResource: newPropose.id,
+						amount,
+					};
+				}),
+			});
+
+			// subtract amount of resource in warehouse
+			await Promise.all(
+				resourceFind.map((r) => {
+					return tx.resource.update({
+						where: {
+							id: r!.id,
+						},
+						data: {
+							amount: r!.amount - resourceIndex[r!.id],
+						},
+					});
+				}),
+			);
+		});
+		return res.json("Tạo đề xuất thành công!");
+	} catch (error) {
+		console.log(error);
+		return res.status(500).json("Server error");
+	}
+};
+
+export const reviewProposeResource = async (
+	req: IProjectResourceRequest,
+	res: Response,
+) => {
+	try {
+	} catch (error) {
+		console.log(error);
+		return res.status(500).json("Server error");
 	}
 };

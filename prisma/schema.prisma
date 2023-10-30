@@ -579,7 +579,7 @@ model ProposeResource {
   idEmpProject              String?                    @map("ID_NVDA") @db.Char(31)
   description                String?                    @db.NVarChar(511) @map("MO_TA_DXNL")
   employeesOfProject        EmployeesOfProject?        @relation(fields: [idEmpProject], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_DE_XUAT_NGUON_LUC_NHAN_VIEN_DU_AN")
-  reviewingsProposeResource ReviewingProposeResource[]
+  reviewingProposeResource ReviewingProposeResource[]
   resourcesProposes              ResourcesPropose[]
 
   @@map("DE_XUAT_NGUON_LUC")
@@ -601,7 +601,7 @@ model ReviewingProposeResource {
   id                String           @id(map: "PK_DUYET_DXNL") @map("ID_DDXNL") @db.Char(31)
   idProposeResource String?          @map("ID_DXNL") @db.Char(31)
   idState           String?          @map("ID_TTDX") @db.Char(31)
-  reviewingDate     DateTime         @map("NGAY_DUYET") @db.DateTime
+  reviewingDate     DateTime?         @map("NGAY_DUYET") @db.DateTime
   note              String?          @map("GHI_CHU_DDXNL") @db.NVarChar(511)
   proposeResource   ProposeResource? @relation(fields: [idProposeResource], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_DUYET_DXNL_DE_XUAT_NGUON_LUC")
   state             StatePropose?    @relation(fields: [idState], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_DUYET_DXNL_TRANG_THAI_DX")

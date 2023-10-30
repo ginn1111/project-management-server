@@ -1,6 +1,7 @@
-import { Router } from "express";
-import { Response } from "express";
+import { PrismaClient } from "@prisma/client";
+import { Response, Router } from "express";
 import {
+	addProposeResource,
 	getDetail,
 	getList,
 	getListProposeResource,
@@ -8,7 +9,6 @@ import {
 	review,
 } from "../../controllers/project/propose";
 import { generateId } from "../../utils/generate-id";
-import { PrismaClient } from "@prisma/client";
 
 const prismaClient = new PrismaClient();
 
@@ -42,5 +42,6 @@ proposeRouter.post("/random/state-propose", async (_, res: Response) => {
 
 // propose resource
 proposeRouter.get("/resource/:id/review", getListProposeResource);
+proposeRouter.post("/resource/:idEmpProject/create", addProposeResource);
 
 export default proposeRouter;

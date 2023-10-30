@@ -22,7 +22,6 @@ import {
 	ReviewingProposeResource,
 	Supply,
 	Tool,
-	ToolSupplier,
 	WorksOfProject,
 } from "@prisma/client";
 import { Request } from "express";
@@ -112,4 +111,8 @@ interface IProjectResourceRequest<T = any> extends Request {
 interface IProposeReviewRSProject<T = any> extends Request {
 	query?: QueryParams;
 	body?: Partial<ReviewingProposeResource & T>;
+}
+interface IProposeResourceRequest<T = any> extends Request {
+	query?: QueryParams;
+	body?: Partial<ProposeResource & T>;
 }
