@@ -1,6 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 import { Response } from "express";
-import { isEmpty } from "lodash";
+import { difference, differenceBy, isEmpty, update } from "lodash";
 import {
 	IProjectResourceRequest,
 	IProposeProject,
@@ -312,6 +312,11 @@ export const getListProposeResource = async (
 					state: true,
 					proposeResource: {
 						include: {
+							resourcesProposes: {
+								include: {
+									resource: true,
+								},
+							},
 							employeesOfProject: {
 								include: {
 									proposeProject: {
@@ -426,7 +431,146 @@ export const reviewProposeResource = async (
 	req: IProjectResourceRequest,
 	res: Response,
 ) => {
+	const { id } = req.params; // idReviewProposeResource
+	const { stateName, note } = req?.body ?? {};
 	try {
+		if (!id || !stateName || isEmpty(req.body))
+			return res.status(422).json("invalid parameter");
+
+		const state = await prismaClient.statePropose.findFirst({
+			where: {
+				name: stateName,
+			},
+		});
+
+		if (isEmpty(state)) return res.status(409).json("Trạng thái không hợp lệ");
+
+		const reviewState = await prismaClient.reviewingProposeResource.findFirst({
+			include: {
+				state: true,
+			},
+			where: {
+				id,
+			},
+		});
+
+		if (reviewState?.state?.name !== StatePropose.Pending) {
+			return res.status(409).json("Đề xuất này đã đuyệt!");
+		}
+
+		await prismaClient.$transaction(async (tx) => {
+			// update state of review propose
+			const updatedReview = await tx.reviewingProposeResource.update({
+				where: { id },
+				data: {
+					idState: state.id,
+					note,
+					reviewingDate: new Date().toISOString(),
+				},
+				include: {
+					proposeResource: {
+						include: {
+							resourcesProposes: {
+								include: {
+									resource: true,
+								},
+							},
+							employeesOfProject: {
+								include: {
+									project: {
+										include: {
+											projectResources: true,
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			});
+
+			// if state is approve, add amount of this propose to project
+			if (state?.name === StatePropose.Approve) {
+				const resourceOfProject =
+					updatedReview.proposeResource?.employeesOfProject?.project?.projectResources?.map(
+						({ idResource, amount, id }) => ({
+							idResource,
+							amount,
+							id,
+						}),
+					);
+
+				const resourceAmountIndex = resourceOfProject?.reduce(
+					(acc, { idResource, amount, id }) => {
+						if (idResource) acc[idResource] = { id, amount };
+						return acc;
+					},
+					{} as Record<string, { id: string; amount: number }>,
+				);
+
+				// resource, which is not exist in project -> add new
+				const nonExistResource = differenceBy(
+					updatedReview.proposeResource?.resourcesProposes ?? [],
+					resourceOfProject ?? [],
+					"idResource",
+				);
+
+				// resource, which is exist in project -> update
+				const existResource = differenceBy(
+					updatedReview.proposeResource?.resourcesProposes ?? [],
+					nonExistResource,
+					"idResource",
+				);
+
+				if (existResource?.length) {
+					await Promise.all(
+						existResource.map(({ idResource, amount }) =>
+							tx.projectResource.update({
+								where: {
+									id: resourceAmountIndex?.[idResource!].id,
+								},
+								data: {
+									amount: resourceAmountIndex?.[idResource!].amount! + amount,
+								},
+							}),
+						),
+					);
+				}
+				if (nonExistResource?.length) {
+					await Promise.all(
+						nonExistResource.map(({ idResource, amount }) =>
+							tx.projectResource.createMany({
+								data: {
+									id: generateId("REPR"),
+									amount,
+									idResource,
+									idProject:
+										updatedReview.proposeResource?.employeesOfProject
+											?.idProject!,
+								},
+							}),
+						),
+					);
+				}
+			}
+			// otherwise add amount to resource warehouse again
+			if (state?.name === StatePropose.Reject) {
+				await Promise.all(
+					updatedReview.proposeResource?.resourcesProposes.map(
+						({ idResource, amount, resource }) =>
+							tx.resource.update({
+								where: {
+									id: idResource,
+								},
+								data: {
+									amount: resource.amount + amount,
+								},
+							}),
+					) ?? [],
+				);
+			}
+		});
+		return res.json("Duyệt đề xuất thành công");
 	} catch (error) {
 		console.log(error);
 		return res.status(500).json("Server error");
