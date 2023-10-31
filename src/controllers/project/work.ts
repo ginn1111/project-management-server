@@ -1,6 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 import { Response } from "express";
-import { isEmpty } from "lodash";
+import { isEmpty, omit } from "lodash";
 import { IWorkProjectRequest } from "../../@types/request";
 import { generateId } from "../../utils/generate-id";
 
@@ -75,6 +75,55 @@ export const add = async (req: IWorkProjectRequest, res: Response) => {
 		});
 
 		return res.json(createdWork);
+	} catch (error) {
+		console.log(error);
+		return res.status(500).json("Server error");
+	}
+};
+
+export const update = async (req: IWorkProjectRequest, res: Response) => {
+	const { idWorkProject } = req.params;
+	const { name, startDate, finishDateET, note } = req.body ?? {};
+	try {
+		if (!idWorkProject || isEmpty(req.body))
+			return res.status(422).json("invalid parameters");
+
+		const workOfProject = await prismaClient.worksOfProject.findFirst({
+			where: {
+				id: idWorkProject,
+			},
+			include: {
+				work: true,
+			},
+		});
+
+		const _updateWork = Object.assign({}, omit(workOfProject, "work"), {
+			startDate: startDate ? new Date(startDate) : undefined,
+			finishDateET: finishDateET ? new Date(finishDateET) : undefined,
+			note,
+		});
+
+		const updatedWork = await prismaClient.worksOfProject.update({
+			where: {
+				id: idWorkProject,
+			},
+			data: {
+				..._updateWork,
+			},
+		});
+
+		if (name) {
+			await prismaClient.work.update({
+				where: {
+					id: workOfProject?.idWork!,
+				},
+				data: {
+					...workOfProject?.work,
+					name,
+				},
+			});
+		}
+		return res.json(updatedWork);
 	} catch (error) {
 		console.log(error);
 		return res.status(500).json("Server error");

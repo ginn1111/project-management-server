@@ -6,12 +6,21 @@ const prismaClient = new PrismaClient();
 
 export const getList = async (req: IEmployeeProjectRequest, res: Response) => {
 	const { id } = req.params;
-	const { page, limit } = req.query ?? {};
+	const { page, limit, idDepartment } = req.query ?? {};
 	const _page = !isNaN(page as unknown as number) ? parseInt(page!) : NaN;
 	const _limit = !isNaN(limit as any) ? parseInt(limit!) : NaN;
 	try {
 		const totalItems = await prismaClient.employeesOfProject.count({
 			where: {
+				...(idDepartment
+					? {
+							proposeProject: {
+								employeesOfDepartment: {
+									idDepartment,
+								},
+							},
+					  }
+					: {}),
 				idProject: id,
 			},
 		});
@@ -21,6 +30,15 @@ export const getList = async (req: IEmployeeProjectRequest, res: Response) => {
 				? { take: _limit, skip: _page * _limit }
 				: {}),
 			where: {
+				...(idDepartment
+					? {
+							proposeProject: {
+								employeesOfDepartment: {
+									idDepartment,
+								},
+							},
+					  }
+					: {}),
 				idProject: id,
 			},
 			include: {

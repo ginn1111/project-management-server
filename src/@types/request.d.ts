@@ -41,7 +41,7 @@ interface IQualificationRequest<T = any> extends Request {
 	body?: Partial<Qualification & QualificationsOfEmployee> & any;
 }
 interface IDepartmentRequest<T = any> extends Request {
-	query?: QueryParams;
+	query?: QueryParams & { idProject?: string };
 	body?: Partial<Department & EmployeesOfDepartment & T>;
 }
 
@@ -101,7 +101,7 @@ interface IWorkProjectRequest<T = any> extends Request {
 }
 
 interface IEmployeeProjectRequest<T = any> extends Request {
-	query?: QueryParams;
+	query?: QueryParams & { idDepartment?: string };
 	body?: Partial<EmployeesOfProject & T>;
 }
 interface IProjectResourceRequest<T = any> extends Request {

@@ -96,6 +96,7 @@ model TasksOfWork {
   idTask        String?          @map("ID_CV") @db.Char(31)
   idEmployee    String?          @map("ID_NVDV") @db.Char(31)
   percentOfDone Float?           @map("MUC_DO_HT")
+  startDate  DateTime?        @map("NGAY_BD_DVCV") @db.DateTime
   finishDateET  DateTime?        @map("NGAY_HT_DK_DVCV") @db.DateTime
   finishDate    DateTime?        @map("NGAY_HT_DVCV") @db.DateTime
   note          String?          @map("GHI_CHU_DVCV") @db.NVarChar(511)
