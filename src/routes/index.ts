@@ -21,15 +21,15 @@ import { getResourceType } from "../controllers/utils/resource-type";
 const router = Router();
 
 router.use("/authentication", authenticationRouter);
-router.use("/project", verifyToken, projectRouter);
-router.use("/account", verifyToken, accountRouter);
-router.use("/department", verifyToken, departmentRouter);
-router.use("/certificate", verifyToken, certificateRouter);
-router.use("/qualification", verifyToken, qualificationRouter);
-router.use("/employee", verifyToken, employeeRoute);
-router.use("/position", verifyToken, positionRouter);
-router.use("/resource", verifyToken, resourceRouter);
-router.use("/statistic", verifyToken, statisticRouter);
+router.use("/project", projectRouter);
+router.use("/account", accountRouter);
+router.use("/department", departmentRouter);
+router.use("/certificate", certificateRouter);
+router.use("/qualification", qualificationRouter);
+router.use("/employee", employeeRoute);
+router.use("/position", positionRouter);
+router.use("/resource", resourceRouter);
+router.use("/statistic", statisticRouter);
 
 router.get("/utils/resource-type", getResourceType);
 router.get("/utils/provinces", getProvinces);
