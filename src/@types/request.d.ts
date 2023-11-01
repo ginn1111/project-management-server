@@ -21,7 +21,9 @@ import {
 	ReviewingProposeProject,
 	ReviewingProposeResource,
 	Supply,
+	TasksOfWork,
 	Tool,
+	WorksOfEmployee,
 	WorksOfProject,
 } from "@prisma/client";
 import { Request } from "express";
@@ -115,4 +117,13 @@ interface IProposeReviewRSProject<T = any> extends Request {
 interface IProposeResourceRequest<T = any> extends Request {
 	query?: QueryParams;
 	body?: Partial<ProposeResource & T>;
+}
+interface IWorkOfEmpRequest<T = any> extends Request {
+	query?: QueryParams;
+	body?: Partial<WorksOfEmployee & T>;
+}
+
+interface ITaskOfWorkRequest<T = any> extends Request {
+	query?: QueryParams;
+	body?: Partial<TasksOfWork & T>;
 }
