@@ -48,6 +48,7 @@ export const getList = async (req: IEmployeeProjectRequest, res: Response) => {
 					include: {
 						employeesOfDepartment: {
 							include: {
+								department: true,
 								employee: true,
 							},
 						},

@@ -10,6 +10,7 @@ import {
 	reviewProposeResource,
 } from "../../controllers/project/propose";
 import { generateId } from "../../utils/generate-id";
+import { isInProject } from "../../middlewares/in-project";
 
 const prismaClient = new PrismaClient();
 
@@ -43,7 +44,7 @@ proposeRouter.post("/random/state-propose", async (_, res: Response) => {
 
 // propose resource
 proposeRouter.get("/resource/:id/review", getListProposeResource);
-proposeRouter.post("/resource/:idEmpProject/create", addProposeResource);
+proposeRouter.post("/resource/create", isInProject, addProposeResource);
 proposeRouter.post("/resource/:id/review", reviewProposeResource);
 
 export default proposeRouter;

@@ -7,6 +7,7 @@ import {
 	updateTask,
 	assign,
 } from "../../controllers/project/work";
+import { isInProject } from "../../middlewares/in-project";
 
 const workRouter = Router();
 
@@ -14,8 +15,8 @@ workRouter.get("/:id", getList);
 workRouter.post("/:id/create", add);
 workRouter.post("/:idWorkProject/update", update);
 // task
-workRouter.post("/:idEmployeeInWork/task/create", createTask);
-workRouter.patch("/:idTasksOfWork/task/update", updateTask);
+workRouter.post("/:idWork/task/create", isInProject, createTask);
+workRouter.patch("/:idTasksOfWork/task/update", isInProject, updateTask);
 // assignment
 workRouter.post("/:idWorksProject/assign", assign);
 

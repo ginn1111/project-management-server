@@ -55,6 +55,7 @@ export const login = async (req: IAuthenticationRequest, res: Response) => {
 				role: username === "admin" ? "admin" : role,
 			},
 			accessToken: generateAccessToken({
+				id: account.employee?.id,
 				username: account.username,
 				role,
 			}),

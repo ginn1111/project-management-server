@@ -346,7 +346,7 @@ export const addProposeResource = async (
 	res: Response,
 ) => {
 	try {
-		const { idEmpProject } = req.params;
+		const { idEmpProject } = res.locals;
 		const { resource, description } = req.body ?? {};
 
 		if (!idEmpProject || !resource?.length)

@@ -21,7 +21,7 @@ import { getResourceType } from "../controllers/utils/resource-type";
 const router = Router();
 
 router.use("/authentication", authenticationRouter);
-router.use("/project", projectRouter);
+router.use("/project", verifyToken, projectRouter);
 router.use("/account", accountRouter);
 router.use("/department", departmentRouter);
 router.use("/certificate", certificateRouter);

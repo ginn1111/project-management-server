@@ -1,3 +1,4 @@
+import { Employee } from "@prisma/client";
 import { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
 
@@ -21,6 +22,9 @@ export const verifyToken = (
 				return res.status(403).json("You are not authorized 1!");
 			}
 			// next(): pass this middleware and come to the next request
+			if (user) {
+				res.locals.idEmpLogin = (user as Employee).id;
+			}
 			next();
 		});
 	} else {
