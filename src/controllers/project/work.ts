@@ -116,7 +116,7 @@ export const update = async (req: IWorkProjectRequest, res: Response) => {
 
 		await prismaClient.$transaction(async (tx) => {
 			// update
-			const updatedWork = await prismaClient.worksOfProject.update({
+			const updatedWork = await tx.worksOfProject.update({
 				where: {
 					id: idWorkProject,
 				},
@@ -129,7 +129,7 @@ export const update = async (req: IWorkProjectRequest, res: Response) => {
 			});
 
 			if (name) {
-				await prismaClient.work.update({
+				await tx.work.update({
 					where: {
 						id: workOfProject?.idWork!,
 					},
@@ -140,31 +140,8 @@ export const update = async (req: IWorkProjectRequest, res: Response) => {
 				});
 			}
 
-			const empOfProj = await prismaClient.employeesOfProject.findFirst({
-				where: {
-					idProject: updatedWork.idProject,
-					endDate: null,
-					proposeProject: {
-						employeesOfDepartment: {
-							employee: {
-								id: res.locals.idEmpLogin,
-							},
-						},
-					},
-				},
-				include: {
-					proposeProject: {
-						include: {
-							employeesOfDepartment: {
-								include: {
-									department: true,
-									employee: true,
-								},
-							},
-						},
-					},
-				},
-			});
+			// get from middleware in-project
+			const empOfProj = res.locals.empOfProject;
 
 			const workOfEmp = updatedWork.worksOfEmployee.find(
 				(w) => w.idEmployee === empOfProj?.id,
@@ -179,7 +156,7 @@ export const update = async (req: IWorkProjectRequest, res: Response) => {
 			const department =
 				empOfProj?.proposeProject?.employeesOfDepartment?.department;
 
-			await prismaClient.historyOfWork.create({
+			await tx.historyOfWork.create({
 				data: {
 					id: generateId("HIWO"),
 					idEmployee: workOfEmp?.id,
@@ -250,7 +227,7 @@ export const createTask = async (req: ITaskOfWorkRequest, res: Response) => {
 		return res.status(500).json("Server error");
 	}
 };
-export const updateTask = async (req: ITaskOfWorkRequest, res: Response) => {
+export const updatedTask = async (req: ITaskOfWorkRequest, res: Response) => {
 	const { idTasksOfWork } = req.params;
 	const { name, startDate, finishDateET, note } = req.body ?? {};
 	try {
@@ -290,21 +267,47 @@ export const updateTask = async (req: ITaskOfWorkRequest, res: Response) => {
 			},
 		);
 
-		const updatedTaskOfWork = await prismaClient.tasksOfWork.update({
-			where: {
-				id: idTasksOfWork,
-			},
-			data: {
-				..._updatedTaskOfWork,
-				task: {
-					update: {
-						name,
+		await prismaClient.$transaction(async (tx) => {
+			const updatedTaskOfWork = await tx.tasksOfWork.update({
+				where: {
+					id: idTasksOfWork,
+				},
+				data: {
+					..._updatedTaskOfWork,
+					task: {
+						update: {
+							name,
+						},
 					},
 				},
-			},
-		});
+				include: {
+					task: true,
+				},
+			});
 
-		return res.json(updatedTaskOfWork);
+			const empOfProj = res.locals.empOfProject;
+			const employee =
+				empOfProj?.proposeProject?.employeesOfDepartment?.employee;
+			const department =
+				empOfProj?.proposeProject?.employeesOfDepartment?.department;
+
+			await tx.historyOfTask.create({
+				data: {
+					id: generateId("HITA"),
+					idTask: updatedTaskOfWork.idTask,
+					date: new Date().toISOString(),
+					content: JSON.stringify({
+						...pick(updatedTask, ["finishDateET", "startDate"]),
+						name: updatedTaskOfWork?.task?.name,
+						employeeEdit: employee?.fullName,
+						department: department?.name,
+					}),
+					note: updatedTaskOfWork.note,
+				},
+			});
+
+			return res.json(updatedTaskOfWork);
+		});
 	} catch (error) {
 		console.log(error);
 		return res.status(500).json("Server error");
@@ -371,20 +374,38 @@ export const history = async (req: IWorkProjectRequest, res: Response) => {
 					},
 				},
 			},
-			include: {
-				employees: {
-					include: {
-						employee: {
-							include: {
-								worksOfEmployees: true,
-							},
-						},
-					},
-				},
-			},
 		});
 
 		return res.json({ historyOfWork, totalItems });
+	} catch (error) {
+		console.log(error);
+		return res.status(500).json("Server error");
+	}
+};
+
+export const historyOfTask = async (req: ITaskOfWorkRequest, res: Response) => {
+	try {
+		const { page, limit } = req.query ?? {};
+		const _page = !isNaN(page as unknown as number) ? parseInt(page!) : NaN;
+		const _limit = !isNaN(limit as any) ? parseInt(limit!) : NaN;
+		const { idTask } = req.params;
+		console.log(idTask);
+		const totalItems = await prismaClient.historyOfTask.count({
+			where: {
+				idTask,
+			},
+		});
+
+		const historyOfTask = await prismaClient.historyOfTask.findMany({
+			...(!isNaN(_page) && !isNaN(_limit)
+				? { take: _limit, skip: _page * _limit }
+				: {}),
+			where: {
+				idTask,
+			},
+		});
+
+		return res.json({ historyOfTask, totalItems });
 	} catch (error) {
 		console.log(error);
 		return res.status(500).json("Server error");

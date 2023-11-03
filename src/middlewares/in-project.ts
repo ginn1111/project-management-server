@@ -25,13 +25,26 @@ export const isInProject = async (
 				},
 				endDate: null,
 			},
+			include: {
+				proposeProject: {
+					include: {
+						employeesOfDepartment: {
+							include: {
+								department: true,
+								employee: true,
+							},
+						},
+					},
+				},
+			},
 		});
 
 		if (isEmpty(empOfProject)) {
 			return res.status(409).json("Bạn không có trong dự án này");
 		}
 
-		res.locals.idEmpProject = empOfProject.id;
+		res.locals.empOfProject = empOfProject;
+
 		next();
 	} catch (error) {
 		return res.status(500).json("Server error");
