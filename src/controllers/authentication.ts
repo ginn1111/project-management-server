@@ -27,6 +27,11 @@ export const login = async (req: IAuthenticationRequest, res: Response) => {
 			include: {
 				employee: {
 					include: {
+						departments: {
+							where: {
+								endDate: null,
+							},
+						},
 						positions: {
 							include: {
 								position: true,

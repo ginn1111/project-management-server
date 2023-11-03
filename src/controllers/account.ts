@@ -136,7 +136,7 @@ export const addNew = async (
 		return res.status(200).json(omit(account, "password"));
 	} catch (error) {
 		console.log(error);
-		return res.status(500).json(error);
+		return res.status(500).json("Server error");
 	}
 };
 

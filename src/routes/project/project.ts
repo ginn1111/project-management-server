@@ -9,6 +9,8 @@ import {
 } from "../../controllers/project/project";
 import { generateId } from "../../utils/generate-id";
 import { addNew } from "../../controllers/project/project";
+import { isInProject } from "../../middlewares/in-project";
+import { IProjectRequest } from "../../@types/request";
 
 const primaClient = new PrismaClient();
 
@@ -17,6 +19,13 @@ const projectRouter = Router();
 projectRouter.get("/", getList);
 projectRouter.get("/:id", detail);
 projectRouter.post("/add", addNew);
+projectRouter.get(
+	"/:id/in-project",
+	isInProject,
+	(req: IProjectRequest, res: Response) => {
+		return res.json(req.params.id);
+	},
+);
 
 projectRouter.post("/:id/add-resource", addResource);
 

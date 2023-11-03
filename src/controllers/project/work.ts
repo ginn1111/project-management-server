@@ -1,6 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 import { Response } from "express";
-import { isEmpty, omit } from "lodash";
+import { isEmpty, omit, pick } from "lodash";
 import {
 	ITaskOfWorkRequest,
 	IWorkOfEmpRequest,
@@ -26,6 +26,7 @@ export const getList = async (req: IWorkProjectRequest, res: Response) => {
 									include: {
 										employeesOfDepartment: {
 											include: {
+												department: true,
 												employee: true,
 											},
 										},
@@ -35,7 +36,11 @@ export const getList = async (req: IWorkProjectRequest, res: Response) => {
 						},
 						tasksOfWork: {
 							include: {
-								task: true,
+								task: {
+									include: {
+										resourceOfTasks: true,
+									},
+								},
 							},
 						},
 					},
@@ -92,6 +97,7 @@ export const update = async (req: IWorkProjectRequest, res: Response) => {
 		if (!idWorkProject || isEmpty(req.body))
 			return res.status(422).json("invalid parameters");
 
+		// get exist work of project
 		const workOfProject = await prismaClient.worksOfProject.findFirst({
 			where: {
 				id: idWorkProject,
@@ -101,33 +107,94 @@ export const update = async (req: IWorkProjectRequest, res: Response) => {
 			},
 		});
 
-		const _updateWork = Object.assign({}, omit(workOfProject, "work"), {
+		// update infor
+		const _updateWork = Object.assign({}, omit(workOfProject, ["work"]), {
 			startDate: startDate ? new Date(startDate) : undefined,
 			finishDateET: finishDateET ? new Date(finishDateET) : undefined,
 			note,
 		});
 
-		const updatedWork = await prismaClient.worksOfProject.update({
-			where: {
-				id: idWorkProject,
-			},
-			data: {
-				..._updateWork,
-			},
-		});
-
-		if (name) {
-			await prismaClient.work.update({
+		await prismaClient.$transaction(async (tx) => {
+			// update
+			const updatedWork = await prismaClient.worksOfProject.update({
 				where: {
-					id: workOfProject?.idWork!,
+					id: idWorkProject,
 				},
 				data: {
-					...workOfProject?.work,
-					name,
+					..._updateWork,
+				},
+				include: {
+					worksOfEmployee: true,
 				},
 			});
-		}
-		return res.json(updatedWork);
+
+			if (name) {
+				await prismaClient.work.update({
+					where: {
+						id: workOfProject?.idWork!,
+					},
+					data: {
+						...workOfProject?.work,
+						name,
+					},
+				});
+			}
+
+			const empOfProj = await prismaClient.employeesOfProject.findFirst({
+				where: {
+					idProject: updatedWork.idProject,
+					endDate: null,
+					proposeProject: {
+						employeesOfDepartment: {
+							employee: {
+								id: res.locals.idEmpLogin,
+							},
+						},
+					},
+				},
+				include: {
+					proposeProject: {
+						include: {
+							employeesOfDepartment: {
+								include: {
+									department: true,
+									employee: true,
+								},
+							},
+						},
+					},
+				},
+			});
+
+			const workOfEmp = updatedWork.worksOfEmployee.find(
+				(w) => w.idEmployee === empOfProj?.id,
+			);
+
+			if (isEmpty(workOfEmp)) {
+				return res.status(409).json("Bạn cần tham gia đầu việc này trước");
+			}
+
+			const employee =
+				empOfProj?.proposeProject?.employeesOfDepartment?.employee;
+			const department =
+				empOfProj?.proposeProject?.employeesOfDepartment?.department;
+
+			await prismaClient.historyOfWork.create({
+				data: {
+					id: generateId("HIWO"),
+					idEmployee: workOfEmp?.id,
+					createdDate: new Date().toISOString(),
+					content: JSON.stringify({
+						...pick(updatedWork, ["finishDateET", "startDate"]),
+						name: workOfProject?.work?.name,
+						employeeEdit: employee?.fullName,
+						department: department?.name,
+					}),
+					note: updatedWork.note,
+				},
+			});
+			return res.json(updatedWork);
+		});
 	} catch (error) {
 		console.log(error);
 		return res.status(500).json("Server error");
@@ -272,6 +339,52 @@ export const assign = async (req: IWorkOfEmpRequest, res: Response) => {
 		});
 
 		return res.json(createdAssign);
+	} catch (error) {
+		console.log(error);
+		return res.status(500).json("Server error");
+	}
+};
+export const history = async (req: IWorkProjectRequest, res: Response) => {
+	const { page, limit } = req.query ?? {};
+	const _page = !isNaN(page as unknown as number) ? parseInt(page!) : NaN;
+	const _limit = !isNaN(limit as any) ? parseInt(limit!) : NaN;
+	try {
+		const { idWorkProject } = req.params;
+		const totalItems = await prismaClient.historyOfWork.count({
+			where: {
+				employees: {
+					worksOfProject: {
+						id: idWorkProject,
+					},
+				},
+			},
+		});
+
+		const historyOfWork = await prismaClient.historyOfWork.findMany({
+			...(!isNaN(_page) && !isNaN(_limit)
+				? { take: _limit, skip: _page * _limit }
+				: {}),
+			where: {
+				employees: {
+					worksOfProject: {
+						id: idWorkProject,
+					},
+				},
+			},
+			include: {
+				employees: {
+					include: {
+						employee: {
+							include: {
+								worksOfEmployees: true,
+							},
+						},
+					},
+				},
+			},
+		});
+
+		return res.json({ historyOfWork, totalItems });
 	} catch (error) {
 		console.log(error);
 		return res.status(500).json("Server error");

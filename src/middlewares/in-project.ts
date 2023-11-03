@@ -10,14 +10,14 @@ export const isInProject = async (
 	res: Response,
 	next: NextFunction,
 ) => {
+	const { id } = req.params;
 	const { idProject } = req.body ?? {};
-	if (!idProject) return res.status(422).json("invalid parameters");
-	console.log(idProject, res.locals.idEmpLogin);
+	if (!idProject && !id) return res.status(422).json("invalid parameters");
 
 	try {
 		const empOfProject = await prismaClient.employeesOfProject.findFirst({
 			where: {
-				idProject,
+				idProject: id || idProject,
 				proposeProject: {
 					employeesOfDepartment: {
 						idEmployee: res.locals.idEmpLogin,

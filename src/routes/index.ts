@@ -16,7 +16,10 @@ import certificateRouter from "./certificate";
 import qualificationRouter from "./qualification";
 import authenticationRouter from "./authentication";
 import { verifyToken } from "../middlewares/authorization";
-import { getResourceType } from "../controllers/utils/resource-type";
+import {
+	generateResourceType,
+	getResourceType,
+} from "../controllers/utils/resource-type";
 
 const router = Router();
 
@@ -31,6 +34,7 @@ router.use("/position", positionRouter);
 router.use("/resource", resourceRouter);
 router.use("/statistic", statisticRouter);
 
+router.get("/utils/resource-type/gen", generateResourceType);
 router.get("/utils/resource-type", getResourceType);
 router.get("/utils/provinces", getProvinces);
 router.get("/utils/districts/:id", getDistricts);
