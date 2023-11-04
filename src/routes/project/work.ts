@@ -8,6 +8,8 @@ import {
 	assign,
 	history,
 	historyOfTask,
+	done,
+	doneTask,
 } from "../../controllers/project/work";
 import { isInProject } from "../../middlewares/in-project";
 
@@ -15,8 +17,9 @@ const workRouter = Router();
 
 workRouter.get("/:id", getList);
 workRouter.post("/:id/create", add);
-workRouter.post("/:idWorkProject/update", update);
+workRouter.post("/:idWorkProject/update", isInProject, update);
 workRouter.post("/:idWorkProject/history", history);
+workRouter.post("/:idWorkProject/done", done);
 // task
 // permission
 // read
@@ -25,6 +28,7 @@ workRouter.post("/:idWork/task/create", isInProject, createTask);
 workRouter.patch("/:idTasksOfWork/task/update", isInProject, updatedTask);
 // read
 workRouter.post("/:idTask/task/history", isInProject, historyOfTask);
+workRouter.post("/:idTaskOfWork/task/done", doneTask);
 
 // assignment
 workRouter.post("/:idWorksProject/assign", assign);

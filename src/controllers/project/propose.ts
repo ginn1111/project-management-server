@@ -1,6 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 import { Response } from "express";
-import { difference, differenceBy, isEmpty, update } from "lodash";
+import { differenceBy, isEmpty } from "lodash";
 import {
 	IProjectResourceRequest,
 	IProposeProject,

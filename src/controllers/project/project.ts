@@ -3,6 +3,8 @@ import { Response } from "express";
 import { intersection, isEmpty, isNaN, isNull, omit } from "lodash";
 import { IProjectRequest } from "../../@types/request";
 import { generateId } from "../../utils/generate-id";
+import { getDepartment } from "../../services/get-department";
+import { StatePropose } from "../../constants/review";
 
 const prismaClient = new PrismaClient();
 
@@ -152,6 +154,51 @@ export const addNew = async (
 					})),
 				});
 			}
+
+			const departmentOfEmp = await getDepartment(res.locals.idEmpLogin);
+			if (isEmpty(departmentOfEmp))
+				return res.status(409).json("Bạn cần tham gia phòng ban trước");
+			const approveState = await tx.statePropose.findFirst({
+				where: {
+					name: StatePropose.Approve,
+				},
+			});
+
+			if (isEmpty(approveState))
+				return res.status(409).json("Không tìm thấy trạng thái đề xuất");
+
+			// create propose and approve it
+			await tx.proposeProject.create({
+				data: {
+					id: generateId("PRPR"),
+					createdDate: new Date().toISOString(),
+					content: "Tạo dự án",
+					employeesOfDepartment: {
+						connect: {
+							id: departmentOfEmp.id,
+						},
+					},
+					reviewingProposeProject: {
+						create: {
+							id: generateId("REVW"),
+							idState: approveState.id,
+							reviewingDate: new Date().toISOString(),
+						},
+					},
+					project: {
+						connect: {
+							id: createdProj.id,
+						},
+					},
+					employeesOfProject: {
+						create: {
+							id: generateId("EMPR"),
+							idProject: createdProj.id,
+							startDate: new Date().toISOString(),
+						},
+					},
+				},
+			});
 		});
 
 		return res.json("ok");

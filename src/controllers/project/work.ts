@@ -7,6 +7,7 @@ import {
 	IWorkProjectRequest,
 } from "../../@types/request";
 import { generateId } from "../../utils/generate-id";
+import { getEmpOfProject } from "../../services/get-emp-of-project";
 
 const prismaClient = new PrismaClient();
 
@@ -63,27 +64,37 @@ export const add = async (req: IWorkProjectRequest, res: Response) => {
 		if (!id || isEmpty(req.body))
 			return res.status(422).json("invalid parameters");
 
-		const createdWork = await prismaClient.worksOfProject.create({
-			data: {
-				id: generateId("WOPR"),
-				note,
-				startDate: startDate && new Date(startDate).toISOString(),
-				finishDateET: finishDateET && new Date(finishDateET).toISOString(),
-				project: {
-					connect: {
-						id,
-					},
-				},
-				work: {
-					create: {
-						id: generateId("WORK"),
-						name,
-					},
-				},
-			},
-		});
+		const empOfProject = await getEmpOfProject(id, res.locals.idEmpLogin);
 
-		return res.json(createdWork);
+		await prismaClient.$transaction(async (tx) => {
+			const createdWork = await prismaClient.worksOfProject.create({
+				data: {
+					id: generateId("WOPR"),
+					note,
+					startDate: startDate && new Date(startDate).toISOString(),
+					finishDateET: finishDateET && new Date(finishDateET).toISOString(),
+					project: {
+						connect: {
+							id,
+						},
+					},
+					work: {
+						create: {
+							id: generateId("WORK"),
+							name,
+						},
+					},
+					worksOfEmployee: {
+						create: {
+							id: generateId("WOEM"),
+							idEmployee: empOfProject?.id,
+						},
+					},
+				},
+			});
+
+			return res.json(createdWork);
+		});
 	} catch (error) {
 		console.log(error);
 		return res.status(500).json("Server error");
@@ -129,7 +140,7 @@ export const update = async (req: IWorkProjectRequest, res: Response) => {
 			});
 
 			if (name) {
-				await tx.work.update({
+				const updatedWork = await tx.work.update({
 					where: {
 						id: workOfProject?.idWork!,
 					},
@@ -163,7 +174,7 @@ export const update = async (req: IWorkProjectRequest, res: Response) => {
 					createdDate: new Date().toISOString(),
 					content: JSON.stringify({
 						...pick(updatedWork, ["finishDateET", "startDate"]),
-						name: workOfProject?.work?.name,
+						name: name ?? workOfProject?.work?.name,
 						employeeEdit: employee?.fullName,
 						department: department?.name,
 					}),
@@ -178,14 +189,57 @@ export const update = async (req: IWorkProjectRequest, res: Response) => {
 	}
 };
 
-// for task
+export const done = async (req: ITaskOfWorkRequest, res: Response) => {
+	const { idWorkProject } = req.params;
+	try {
+		const worksOfProject = await prismaClient.worksOfProject.findFirst({
+			where: {
+				id: idWorkProject,
+			},
+			include: {
+				worksOfEmployee: {
+					include: {
+						tasksOfWork: true,
+					},
+				},
+			},
+		});
+
+		const flatTasksOfWork = worksOfProject?.worksOfEmployee.flatMap(
+			(w) => w.tasksOfWork,
+		);
+		const isAllTaskDone =
+			flatTasksOfWork?.length === 0 ||
+			flatTasksOfWork?.some((task) => task.finishDate);
+
+		if (!isAllTaskDone) {
+			return res.status(409).json("Các công việc chưa hoàn thành!");
+		}
+
+		await prismaClient.worksOfProject.update({
+			where: {
+				id: idWorkProject,
+			},
+			data: {
+				finishDate: new Date().toISOString(),
+			},
+		});
+
+		return res.json("ok");
+	} catch (error) {
+		console.log(error);
+		return res.status(500).json("Server error");
+	}
+};
+
+/**
+ * 															FOR TASK
+ * */
 export const createTask = async (req: ITaskOfWorkRequest, res: Response) => {
 	const { idWork } = req.params;
 	const { idEmployee, startDate, finishDateET, name, note } = req.body ?? {};
 	if (!idWork || isEmpty(req.body))
 		return res.status(409).json("invalid parameter");
-
-	console.log(idEmployee);
 
 	try {
 		const empOfWork = await prismaClient.worksOfEmployee.findFirst({
@@ -251,6 +305,7 @@ export const updatedTask = async (req: ITaskOfWorkRequest, res: Response) => {
 			},
 		});
 
+		// update task of login's emp!
 		if (isEmpty(existTaskOfWork)) {
 			return res.status(409).json("Nhân viên không có quyền sửa");
 		}
@@ -374,6 +429,9 @@ export const history = async (req: IWorkProjectRequest, res: Response) => {
 					},
 				},
 			},
+			orderBy: {
+				createdDate: "desc",
+			},
 		});
 
 		return res.json({ historyOfWork, totalItems });
@@ -389,7 +447,7 @@ export const historyOfTask = async (req: ITaskOfWorkRequest, res: Response) => {
 		const _page = !isNaN(page as unknown as number) ? parseInt(page!) : NaN;
 		const _limit = !isNaN(limit as any) ? parseInt(limit!) : NaN;
 		const { idTask } = req.params;
-		console.log(idTask);
+
 		const totalItems = await prismaClient.historyOfTask.count({
 			where: {
 				idTask,
@@ -403,9 +461,32 @@ export const historyOfTask = async (req: ITaskOfWorkRequest, res: Response) => {
 			where: {
 				idTask,
 			},
+			orderBy: {
+				date: "desc",
+			},
 		});
 
 		return res.json({ historyOfTask, totalItems });
+	} catch (error) {
+		console.log(error);
+		return res.status(500).json("Server error");
+	}
+};
+
+export const doneTask = async (req: ITaskOfWorkRequest, res: Response) => {
+	const { idTaskOfWork } = req.params;
+	try {
+		if (!idTaskOfWork) return res.status(422).json("invalid parameter");
+		await prismaClient.tasksOfWork.update({
+			where: {
+				id: idTaskOfWork,
+			},
+			data: {
+				finishDate: new Date().toISOString(),
+			},
+		});
+
+		return res.json("ok");
 	} catch (error) {
 		console.log(error);
 		return res.status(500).json("Server error");
