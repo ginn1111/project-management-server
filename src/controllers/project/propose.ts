@@ -346,10 +346,10 @@ export const addProposeResource = async (
 	res: Response,
 ) => {
 	try {
-		const { idEmpProject } = res.locals;
+		const { empOfProject } = res.locals;
 		const { resource, description } = req.body ?? {};
 
-		if (!idEmpProject || !resource?.length)
+		if (!empOfProject || !resource?.length)
 			return res.status(422).json("invalid parameter");
 
 		const resourceIndex = resource.reduce(
@@ -384,7 +384,7 @@ export const addProposeResource = async (
 				data: {
 					id: generateId("PRPR"),
 					description,
-					idEmpProject,
+					idEmpProject: empOfProject.id,
 					reviewingProposeResource: {
 						create: {
 							id: generateId("RVPR"),

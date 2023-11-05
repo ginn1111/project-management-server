@@ -48,6 +48,9 @@ export const getList = async (req: IWorkProjectRequest, res: Response) => {
 				},
 				work: true,
 			},
+			orderBy: {
+				startDate: "asc",
+			},
 		});
 
 		return res.json(worksOfProject);
@@ -475,14 +478,17 @@ export const historyOfTask = async (req: ITaskOfWorkRequest, res: Response) => {
 
 export const doneTask = async (req: ITaskOfWorkRequest, res: Response) => {
 	const { idTaskOfWork } = req.params;
+	const { percentOfDone } = req.body ?? {};
 	try {
-		if (!idTaskOfWork) return res.status(422).json("invalid parameter");
+		if (!idTaskOfWork || !percentOfDone)
+			return res.status(422).json("invalid parameter");
 		await prismaClient.tasksOfWork.update({
 			where: {
 				id: idTaskOfWork,
 			},
 			data: {
 				finishDate: new Date().toISOString(),
+				percentOfDone,
 			},
 		});
 
