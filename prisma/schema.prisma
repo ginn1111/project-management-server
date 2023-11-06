@@ -96,7 +96,7 @@ model TasksOfWork {
   idTask        String?          @map("ID_CV") @db.Char(31)
   idEmployee    String?          @map("ID_NVDV") @db.Char(31)
   percentOfDone Float?           @map("MUC_DO_HT")
-  startDate  DateTime?        @map("NGAY_BD_DVCV") @db.DateTime
+  startDate     DateTime?        @map("NGAY_BD_DVCV") @db.DateTime
   finishDateET  DateTime?        @map("NGAY_HT_DK_DVCV") @db.DateTime
   finishDate    DateTime?        @map("NGAY_HT_DVCV") @db.DateTime
   note          String?          @map("GHI_CHU_DVCV") @db.NVarChar(511)
@@ -563,25 +563,26 @@ model ResourceType {
 }
 
 model Resource {
-  id              String            @id(map: "PK_NGUON_LUC") @map("ID_NL") @db.Char(31)
-  idResourceType  String?           @map("ID_LNL") @db.Char(31)
-  name            String            @map("TEN_NL") @db.NVarChar(127)
-  amount          Int               @default(0, map: "DEFAULT_NGUON_LUC_SL_NL") @map("SL_NL")
-  note            String?           @map("GHI_CHU_NL") @db.NVarChar(511)
-  resourceType    ResourceType?     @relation(fields: [idResourceType], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_NGUON_LUC_LOAI_NGUON_LUC")
-  resourceProject ProjectResource[]
-  resourcesPropose    ResourcesPropose[]
+  id               String             @id(map: "PK_NGUON_LUC") @map("ID_NL") @db.Char(31)
+  idResourceType   String?            @map("ID_LNL") @db.Char(31)
+  name             String             @map("TEN_NL") @db.NVarChar(127)
+  amount           Int                @default(0, map: "DEFAULT_NGUON_LUC_SL_NL") @map("SL_NL")
+  note             String?            @map("GHI_CHU_NL") @db.NVarChar(511)
+  resourceType     ResourceType?      @relation(fields: [idResourceType], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_NGUON_LUC_LOAI_NGUON_LUC")
+  resourceProject  ProjectResource[]
+  resourcesPropose ResourcesPropose[]
 
   @@map("NGUON_LUC")
 }
 
 model ProposeResource {
-  id                        String                     @id(map: "PK_DE_XUAT_NGUON_LUC") @map("ID_DXNL") @db.Char(31)
-  idEmpProject              String?                    @map("ID_NVDA") @db.Char(31)
-  description                String?                    @db.NVarChar(511) @map("MO_TA_DXNL")
-  employeesOfProject        EmployeesOfProject?        @relation(fields: [idEmpProject], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_DE_XUAT_NGUON_LUC_NHAN_VIEN_DU_AN")
+  id                       String                     @id(map: "PK_DE_XUAT_NGUON_LUC") @map("ID_DXNL") @db.Char(31)
+  idEmpProject             String?                    @map("ID_NVDA") @db.Char(31)
+  createdDate              DateTime                   @map("NGAY_TAO_DXNL") @db.DateTime
+  description              String?                    @map("MO_TA_DXNL") @db.NVarChar(511)
+  employeesOfProject       EmployeesOfProject?        @relation(fields: [idEmpProject], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_DE_XUAT_NGUON_LUC_NHAN_VIEN_DU_AN")
   reviewingProposeResource ReviewingProposeResource[]
-  resourcesProposes              ResourcesPropose[]
+  resourcesProposes        ResourcesPropose[]
 
   @@map("DE_XUAT_NGUON_LUC")
 }
@@ -602,7 +603,7 @@ model ReviewingProposeResource {
   id                String           @id(map: "PK_DUYET_DXNL") @map("ID_DDXNL") @db.Char(31)
   idProposeResource String?          @map("ID_DXNL") @db.Char(31)
   idState           String?          @map("ID_TTDX") @db.Char(31)
-  reviewingDate     DateTime?         @map("NGAY_DUYET") @db.DateTime
+  reviewingDate     DateTime?        @map("NGAY_DUYET") @db.DateTime
   note              String?          @map("GHI_CHU_DDXNL") @db.NVarChar(511)
   proposeResource   ProposeResource? @relation(fields: [idProposeResource], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_DUYET_DXNL_DE_XUAT_NGUON_LUC")
   state             StatePropose?    @relation(fields: [idState], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_DUYET_DXNL_TRANG_THAI_DX")
@@ -611,12 +612,12 @@ model ReviewingProposeResource {
 }
 
 model ResourcesPropose {
-  id           String          @id(map: "PK_NGUON_LUC_DX") @db.Char(31) @map("ID_NLDX")
-  idResource             String          @db.Char(31) @map("ID_NL")
-  idProposeResource           String          @db.Char(31) @map("ID_DXNL")
-  amount             Int @map("SL_NL")
-  proposeResource ProposeResource @relation(fields: [idProposeResource], references: [id], onUpdate: NoAction, map: "FK_NGUON_LUC_DX_DE_XUAT_NGUON_LUC_1")
-  resource         Resource        @relation(fields: [idResource], references: [id], onUpdate: NoAction, map: "FK_NGUON_LUC_DX_NGUON_LUC")
+  id                String          @id(map: "PK_NGUON_LUC_DX") @map("ID_NLDX") @db.Char(31)
+  idResource        String          @map("ID_NL") @db.Char(31)
+  idProposeResource String          @map("ID_DXNL") @db.Char(31)
+  amount            Int             @map("SL_NL")
+  proposeResource   ProposeResource @relation(fields: [idProposeResource], references: [id], onUpdate: NoAction, map: "FK_NGUON_LUC_DX_DE_XUAT_NGUON_LUC_1")
+  resource          Resource        @relation(fields: [idResource], references: [id], onUpdate: NoAction, map: "FK_NGUON_LUC_DX_NGUON_LUC")
 
   @@map("NGUON_LUC_DE_XUAT")
 }
