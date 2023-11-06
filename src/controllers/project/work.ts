@@ -1,13 +1,14 @@
 import { PrismaClient } from "@prisma/client";
 import { Response } from "express";
-import { isEmpty, omit, pick } from "lodash";
+import { isEmpty, isNull, omit, pick } from "lodash";
 import {
+	IResourceOfTaskRequest,
 	ITaskOfWorkRequest,
 	IWorkOfEmpRequest,
 	IWorkProjectRequest,
 } from "../../@types/request";
-import { generateId } from "../../utils/generate-id";
 import { getEmpOfProject } from "../../services/get-emp-of-project";
+import { generateId } from "../../utils/generate-id";
 
 const prismaClient = new PrismaClient();
 
@@ -39,7 +40,15 @@ export const getList = async (req: IWorkProjectRequest, res: Response) => {
 							include: {
 								task: {
 									include: {
-										resourceOfTasks: true,
+										resourceOfTasks: {
+											include: {
+												resource: {
+													include: {
+														resource: true,
+													},
+												},
+											},
+										},
 									},
 								},
 							},
@@ -493,6 +502,105 @@ export const doneTask = async (req: ITaskOfWorkRequest, res: Response) => {
 		});
 
 		return res.json("ok");
+	} catch (error) {
+		console.log(error);
+		return res.status(500).json("Server error");
+	}
+};
+export const addResourceForTask = async (
+	req: IResourceOfTaskRequest<{ resource: { id: string; amount: number }[] }>,
+	res: Response,
+) => {
+	const { idTask } = req.params;
+	const { resource } = req.body ?? {};
+	try {
+		if (!idTask || !resource?.length)
+			return res.status(422).json("invalid parameters");
+
+		// create index for update exist and subtract
+		const resourceIndex = resource.reduce(
+			(acc, { id, amount }) => {
+				acc[id] = amount;
+				return acc;
+			},
+			{} as Record<string, number>,
+		);
+
+		// get resource of this task for update amount
+		const resourceOfTask = await Promise.all(
+			resource.map(({ id }) =>
+				prismaClient.resourceOfTask.findFirst({
+					where: { idResource: id, idTask },
+				}),
+			),
+		);
+
+		// exist will update
+		const existResourceInTask = resourceOfTask.filter(Boolean);
+
+		// non-exist will create
+		const nonExistResourceInTask = resourceOfTask.reduce(
+			(acc, resourceInTask, idx) => {
+				if (isNull(resourceInTask)) {
+					acc.push(resource[idx]);
+				}
+
+				return acc;
+			},
+			[] as { id: string; amount: number }[],
+		);
+
+		// exist resource of project - subtract amount
+		const resourcesOfProject = await prismaClient.projectResource.findMany({
+			where: {
+				id: {
+					in: resource.map(({ id }) => id),
+				},
+			},
+		});
+
+		await prismaClient.$transaction(async (tx) => {
+			if (nonExistResourceInTask?.length) {
+				await tx.resourceOfTask.createMany({
+					data: nonExistResourceInTask.map(({ id, amount }) => ({
+						id: generateId("RETA"),
+						idTask,
+						idResource: id,
+						amount,
+					})),
+				});
+			}
+			if (existResourceInTask?.length) {
+				await Promise.all(
+					existResourceInTask.map((r) =>
+						prismaClient.resourceOfTask.update({
+							where: {
+								id: r!.id,
+							},
+							data: {
+								amount: r!.amount + resourceIndex[r!.idResource!],
+							},
+						}),
+					),
+				);
+			}
+
+			await Promise.all(
+				resourcesOfProject.map(({ id, amount }) => {
+					console.log(amount, resourceIndex[id]);
+					return tx.projectResource.update({
+						where: {
+							id,
+						},
+						data: {
+							amount: amount - resourceIndex[id!],
+						},
+					});
+				}),
+			);
+		});
+
+		return res.json("Thêm nguồn lực thành công");
 	} catch (error) {
 		console.log(error);
 		return res.status(500).json("Server error");

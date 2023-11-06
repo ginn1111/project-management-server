@@ -17,6 +17,7 @@ import {
 	Qualification,
 	QualificationsOfEmployee,
 	Resource,
+	ResourceOfTask,
 	ResourceType,
 	ReviewingProposeProject,
 	ReviewingProposeResource,
@@ -77,7 +78,7 @@ interface IProjectRequest<T = any> extends Request {
 	body?: Partial<Project & T>;
 }
 interface IResourceRequest<T = any> extends Request {
-	query?: QueryParams & { idResourceType?: string };
+	query?: QueryParams & { idResourceType?: string; idProject?: string };
 	body?: Partial<Resource>;
 }
 
@@ -107,7 +108,7 @@ interface IEmployeeProjectRequest<T = any> extends Request {
 	body?: Partial<EmployeesOfProject & T>;
 }
 interface IProjectResourceRequest<T = any> extends Request {
-	query?: QueryParams;
+	query?: QueryParams & { idResourceType?: string };
 	body?: Partial<ProjectResource & T>;
 }
 interface IProposeReviewRSProject<T = any> extends Request {
@@ -126,4 +127,9 @@ interface IWorkOfEmpRequest<T = any> extends Request {
 interface ITaskOfWorkRequest<T = any> extends Request {
 	query?: QueryParams;
 	body?: Partial<TasksOfWork & T>;
+}
+
+interface IResourceOfTaskRequest<T = any> extends Request {
+	query?: QueryParams;
+	body?: Partial<ResourceOfTask & T>;
 }

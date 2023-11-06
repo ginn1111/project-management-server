@@ -7,7 +7,13 @@ import { isEmpty } from "lodash";
 const prismaClient = new PrismaClient();
 
 export const getList = async (req: IResourceRequest, res: Response) => {
-	const { page, limit, search = "", idResourceType } = req.query ?? {};
+	const {
+		page,
+		limit,
+		search = "",
+		idResourceType,
+		idProject,
+	} = req.query ?? {};
 	const _page = !isNaN(page as any) ? parseInt(page!) : NaN;
 	const _limit = !isNaN(limit as any) ? parseInt(limit!) : NaN;
 
@@ -18,6 +24,15 @@ export const getList = async (req: IResourceRequest, res: Response) => {
 					contains: search || undefined,
 				},
 				idResourceType: idResourceType || undefined,
+				...(idProject
+					? {
+							resourceProject: {
+								some: {
+									idProject,
+								},
+							},
+					  }
+					: {}),
 			},
 		});
 
@@ -30,6 +45,15 @@ export const getList = async (req: IResourceRequest, res: Response) => {
 					contains: search || undefined,
 				},
 				idResourceType: idResourceType || undefined,
+				...(idProject
+					? {
+							resourceProject: {
+								some: {
+									idProject,
+								},
+							},
+					  }
+					: {}),
 			},
 			include: {
 				resourceType: true,

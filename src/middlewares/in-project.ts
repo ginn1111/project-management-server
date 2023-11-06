@@ -12,7 +12,8 @@ export const isInProject = async (
 ) => {
 	const { id } = req.params;
 	const { idProject } = req.body ?? {};
-	if (!idProject && !id) return res.status(422).json("invalid parameters");
+	if (!idProject && !id)
+		return res.status(422).json("in-project middleware invalid parameters");
 
 	try {
 		const empOfProject = await prismaClient.employeesOfProject.findFirst({

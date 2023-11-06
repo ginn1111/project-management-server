@@ -6,13 +6,23 @@ const prismaClient = new PrismaClient();
 
 export const getList = async (req: IProjectResourceRequest, res: Response) => {
 	const { id } = req.params;
-	const { page, limit } = req.query ?? {};
+	const { page, limit, idResourceType, search = "" } = req.query ?? {};
 	const _page = !isNaN(page as unknown as number) ? parseInt(page!) : NaN;
 	const _limit = !isNaN(limit as any) ? parseInt(limit!) : NaN;
 	try {
 		const totalItems = await prismaClient.projectResource.count({
 			where: {
 				idProject: id,
+				...(idResourceType
+					? {
+							resource: {
+								name: {
+									contains: search || undefined,
+								},
+								idResourceType,
+							},
+					  }
+					: null),
 			},
 		});
 
@@ -22,6 +32,16 @@ export const getList = async (req: IProjectResourceRequest, res: Response) => {
 				: {}),
 			where: {
 				idProject: id,
+				...(idResourceType
+					? {
+							resource: {
+								name: {
+									contains: search || undefined,
+								},
+								idResourceType,
+							},
+					  }
+					: null),
 			},
 			include: {
 				resource: { include: { resourceType: true } },

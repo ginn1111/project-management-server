@@ -333,6 +333,11 @@ export const getListProposeResource = async (
 						},
 					},
 				},
+				orderBy: {
+					proposeResource: {
+						createdDate: "desc",
+					},
+				},
 			});
 		return res.json({ proposeResource, totalItems });
 	} catch (error) {
@@ -385,6 +390,7 @@ export const addProposeResource = async (
 					id: generateId("PRPR"),
 					description,
 					idEmpProject: empOfProject.id,
+					createdDate: new Date().toISOString(),
 					reviewingProposeResource: {
 						create: {
 							id: generateId("RVPR"),
