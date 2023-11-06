@@ -11,14 +11,15 @@ import {
 } from "../../controllers/project/propose";
 import { generateId } from "../../utils/generate-id";
 import { isInProject } from "../../middlewares/in-project";
+import { doneProject } from "../../middlewares/done-project";
 
 const prismaClient = new PrismaClient();
 
 const proposeRouter = Router();
 
 proposeRouter.get("/list", getList);
-proposeRouter.post("/", propose);
-proposeRouter.post("/:id/review", review);
+proposeRouter.post("/", doneProject, propose);
+proposeRouter.post("/:id/review", doneProject, review);
 proposeRouter.get("/:id/review", getDetail);
 
 proposeRouter.post("/random/state-propose", async (_, res: Response) => {

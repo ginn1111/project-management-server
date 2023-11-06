@@ -5,26 +5,26 @@ import {
 	getProvinces,
 	getWards,
 } from "../controllers/utils/address";
-import accountRouter from "./account";
-import departmentRouter from "./department";
-import employeeRoute from "./employee";
-import positionRouter from "./position";
-import projectRouter from "./project";
-import resourceRouter from "./resource";
-import statisticRouter from "./statistic";
-import certificateRouter from "./certificate";
-import qualificationRouter from "./qualification";
-import authenticationRouter from "./authentication";
-import { verifyToken } from "../middlewares/authorization";
 import {
 	generateResourceType,
 	getResourceType,
 } from "../controllers/utils/resource-type";
+import { verifyToken } from "../middlewares/authorization";
+import accountRouter from "./account";
+import authenticationRouter from "./authentication";
+import certificateRouter from "./certificate";
+import departmentRouter from "./department";
+import employeeRoute from "./employee";
+import positionRouter from "./position";
+import projectRouter from "./project";
+import qualificationRouter from "./qualification";
+import resourceRouter from "./resource";
+import statisticRouter from "./statistic";
 
 const router = Router();
 
 router.use("/authentication", authenticationRouter);
-router.use("/project", verifyToken, projectRouter);
+router.use("/project", verifyToken,  projectRouter);
 router.use("/account", accountRouter);
 router.use("/department", departmentRouter);
 router.use("/certificate", certificateRouter);

@@ -12,17 +12,16 @@ import {
 	doneTask,
 } from "../../controllers/project/work";
 import { isInProject } from "../../middlewares/in-project";
+import { doneProject } from "../../middlewares/done-project";
 
 const workRouter = Router();
 
 workRouter.get("/:id", getList);
-workRouter.post("/:id/create", add);
+workRouter.post("/:id/create",doneProject, add);
 workRouter.post("/:idWorkProject/update", isInProject, update);
 workRouter.post("/:idWorkProject/history", history);
 workRouter.post("/:idWorkProject/done", done);
 // task
-// permission
-// read
 workRouter.post("/:idWork/task/create", isInProject, createTask);
 // update
 workRouter.patch("/:idTasksOfWork/task/update", isInProject, updatedTask);

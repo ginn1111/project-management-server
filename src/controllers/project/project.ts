@@ -470,3 +470,46 @@ export const addResource = async (
 		return res.status(500).json((error as Error).message ?? "Server error");
 	}
 };
+
+export const done = async (req: IProjectRequest, res: Response) => {
+	const {id}  = req.params;
+	try {
+		const project = await prismaClient.project.findFirst({
+			where: {
+				id
+			},
+			include: {
+				worksOfProject: true
+			}
+		})
+
+		if(!project?.worksOfProject?.length) {
+			return res.status(409).json("Dự án chưa có đầu việc nào")
+		}
+
+		const allWorkDone = project?.worksOfProject.every(workOfPrj => !!workOfPrj.finishDate)
+
+		if(!allWorkDone) {
+			return res.status(409).json("Các đầu việc của dự án chưa hoàn thành!")
+		}
+
+		if(project?.finishDate) {
+			return res.status(409).json("Dự án đã hoàn thành")
+		}
+
+		const doneProject = await prismaClient.project.update({
+			where: {
+				id,
+			},
+			data: {
+				finishDate: new Date().toISOString()
+			}
+		})
+
+		return res.json(doneProject)
+		
+	} catch (error) {
+		console.log(error);
+		return res.status(500).json((error as Error).message ?? "Server error");
+	}
+}

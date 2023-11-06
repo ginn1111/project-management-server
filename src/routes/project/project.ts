@@ -6,18 +6,21 @@ import {
 	detail,
 	getList,
 	update,
+	done,
 } from "../../controllers/project/project";
 import { generateId } from "../../utils/generate-id";
 import { addNew } from "../../controllers/project/project";
 import { isInProject } from "../../middlewares/in-project";
 import { IProjectRequest } from "../../@types/request";
+import { doneProject } from "../../middlewares/done-project";
 
 const primaClient = new PrismaClient();
 
 const projectRouter = Router();
 
 projectRouter.get("/", getList);
-projectRouter.get("/:id", detail);
+projectRouter.post("/:id/done", doneProject, done);
+projectRouter.get("/:id",  detail);
 projectRouter.post("/add", addNew);
 projectRouter.get(
 	"/:id/in-project",
@@ -27,9 +30,9 @@ projectRouter.get(
 	},
 );
 
-projectRouter.post("/:id/add-resource", addResource);
+projectRouter.post("/:id/add-resource", doneProject, addResource);
 
-projectRouter.patch("/:id/update", update);
+projectRouter.patch("/:id/update", doneProject, update);
 projectRouter.post("/random", async (_, res: Response) => {
 	const projects = Array(10)
 		.fill(0)
