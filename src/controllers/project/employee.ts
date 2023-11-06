@@ -1,6 +1,6 @@
+import { PrismaClient } from "@prisma/client";
 import { Response } from "express";
 import { IEmployeeProjectRequest } from "../../@types/request";
-import { PrismaClient } from "@prisma/client";
 
 const prismaClient = new PrismaClient();
 
@@ -22,6 +22,9 @@ export const getList = async (req: IEmployeeProjectRequest, res: Response) => {
 					  }
 					: {}),
 				idProject: id,
+				idProposeProject: {
+					not: res.locals.empOfProject.idProposeProject,
+				},
 				endDate: null,
 			},
 		});
@@ -42,6 +45,9 @@ export const getList = async (req: IEmployeeProjectRequest, res: Response) => {
 					: {}),
 				idProject: id,
 				endDate: null,
+				idProposeProject: {
+					not: res.locals.empOfProject.idProposeProject,
+				},
 			},
 			include: {
 				proposeProject: {
@@ -60,6 +66,28 @@ export const getList = async (req: IEmployeeProjectRequest, res: Response) => {
 		return res.json({ employeesOfProject, totalItems });
 	} catch (error) {
 		console.log(error);
-		return res.status(500).json(error);
+		return res.status(500).json("Server error");
+	}
+};
+
+export const remove = async (req: IEmployeeProjectRequest, res: Response) => {
+	const { idEmpProject } = req.params;
+	try {
+		if (!idEmpProject) return res.status(422).json("invalid parameter");
+
+		const removeEmpOfProject = await prismaClient.employeesOfProject.update({
+			where: {
+				id: idEmpProject,
+				endDate: null,
+			},
+			data: {
+				endDate: new Date().toISOString(),
+			},
+		});
+
+		return res.json(removeEmpOfProject);
+	} catch (error) {
+		console.log(error);
+		return res.status(500).json("Nhân viên đã bị xoá khỏi dự án!");
 	}
 };

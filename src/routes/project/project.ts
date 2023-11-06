@@ -20,7 +20,7 @@ const projectRouter = Router();
 
 projectRouter.get("/", getList);
 projectRouter.post("/:id/done", doneProject, done);
-projectRouter.get("/:id",  detail);
+projectRouter.get("/:id", detail);
 projectRouter.post("/add", addNew);
 projectRouter.get(
 	"/:id/in-project",
