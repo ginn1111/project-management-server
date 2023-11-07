@@ -3,6 +3,8 @@ import { Response } from "express";
 import { isEmpty } from "lodash";
 import { IPositionRequest } from "../@types/request";
 import { generateId } from "../utils/generate-id";
+import { getDepartment } from "../services/get-department";
+import { Role } from "../constants/general";
 
 const PREFIX_KEY = "POST";
 const prismaClient = new PrismaClient();
@@ -172,16 +174,24 @@ export const updateByEmployee = async (
 };
 
 export const addNew = async (req: IPositionRequest, res: Response) => {
+	const { id, name, code, ...restBody } = req.body ?? {};
 	try {
-		if (isEmpty(req.body)) {
-			return res.status(422).json("invalid parameters");
-		}
-		const { id, name, ...restBody } = req.body;
-		if (!name) return res.status(422).json("invalid parameter");
+		if (!name || !code) return res.status(422).json("invalid parameter");
+
+		const existPositionCode = await prismaClient.position.findFirst({
+			where: {
+				code,
+			},
+		});
+
+		if (!isEmpty(existPositionCode))
+			return res.status(409).json("Tên chức vụ đã tồn tại");
+
 		const position = await prismaClient.position.create({
 			data: {
 				id: generateId(PREFIX_KEY),
 				name,
+				code,
 				...restBody,
 			},
 		});
@@ -215,28 +225,81 @@ export const addToEmployee = async (
 		if (id === positionOfEmp?.position?.id)
 			return res.status(409).json("Chức vụ mới không thể là chức vụ hiện tại");
 
-		if (!isEmpty(positionOfEmp)) {
-			await prismaClient.positionsOfEmployee.update({
-				where: {
-					id: positionOfEmp?.id,
-				},
-				data: {
-					endDate: new Date().toISOString(),
-				},
-			});
+		// check if now position is head of department
+		const position = await prismaClient.position.findFirst({ where: { id } });
+		const department = await getDepartment(idEmp);
+
+		if (position?.code === Role.TRUONG_PHONG) {
+			if (isEmpty(department)) {
+				return res
+					.status(409)
+					.json(
+						"Bạn phải là thành viên của phòng ban trước khi làm trưởng phòng!",
+					);
+			}
+			const headOfDepartment =
+				await prismaClient.employeesOfDepartment.findFirst({
+					where: {
+						idDepartment: department.idDepartment,
+						idHead: null,
+						employee: {
+							positions: {
+								some: {
+									idPosition: position.id,
+								},
+							},
+						},
+						endDate: null,
+					},
+				});
+
+			if (!isEmpty(headOfDepartment)) {
+				return res.status(409).json("Mỗi phòng ban chỉ có một trưởng phòng!");
+			}
 		}
 
-		const positionOfEmployee = await prismaClient.positionsOfEmployee.create({
-			data: {
-				id: generateId("POEM"),
-				idPosition: id,
-				idEmployee: idEmp,
-				startDate: new Date().toISOString(),
-				...bodyData,
-			},
-		});
+		await prismaClient.$transaction(async (tx) => {
+			// end of old position
+			if (!isEmpty(positionOfEmp)) {
+				await tx.positionsOfEmployee.update({
+					where: {
+						id: positionOfEmp?.id,
+					},
+					data: {
+						endDate: new Date().toISOString(),
+					},
+				});
+			}
 
-		return res.json(positionOfEmployee);
+			// create new positionsOfEmployee record
+			const positionOfEmployee = await tx.positionsOfEmployee.create({
+				data: {
+					id: generateId("POEM"),
+					idPosition: id,
+					idEmployee: idEmp,
+					startDate: new Date().toISOString(),
+					...bodyData,
+				},
+			});
+
+			// update head of department
+			if (position?.code === Role.TRUONG_PHONG && department) {
+				await tx.employeesOfDepartment.updateMany({
+					where: {
+						id: {
+							not: department.id,
+						},
+						idDepartment: department?.idDepartment,
+						endDate: null,
+					},
+					data: {
+						idHead: department.id,
+					},
+				});
+			}
+
+			return res.json(positionOfEmployee);
+		});
 	} catch (error) {
 		console.log(error);
 		return res.status(500).json(error);

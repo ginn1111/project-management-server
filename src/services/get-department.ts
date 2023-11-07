@@ -9,6 +9,9 @@ export const getDepartment = async (idEmployee: string) => {
 				idEmployee: idEmployee,
 				endDate: null,
 			},
+			include: {
+				department: true,
+			},
 		});
 
 		return department;
