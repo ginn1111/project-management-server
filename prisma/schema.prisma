@@ -20,6 +20,7 @@ model Qualification {
 model Position {
   id                  String                @id(clustered: false, map: "PK_CHUC_VU") @map("ID_CHV") @db.Char(31)
   name                String                @map("TEN_CHV") @db.NVarChar(255)
+  code String? @map("CODE") @db.VarChar(64)
   note                String?               @map("GHI_CHU_CHV") @db.NVarChar(511)
   isActive            Boolean               @default(true) @map("IS_ACTIVE_CHV")
   positionsOfEmployee PositionsOfEmployee[]
