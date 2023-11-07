@@ -78,7 +78,7 @@ export const update = async (req: IQualificationRequest, res: Response) => {
 		}
 	} catch (error) {
 		console.log(error);
-		return res.status(500).json(error);
+		return res.status(500).json("Server error");
 	}
 };
 export const addNew = async (
@@ -108,7 +108,7 @@ export const addNew = async (
 		return res.status(200).json(qualification);
 	} catch (error) {
 		console.log(error);
-		return res.status(500).json(error);
+		return res.status(500).json("Server error");
 	}
 };
 
@@ -131,7 +131,7 @@ export const getDetail = async (req: IQualificationRequest, res: Response) => {
 		return res.status(200).json(qualification);
 	} catch (error) {
 		console.log(error);
-		return res.status(500).json(error);
+		return res.status(500).json("Server error");
 	}
 };
 
@@ -196,7 +196,7 @@ export const addRole = async (req: IQualificationRequest, res: Response) => {
 		return res.json(newRole);
 	} catch (error) {
 		console.log(error);
-		return res.status(500).json(error);
+		return res.status(500).json("Server error");
 	}
 };
 

@@ -65,7 +65,7 @@ export const getList = async (req: IWorkProjectRequest, res: Response) => {
 		return res.json(worksOfProject);
 	} catch (error) {
 		console.log(error);
-		return res.status(500).json(error);
+		return res.status(500).json("Server error");
 	}
 };
 

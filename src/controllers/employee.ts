@@ -116,7 +116,7 @@ export const update = async (req: IEmployeeRequest, res: Response) => {
 		}
 	} catch (error) {
 		console.log(error);
-		return res.status(500).json(error);
+		return res.status(500).json("Server error");
 	}
 };
 export const addNew = async (req: IEmployeeRequest, res: Response) => {
@@ -133,7 +133,7 @@ export const addNew = async (req: IEmployeeRequest, res: Response) => {
 		return res.status(200).json(employee);
 	} catch (error) {
 		console.log(error);
-		return res.status(500).json(error);
+		return res.status(500).json("Server error");
 	}
 };
 
@@ -187,7 +187,7 @@ export const getDetail = async (req: IEmployeeRequest, res: Response) => {
 		return res.status(200).json(employee);
 	} catch (error) {
 		console.log(error);
-		return res.status(500).json(error);
+		return res.status(500).json("Server error");
 	}
 };
 export const remove = async (req: IEmployeeRequest, res: Response) => {
@@ -208,6 +208,6 @@ export const remove = async (req: IEmployeeRequest, res: Response) => {
 		return res.status(200).json(employee);
 	} catch (error) {
 		console.log(error);
-		return res.status(500).json(error);
+		return res.status(500).json("Server error");
 	}
 };

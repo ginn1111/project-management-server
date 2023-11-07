@@ -8,7 +8,7 @@ export const getProvinces = async (_: any, res: Response) => {
 		const provinceList = await prismaClient.province.findMany();
 		return res.json(provinceList);
 	} catch (error) {
-		res.status(500).json(error);
+		res.status(500).json("Server error");
 	}
 };
 
@@ -25,7 +25,7 @@ export const getDistricts = async (req: Request, res: Response) => {
 
 		return res.json(districtList);
 	} catch (error) {
-		res.status(500).json(error);
+		res.status(500).json("Server error");
 	}
 };
 
@@ -42,6 +42,6 @@ export const getWards = async (req: Request, res: Response) => {
 
 		return res.json(wardList);
 	} catch (error) {
-		res.status(500).json(error);
+		res.status(500).json("Server error");
 	}
 };

@@ -69,7 +69,7 @@ export const update = async (req: ICertificateRequest, res: Response) => {
 		}
 	} catch (error) {
 		console.log(error);
-		return res.status(500).json(error);
+		return res.status(500).json("Server error");
 	}
 };
 export const addNew = async (
@@ -110,7 +110,7 @@ export const addNew = async (
 		return res.status(200).json(certificate);
 	} catch (error) {
 		console.log(error);
-		return res.status(500).json(error);
+		return res.status(500).json("Server error");
 	}
 };
 
@@ -132,6 +132,6 @@ export const getDetail = async (req: ICertificateRequest, res: Response) => {
 		return res.status(200).json(certificate);
 	} catch (error) {
 		console.log(error);
-		return res.status(500).json(error);
+		return res.status(500).json("Server error");
 	}
 };

@@ -2,6 +2,8 @@ import { PrismaClient } from "@prisma/client";
 import { Response } from "express";
 import { isEmpty } from "lodash";
 import { IDepartmentRequest } from "../@types/request";
+import { Role } from "../constants/general";
+import { getPositionOfEmp } from "../services/get-position";
 import { generateId } from "../utils/generate-id";
 
 const PREFIX_KEY = "DEPA";
@@ -30,7 +32,7 @@ export const getListByEmployee = async (
 		return res.json(departmentOfEmployee);
 	} catch (error) {
 		console.log(error);
-		return res.status(500).json(error);
+		return res.status(500).json("Server error");
 	}
 };
 
@@ -104,12 +106,37 @@ export const getList = async (req: IDepartmentRequest, res: Response) => {
 					},
 				],
 			},
+			include: {
+				employeesOfDepartment: {
+					where: {
+						endDate: null,
+					},
+					include: {
+						employee: {
+							include: {
+								positions: {
+									where: {
+										endDate: null,
+									},
+									include: {
+										position: true,
+									},
+								},
+							},
+						},
+					},
+
+					orderBy: {
+						startDate: "desc",
+					},
+				},
+			},
 		});
 
 		return res.status(200).json({ departments, totalItems });
 	} catch (error) {
 		console.log(error);
-		return res.status(500).json(error);
+		return res.status(500).json("Server error");
 	}
 };
 
@@ -142,7 +169,7 @@ export const update = async (req: IDepartmentRequest, res: Response) => {
 		return res.json(updatedDepartment);
 	} catch (error) {
 		console.log(error);
-		return res.status(500).json(error);
+		return res.status(500).json("Server error");
 	}
 };
 
@@ -183,7 +210,7 @@ export const updateByEmployee = async (
 		return res.json(updatedDepartmentByEmployee);
 	} catch (error) {
 		console.log(error);
-		return res.status(500).json(error);
+		return res.status(500).json("Server error");
 	}
 };
 
@@ -202,7 +229,7 @@ export const addNew = async (req: IDepartmentRequest, res: Response) => {
 		return res.status(200).json(department);
 	} catch (error) {
 		console.log(error);
-		return res.status(500).json(error);
+		return res.status(500).json("Server error");
 	}
 };
 
@@ -216,32 +243,98 @@ export const addToEmployee = async (
 	try {
 		if (!id || !idEmp) return res.status(422).json("invalid parameters");
 
-		if (idOld) {
-			await prismaClient.employeesOfDepartment.update({
-				where: {
-					id: idOld,
-				},
-				data: {
-					endDate: new Date().toISOString(),
-				},
-			});
-		}
+		await prismaClient.$transaction(
+			async (tx) => {
+				const currentPositionOfEmp = await getPositionOfEmp(idEmp);
 
-		const createdDepartmentOfEmployee =
-			await prismaClient.employeesOfDepartment.create({
-				data: {
-					id: generateId("EMDE"),
-					idDepartment: id,
-					idEmployee: idEmp,
-					startDate: new Date().toISOString(),
-					...restBody,
-				},
-			});
+				// remove position of emp with TRUONG_PHONG role of old department
+				if (currentPositionOfEmp?.position?.code === Role.TRUONG_PHONG) {
+					await tx.positionsOfEmployee.update({
+						where: {
+							id: currentPositionOfEmp.id,
+						},
+						data: {
+							endDate: new Date().toISOString(),
+						},
+					});
+					if (idOld) {
+						// if old position is TRUONG_PHONG update idHead of rest department
+						const oldDepartment = await tx.employeesOfDepartment.findFirst({
+							where: {
+								id: idOld,
+							},
+						});
+						if (!oldDepartment?.id) {
+							return res
+								.status(409)
+								.json("Không thể cập nhật lại trưởng phòng cho nhân viên khác");
+						}
+						await tx.employeesOfDepartment.updateMany({
+							where: {
+								idDepartment: oldDepartment.idDepartment,
+								endDate: null,
+							},
+							data: {
+								idHead: null,
+							},
+						});
+					}
+				}
 
-		return res.json(createdDepartmentOfEmployee);
+				// if emp have old department
+				// make it end
+				if (idOld) {
+					await tx.employeesOfDepartment.update({
+						where: {
+							id: idOld,
+						},
+						data: {
+							endDate: new Date().toISOString(),
+						},
+					});
+				}
+
+				// if emp's department have head
+				// update idHead
+				const headOfNewDepartment = await tx.employeesOfDepartment.findFirst({
+					where: {
+						idDepartment: id,
+						idHead: null,
+						employee: {
+							positions: {
+								some: {
+									position: {
+										code: Role.TRUONG_PHONG,
+									},
+									endDate: null,
+								},
+							},
+						},
+						endDate: null,
+					},
+				});
+
+				const createdDepartmentOfEmployee =
+					await tx.employeesOfDepartment.create({
+						data: {
+							id: generateId("EMDE"),
+							idDepartment: id,
+							idEmployee: idEmp,
+							startDate: new Date().toISOString(),
+							idHead: headOfNewDepartment?.id,
+							...restBody,
+						},
+					});
+
+				return res.json(createdDepartmentOfEmployee);
+			},
+			{
+				timeout: 20000,
+			},
+		);
 	} catch (error) {
 		console.log(error);
-		return res.status(500).json(error);
+		return res.status(500).json("Server error");
 	}
 };
 
@@ -263,7 +356,7 @@ export const getDetail = async (req: IDepartmentRequest, res: Response) => {
 		return res.status(200).json(department);
 	} catch (error) {
 		console.log(error);
-		return res.status(500).json(error);
+		return res.status(500).json("Server error");
 	}
 };
 
@@ -283,6 +376,6 @@ export const remove = async (req: IDepartmentRequest, res: Response) => {
 		return res.json(deletedDepartment);
 	} catch (error) {
 		console.log(error);
-		return res.status(500).json(error);
+		return res.status(500).json("Server error");
 	}
 };

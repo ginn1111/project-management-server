@@ -60,7 +60,7 @@ export const getList = async (req: IAccountRequest, res: Response) => {
 		return res.status(200).json({ accounts, totalItems });
 	} catch (error) {
 		console.log(error);
-		return res.status(500).json(error);
+		return res.status(500).json("Server error");
 	}
 };
 
@@ -102,7 +102,7 @@ export const getList = async (req: IAccountRequest, res: Response) => {
 // 		return res.json(omit(updatedAccount, "password"));
 // 	} catch (error) {
 // 		console.log(error);
-// 		return res.status(500).json(error);
+// 		return res.status(500).json("Server error");
 // 	}
 // };
 
@@ -170,7 +170,7 @@ export const update = async (req: IAccountRequest, res: Response) => {
 		return res.json(updatedAccount);
 	} catch (error) {
 		console.log(error);
-		return res.status(500).json(error);
+		return res.status(500).json("Server error");
 	}
 };
 
@@ -192,7 +192,7 @@ export const getDetail = async (req: IAccountRequest, res: Response) => {
 		return res.status(200).json(omit(account, "password"));
 	} catch (error) {
 		console.log(error);
-		return res.status(500).json(error);
+		return res.status(500).json("Server error");
 	}
 };
 
@@ -249,6 +249,6 @@ export const active = async (req: IAccountRequest, res: Response) => {
 		return res.json(omit(updatedAccount, "password"));
 	} catch (error) {
 		console.log(error);
-		return res.status(500).json(error);
+		return res.status(500).json("Server error");
 	}
 };

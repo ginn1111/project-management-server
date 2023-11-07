@@ -11,7 +11,7 @@ export const getResourceType = async (_: unknown, res: Response) => {
 		return res.json(resourceTypes);
 	} catch (error) {
 		console.log(error);
-		res.status(500).json(error);
+		res.status(500).json("Server error");
 	}
 };
 
