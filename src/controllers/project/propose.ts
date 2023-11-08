@@ -222,7 +222,7 @@ export const review = async (req: IReviewProposeProject, res: Response) => {
 };
 
 export const getList = async (req: IReviewProposeProject, res: Response) => {
-	const { page, limit, idProject } = req.query ?? {};
+	const { page, limit, idProject, idDepartment } = req.query ?? {};
 	const _page = !isNaN(page as unknown as number) ? parseInt(page!) : NaN;
 	const _limit = !isNaN(limit as any) ? parseInt(limit!) : NaN;
 
@@ -232,6 +232,11 @@ export const getList = async (req: IReviewProposeProject, res: Response) => {
 				proposeProject: {
 					project: {
 						id: idProject || undefined,
+					},
+					employeesOfDepartment: {
+						department: {
+							id: idDepartment || undefined,
+						},
 					},
 				},
 			},
@@ -258,6 +263,11 @@ export const getList = async (req: IReviewProposeProject, res: Response) => {
 				proposeProject: {
 					project: {
 						id: idProject || undefined,
+					},
+					employeesOfDepartment: {
+						department: {
+							id: idDepartment || undefined,
+						},
 					},
 				},
 			},

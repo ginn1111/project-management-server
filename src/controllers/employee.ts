@@ -8,13 +8,27 @@ const PREFIX_KEY = "EMPL";
 const prismaClient = new PrismaClient();
 
 export const getList = async (req: IEmployeeRequest, res: any) => {
-	let { page, limit, search = "" } = req.query ?? {};
+	let { page, limit, search = "", idDepartment } = req.query ?? {};
 	const _page = !isNaN(page as unknown as number) ? parseInt(page!) : 0;
 	const _limit = !isNaN(limit as any) ? parseInt(limit!) : 10;
 
 	const totalItems = await prismaClient.employee.count({
 		where: {
-			AND: [{ isActive: true }],
+			AND: [
+				{ isActive: true },
+				{
+					...((idDepartment
+						? {
+								departments: {
+									some: {
+										idDepartment,
+										endDate: null,
+									},
+								},
+						  }
+						: {}) as any),
+				},
+			],
 			OR: [
 				{
 					fullName: {
@@ -58,7 +72,21 @@ export const getList = async (req: IEmployeeRequest, res: any) => {
 			province: true,
 		},
 		where: {
-			AND: [{ isActive: true }],
+			AND: [
+				{ isActive: true },
+				{
+					...((idDepartment
+						? {
+								departments: {
+									some: {
+										idDepartment,
+										endDate: null,
+									},
+								},
+						  }
+						: {}) as any),
+				},
+			],
 			OR: [
 				{
 					fullName: {

@@ -228,6 +228,16 @@ export const done = async (req: ITaskOfWorkRequest, res: Response) => {
 			return res.status(409).json("Các công việc chưa hoàn thành!");
 		}
 
+		const workOfProject = await prismaClient.worksOfProject.findFirst({
+			where: {
+				id: idWorkProject,
+			},
+		});
+
+		if (workOfProject?.finishDate) {
+			return res.status(309).json("Đầu việc này đã hoàn thành");
+		}
+
 		await prismaClient.worksOfProject.update({
 			where: {
 				id: idWorkProject,
@@ -491,6 +501,15 @@ export const doneTask = async (req: ITaskOfWorkRequest, res: Response) => {
 	try {
 		if (!idTaskOfWork || !percentOfDone)
 			return res.status(422).json("invalid parameter");
+
+		const taskOfWork = await prismaClient.tasksOfWork.findFirst({
+			where: { id: idTaskOfWork },
+		});
+
+		if (taskOfWork?.finishDate) {
+			return res.status(309).json("Công việc đã hoàn thành");
+		}
+
 		await prismaClient.tasksOfWork.update({
 			where: {
 				id: idTaskOfWork,

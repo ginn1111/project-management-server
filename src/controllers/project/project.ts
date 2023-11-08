@@ -48,7 +48,11 @@ export const getList = async (req: IProjectRequest, res: Response) => {
 									...(idDepartment
 										? {
 												some: {
-													idDepartment: idDepartment || undefined,
+													AND: [
+														{
+															idDepartment: idDepartment || undefined,
+														},
+													],
 												},
 										  }
 										: {}),
@@ -98,7 +102,11 @@ export const getList = async (req: IProjectRequest, res: Response) => {
 									...(idDepartment
 										? {
 												some: {
-													idDepartment: idDepartment || undefined,
+													AND: [
+														{
+															idDepartment: idDepartment || undefined,
+														},
+													],
 												},
 										  }
 										: {}),

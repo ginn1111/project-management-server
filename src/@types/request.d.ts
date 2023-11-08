@@ -30,7 +30,7 @@ import {
 import { Request } from "express";
 
 interface IEmployeeRequest extends Request {
-	query?: QueryParams;
+	query?: QueryParams & { idDepartment?: string };
 	body?: Partial<Employee>;
 }
 
@@ -88,7 +88,7 @@ interface IProposeProject<T = any> extends Request {
 }
 
 interface IReviewProposeProject<T = any> extends Request {
-	query?: QueryParams & { idProject?: string };
+	query?: QueryParams & { idProject?: string; idDepartment?: string };
 	body?: Partial<ReviewingProposeProject & T>;
 }
 interface IAuthenticationRequest<T = any> extends Request {

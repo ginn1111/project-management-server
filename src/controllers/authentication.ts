@@ -2,8 +2,9 @@ import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcrypt";
 import { Response } from "express";
 import jwt from "jsonwebtoken";
-import { isEmpty, isNull } from "lodash";
+import { isEmpty } from "lodash";
 import { IAuthenticationRequest } from "../@types/request";
+import { Role } from "../constants/general";
 
 const prismaClient = new PrismaClient();
 
@@ -19,6 +20,7 @@ export const login = async (req: IAuthenticationRequest, res: Response) => {
 		if (!username || !password)
 			return res.status(422).json("invalid parameters");
 
+		console.log(username?.length);
 		// check exist username
 		const account = await prismaClient.account.findFirst({
 			where: {
@@ -33,6 +35,9 @@ export const login = async (req: IAuthenticationRequest, res: Response) => {
 							},
 						},
 						positions: {
+							where: {
+								endDate: null,
+							},
 							include: {
 								position: true,
 							},
@@ -49,9 +54,8 @@ export const login = async (req: IAuthenticationRequest, res: Response) => {
 		const isEq = await bcrypt.compare(password, account.password);
 		if (!isEq) return res.status(409).json("Mật khẩu hoặc username không đúng");
 
-		const role = account.employee?.positions.find(
-			({ endDate }) => !isNull(endDate),
-		);
+		const role =
+			account?.employee?.positions?.[0]?.position?.code ?? Role.NHAN_VIEN;
 
 		// return user info with jwt and other info
 		return res.json({
