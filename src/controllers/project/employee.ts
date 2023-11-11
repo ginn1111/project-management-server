@@ -22,9 +22,6 @@ export const getList = async (req: IEmployeeProjectRequest, res: Response) => {
 					  }
 					: {}),
 				idProject: id,
-				idProposeProject: {
-					not: res.locals.empOfProject.idProposeProject,
-				},
 				endDate: null,
 			},
 		});
@@ -45,9 +42,6 @@ export const getList = async (req: IEmployeeProjectRequest, res: Response) => {
 					: {}),
 				idProject: id,
 				endDate: null,
-				idProposeProject: {
-					not: res.locals.empOfProject.idProposeProject,
-				},
 			},
 			include: {
 				proposeProject: {

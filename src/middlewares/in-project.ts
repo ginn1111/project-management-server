@@ -16,6 +16,7 @@ export const isInProject = async (
 		return res.status(422).json("in-project middleware invalid parameters");
 
 	try {
+		// normal emp
 		const empOfProject = await prismaClient.employeesOfProject.findFirst({
 			where: {
 				idProject: id || idProject,
@@ -40,11 +41,24 @@ export const isInProject = async (
 			},
 		});
 
-		if (isEmpty(empOfProject)) {
+		// is head or creator of employee
+		const headOrCreator = await prismaClient.manageProject.findFirst({
+			where: {
+				endDate: null,
+				idProject,
+				idEmpHead: res.locals.idEmpLogin,
+			},
+			include: {
+				employee: true,
+			},
+		});
+
+		if (isEmpty(empOfProject) && isEmpty(headOrCreator)) {
 			return res.status(409).json("Bạn không có trong dự án này");
 		}
 
 		res.locals.empOfProject = empOfProject;
+		res.locals.headOrCreator = headOrCreator;
 
 		next();
 	} catch (error) {

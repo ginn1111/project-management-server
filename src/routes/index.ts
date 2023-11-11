@@ -20,11 +20,15 @@ import projectRouter from "./project";
 import qualificationRouter from "./qualification";
 import resourceRouter from "./resource";
 import statisticRouter from "./statistic";
+import {
+	getPermissionOfProject,
+	getPermissionOfWork,
+} from "../controllers/utils/permission";
 
 const router = Router();
 
 router.use("/authentication", authenticationRouter);
-router.use("/project", verifyToken,  projectRouter);
+router.use("/project", verifyToken, projectRouter);
 router.use("/account", accountRouter);
 router.use("/department", departmentRouter);
 router.use("/certificate", certificateRouter);
@@ -39,5 +43,7 @@ router.get("/utils/resource-type", getResourceType);
 router.get("/utils/provinces", getProvinces);
 router.get("/utils/districts/:id", getDistricts);
 router.get("/utils/wards/:id", getWards);
+router.get("/utils/permission/work", getPermissionOfWork);
+router.get("/utils/permission/project", getPermissionOfProject);
 
 export default router;

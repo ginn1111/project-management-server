@@ -13,26 +13,33 @@ import { addNew } from "../../controllers/project/project";
 import { isInProject } from "../../middlewares/in-project";
 import { IProjectRequest } from "../../@types/request";
 import { doneProject } from "../../middlewares/done-project";
+import { isHeadOrCreator } from "../../middlewares/is-head-or-creator";
 
 const primaClient = new PrismaClient();
 
 const projectRouter = Router();
 
 projectRouter.get("/", getList);
-projectRouter.post("/:id/done", doneProject, done);
+projectRouter.post("/:id/done", isHeadOrCreator, doneProject, done);
 projectRouter.get("/:id", detail);
 projectRouter.post("/add", addNew);
 projectRouter.get(
 	"/:id/in-project",
 	isInProject,
 	(req: IProjectRequest, res: Response) => {
-		return res.json(req.params.id);
+		const isHeadOrCreator = !!res.locals.headOrCreator;
+		return res.json({ idProject: req.params.id, isHeadOrCreator });
 	},
 );
 
-projectRouter.post("/:id/add-resource", doneProject, addResource);
+projectRouter.post(
+	"/:id/add-resource",
+	isHeadOrCreator,
+	doneProject,
+	addResource,
+);
 
-projectRouter.patch("/:id/update", doneProject, update);
+projectRouter.patch("/:id/update", isHeadOrCreator, doneProject, update);
 projectRouter.post("/random", async (_, res: Response) => {
 	const projects = Array(10)
 		.fill(0)

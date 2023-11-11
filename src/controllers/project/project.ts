@@ -75,6 +75,12 @@ export const getList = async (req: IProjectRequest, res: Response) => {
 					},
 				},
 				customers: true,
+				manageProjects: {
+					where: {
+						endDate: null,
+						isHead: true,
+					},
+				},
 			},
 			where: {
 				AND: [
@@ -128,17 +134,19 @@ export const getList = async (req: IProjectRequest, res: Response) => {
 	}
 };
 export const addNew = async (
-	req: IProjectRequest<{ departments: string[] }>,
+	req: IProjectRequest<{ departments: string[]; idEmpHead: string }>,
 	res: Response,
 ) => {
-	const { name, startDate, finishDateET, departments, note } = req.body ?? {};
+	const { name, startDate, idEmpHead, finishDateET, departments, note } =
+		req.body ?? {};
 
 	try {
-		if (!name || isEmpty(req.body)) {
+		if (!name || !idEmpHead || isEmpty(req.body)) {
 			return res.status(422).json("invalid parameters ");
 		}
 
 		await prismaClient.$transaction(async (tx) => {
+			// create new project
 			const createdProj = await tx.project.create({
 				data: {
 					id: generateId("PROJ"),
@@ -153,6 +161,7 @@ export const addNew = async (
 			});
 
 			if (departments?.length) {
+				// create department of project
 				await tx.departmentOfProject.createMany({
 					data: departments.map((department) => ({
 						id: generateId("DEPR"),
@@ -163,50 +172,26 @@ export const addNew = async (
 				});
 			}
 
-			const departmentOfEmp = await getDepartment(res.locals.idEmpLogin);
-			if (isEmpty(departmentOfEmp))
-				return res.status(409).json("Bạn cần tham gia phòng ban trước");
-			const approveState = await tx.statePropose.findFirst({
-				where: {
-					name: StatePropose.Approve,
-				},
-			});
-
-			if (isEmpty(approveState))
-				return res.status(409).json("Không tìm thấy trạng thái đề xuất");
-
-			// create propose and approve it
-			await tx.proposeProject.create({
+			// create creator of project
+			await tx.manageProject.create({
 				data: {
-					id: generateId("PRPR"),
-					createdDate: new Date().toISOString(),
-					content: "Tạo dự án",
-					employeesOfDepartment: {
-						connect: {
-							id: departmentOfEmp.id,
-						},
-					},
-					reviewingProposeProject: {
-						create: {
-							id: generateId("REVW"),
-							idState: approveState.id,
-							reviewingDate: new Date().toISOString(),
-						},
-					},
-					project: {
-						connect: {
-							id: createdProj.id,
-						},
-					},
-					employeesOfProject: {
-						create: {
-							id: generateId("EMPR"),
-							idProject: createdProj.id,
-							startDate: new Date().toISOString(),
-						},
-					},
+					id: generateId("MAPR"),
+					startDate: new Date().toISOString(),
+					idEmpHead: res.locals.idEmpLogin,
+					idProject: createdProj.id,
 				},
 			});
+
+			await tx.manageProject.create({
+				data: {
+					id: generateId("MAPR"),
+					startDate: new Date().toISOString(),
+					idEmpHead,
+					idProject: createdProj.id,
+					isHead: true,
+				},
+			});
+			// create head of project
 		});
 
 		return res.json("ok");
@@ -217,9 +202,10 @@ export const addNew = async (
 };
 export const update = async (req: IProjectRequest, res: Response) => {
 	const { id } = req.params;
-	const { name, startDate, finishDateET, departments, note } = req.body ?? {};
+	const { name, startDate, finishDateET, departments, note, idEmpHead } =
+		req.body ?? {};
 	try {
-		if (!id || isEmpty(req.body))
+		if (!id || !idEmpHead || isEmpty(req.body))
 			return res.status(422).json("invalid parameters");
 
 		const existProject = await prismaClient.project.findFirst({
@@ -228,20 +214,32 @@ export const update = async (req: IProjectRequest, res: Response) => {
 			},
 			include: {
 				departments: true,
+				manageProjects: {
+					where: {
+						endDate: null,
+						isHead: true,
+					},
+				},
 			},
 		});
 
 		if (isEmpty(existProject))
 			return res.status(409).json("Dự án không tồn tại");
 
-		const _updatedProject = Object.assign(existProject, {
-			name,
-			startDate: startDate ? new Date(startDate).toISOString() : undefined,
-			finishDateET: finishDateET
-				? new Date(finishDateET).toISOString()
-				: undefined,
-			note,
-		});
+		const isHeadChange =
+			existProject?.manageProjects?.[0]?.idEmpHead !== idEmpHead;
+
+		const _updatedProject = Object.assign(
+			omit(existProject, "manageProjects"),
+			{
+				name,
+				startDate: startDate ? new Date(startDate).toISOString() : undefined,
+				finishDateET: finishDateET
+					? new Date(finishDateET).toISOString()
+					: undefined,
+				note,
+			},
+		);
 
 		// new department is the old in project
 		const isExistDepartment =
@@ -253,36 +251,57 @@ export const update = async (req: IProjectRequest, res: Response) => {
 		if (isExistDepartment)
 			return res.status(409).json("Tồn tại phòng ban đã có trong dự án!");
 
-		const updatedProject = await prismaClient.project.update({
-			where: {
-				id,
-			},
-			data: {
-				...omit(_updatedProject, "departments"),
-				...(departments?.length
-					? {
-							departments: {
-								createMany: {
-									data: departments?.map((idDepartment: string) => ({
-										id: generateId("DEPR"),
-										idDepartment: idDepartment,
-										createdDate: new Date().toISOString(),
-									})),
+		await prismaClient.$transaction(async (tx) => {
+			const updatedProject = await tx.project.update({
+				where: {
+					id,
+				},
+				data: {
+					...omit(_updatedProject, "departments"),
+					...(departments?.length
+						? {
+								departments: {
+									createMany: {
+										data: departments?.map((idDepartment: string) => ({
+											id: generateId("DEPR"),
+											idDepartment: idDepartment,
+											createdDate: new Date().toISOString(),
+										})),
+									},
 								},
-							},
-					  }
-					: {
-							// Donot allow remove when update
-							// departments: {
-							// 	deleteMany: existProject.departments.map(({ id }) => ({
-							// 		id,
-							// 	})),
-							// },
-					  }),
-			},
-		});
+						  }
+						: {
+								// Donot allow remove when update
+								// departments: {
+								// 	deleteMany: existProject.departments.map(({ id }) => ({
+								// 		id,
+								// 	})),
+								// },
+						  }),
+				},
+			});
 
-		return res.json(updatedProject);
+			if (isHeadChange && existProject?.manageProjects?.[0]?.id) {
+				await tx.manageProject.update({
+					where: {
+						id: existProject.manageProjects?.[0]?.id,
+					},
+					data: {
+						endDate: new Date().toISOString(),
+					},
+				});
+				await tx.manageProject.create({
+					data: {
+						id: generateId("MAPR"),
+						startDate: new Date().toISOString(),
+						idEmpHead,
+						idProject: id,
+					},
+				});
+			}
+
+			return res.json(updatedProject);
+		});
 	} catch (error) {
 		console.log(error);
 		return res.status(500).json((error as Error).message ?? "Server error");
@@ -302,13 +321,7 @@ export const detail = async (req: IProjectRequest, res: Response) => {
 						work: true,
 						worksOfEmployee: {
 							include: {
-								historyOfWork: true,
 								employee: true,
-								permissionsWork: {
-									include: {
-										permissionWork: true,
-									},
-								},
 								tasksOfWork: {
 									include: {
 										task: {
@@ -347,6 +360,7 @@ export const detail = async (req: IProjectRequest, res: Response) => {
 
 		return res.json(project);
 	} catch (error) {
+		console.log("error here");
 		console.log(error);
 		return res.status(500).json((error as Error).message ?? "Server error");
 	}

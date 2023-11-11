@@ -14,13 +14,14 @@ import {
 } from "../../controllers/project/work";
 import { isInProject } from "../../middlewares/in-project";
 import { doneProject } from "../../middlewares/done-project";
+import { isHeadOrCreator } from "../../middlewares/is-head-or-creator";
 
 const workRouter = Router();
 
-workRouter.get("/:id", getList);
+workRouter.get("/:id", isInProject, getList);
 workRouter.post("/:id/create", doneProject, add);
 workRouter.post("/:idWorkProject/update", isInProject, update);
-workRouter.post("/:idWorkProject/history", history);
+workRouter.post("/:idWork/history", history);
 workRouter.post("/:idWorkProject/done", done);
 // task
 workRouter.post("/:idWork/task/create", isInProject, createTask);
@@ -36,14 +37,6 @@ workRouter.post("/:idTask/task/history", isInProject, historyOfTask);
 workRouter.post("/:idTaskOfWork/task/done", doneTask);
 
 // assignment
-workRouter.post("/:idWorksProject/assign", assign);
-
-// export const assign = async (req: ITaskOfWorkRequest, res: Response) => {
-// 	try {
-// 	} catch (error) {
-// 		console.log(error);
-// 		return res.status(500).json("Server error");
-// 	}
-// };
+workRouter.post("/:idWorksProject/assign", isHeadOrCreator, assign);
 
 export default workRouter;

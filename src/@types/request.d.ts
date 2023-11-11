@@ -8,6 +8,7 @@ import {
 	EmployeesOfDepartment,
 	EmployeesOfProject,
 	Ingredient,
+	PermissionWork,
 	Position,
 	PositionsOfEmployee,
 	Project,
@@ -30,7 +31,7 @@ import {
 import { Request } from "express";
 
 interface IEmployeeRequest extends Request {
-	query?: QueryParams & { idDepartment?: string };
+	query?: QueryParams & { idDepartment?: string; code?: string };
 	body?: Partial<Employee>;
 }
 
@@ -132,4 +133,9 @@ interface ITaskOfWorkRequest<T = any> extends Request {
 interface IResourceOfTaskRequest<T = any> extends Request {
 	query?: QueryParams;
 	body?: Partial<ResourceOfTask & T>;
+}
+
+interface IPermissionOfWork<T = any> extends Request {
+	query?: QueryParams;
+	body?: Partial<PermissionWork & T>;
 }

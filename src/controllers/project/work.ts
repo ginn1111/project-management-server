@@ -9,60 +9,142 @@ import {
 } from "../../@types/request";
 import { getEmpOfProject } from "../../services/get-emp-of-project";
 import { generateId } from "../../utils/generate-id";
+import { getPositionOfEmp } from "../../services/get-position";
+import { getHeadOrCreatorOfProject } from "../../services/get-head-of-project";
+import { PERMISSION } from "../../constants/general";
 
 const prismaClient = new PrismaClient();
 
 export const getList = async (req: IWorkProjectRequest, res: Response) => {
 	const { id } = req.params;
+
 	try {
-		const worksOfProject = await prismaClient.worksOfProject.findMany({
-			where: {
-				idProject: id,
-			},
-			include: {
-				worksOfEmployee: {
-					include: {
-						employee: {
-							include: {
-								proposeProject: {
-									include: {
-										employeesOfDepartment: {
-											include: {
-												department: true,
-												employee: true,
-											},
-										},
-									},
-								},
-							},
-						},
-						tasksOfWork: {
-							include: {
-								task: {
-									include: {
-										resourceOfTasks: {
-											include: {
-												resource: {
-													include: {
-														resource: true,
-													},
+		if (res.locals.headOrCreator) {
+			const worksOfProject = await prismaClient.worksOfProject.findMany({
+				where: {
+					idProject: id,
+				},
+				include: {
+					worksOfEmployee: {
+						include: {
+							employee: {
+								include: {
+									proposeProject: {
+										include: {
+											employeesOfDepartment: {
+												include: {
+													department: true,
+													employee: true,
 												},
 											},
 										},
 									},
 								},
 							},
+							tasksOfWork: {
+								include: {
+									task: {
+										include: {
+											resourceOfTasks: {
+												include: {
+													resource: {
+														include: {
+															resource: true,
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+								orderBy: {
+									startDate: "asc",
+								},
+							},
+						},
+					},
+					work: true,
+				},
+				orderBy: {
+					startDate: "asc",
+				},
+			});
+
+			return res.json(worksOfProject);
+		} else {
+			// work with been assigned or authorization
+			const empOfProject = res.locals.empOfProject;
+			const workOfProject = await prismaClient.worksOfProject.findMany({
+				where: {
+					idProject: id,
+					worksOfEmployee: {
+						some: {
+							OR: [
+								{
+									idEmployee: empOfProject.id,
+								},
+								{
+									employee: {
+										permissionOfWork: {
+											some: {
+												permissionWork: {
+													code: PERMISSION.XEM,
+												},
+											},
+										},
+									},
+								},
+							],
 						},
 					},
 				},
-				work: true,
-			},
-			orderBy: {
-				startDate: "asc",
-			},
-		});
-
-		return res.json(worksOfProject);
+				include: {
+					worksOfEmployee: {
+						include: {
+							employee: {
+								include: {
+									proposeProject: {
+										include: {
+											employeesOfDepartment: {
+												include: {
+													department: true,
+													employee: true,
+												},
+											},
+										},
+									},
+								},
+							},
+							tasksOfWork: {
+								include: {
+									task: {
+										include: {
+											resourceOfTasks: {
+												include: {
+													resource: {
+														include: {
+															resource: true,
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+								orderBy: {
+									startDate: "asc",
+								},
+							},
+						},
+					},
+					work: true,
+				},
+				orderBy: {
+					startDate: "asc",
+				},
+			});
+			return res.json(workOfProject);
+		}
 	} catch (error) {
 		console.log(error);
 		return res.status(500).json("Server error");
@@ -151,8 +233,28 @@ export const update = async (req: IWorkProjectRequest, res: Response) => {
 				},
 			});
 
+			// get from middleware in-project
+			const empOfProj = res.locals.empOfProject;
+
+			const workOfEmp = updatedWork.worksOfEmployee.find(
+				(w) => w.idEmployee === empOfProj?.id,
+			);
+
+			const isHeadOrCreator = res.locals.headOrCreator;
+
+			if (isEmpty(workOfEmp) && !isHeadOrCreator) {
+				return res.status(409).json("Bạn cần tham gia đầu việc này trước");
+			}
+
+			const employee =
+				empOfProj?.proposeProject?.employeesOfDepartment?.employee;
+			const department =
+				empOfProj?.proposeProject?.employeesOfDepartment?.department;
+
+			const headOrCreator = res.locals.headOrCreator;
+
 			if (name) {
-				const updatedWork = await tx.work.update({
+				await tx.work.update({
 					where: {
 						id: workOfProject?.idWork!,
 					},
@@ -163,32 +265,19 @@ export const update = async (req: IWorkProjectRequest, res: Response) => {
 				});
 			}
 
-			// get from middleware in-project
-			const empOfProj = res.locals.empOfProject;
-
-			const workOfEmp = updatedWork.worksOfEmployee.find(
-				(w) => w.idEmployee === empOfProj?.id,
-			);
-
-			if (isEmpty(workOfEmp)) {
-				return res.status(409).json("Bạn cần tham gia đầu việc này trước");
-			}
-
-			const employee =
-				empOfProj?.proposeProject?.employeesOfDepartment?.employee;
-			const department =
-				empOfProj?.proposeProject?.employeesOfDepartment?.department;
-
 			await tx.historyOfWork.create({
 				data: {
 					id: generateId("HIWO"),
-					idEmployee: workOfEmp?.id,
+					idWork: updatedWork.idWork,
 					createdDate: new Date().toISOString(),
 					content: JSON.stringify({
 						...pick(updatedWork, ["finishDateET", "startDate"]),
 						name: name ?? workOfProject?.work?.name,
-						employeeEdit: employee?.fullName,
-						department: department?.name,
+						employeeEdit:
+							employee?.fullName ?? headOrCreator?.employee?.fullName,
+						department:
+							department?.name ??
+							(headOrCreator?.isHead ? "Phụ trách dự án" : "Người tạo dự án"),
 					}),
 					note: updatedWork.note,
 				},
@@ -313,12 +402,20 @@ export const updatedTask = async (req: ITaskOfWorkRequest, res: Response) => {
 		const existTaskOfWork = await prismaClient.tasksOfWork.findFirst({
 			where: {
 				id: idTasksOfWork,
+			},
+			include: {
 				employee: {
-					employee: {
-						proposeProject: {
-							employeesOfDepartment: {
-								employee: {
-									id: res.locals.idEmpLogin,
+					include: {
+						employee: {
+							include: {
+								proposeProject: {
+									include: {
+										employeesOfDepartment: {
+											include: {
+												employee: true,
+											},
+										},
+									},
 								},
 							},
 						},
@@ -328,13 +425,17 @@ export const updatedTask = async (req: ITaskOfWorkRequest, res: Response) => {
 		});
 
 		// update task of login's emp!
-		if (isEmpty(existTaskOfWork)) {
+		if (
+			existTaskOfWork?.employee?.employee?.proposeProject?.employeesOfDepartment
+				?.employee?.id !== res.locals.idEmpLogin &&
+			!res.locals.headOrCreator
+		) {
 			return res.status(409).json("Nhân viên không có quyền sửa");
 		}
 
 		const _updatedTaskOfWork = Object.assign(
 			{},
-			omit(existTaskOfWork, ["idTask", "idEmployee"]),
+			omit(existTaskOfWork, ["idTask", "idEmployee", "employee"]),
 			{
 				note,
 				startDate: startDate ? new Date(startDate).toISOString() : undefined,
@@ -368,16 +469,23 @@ export const updatedTask = async (req: ITaskOfWorkRequest, res: Response) => {
 			const department =
 				empOfProj?.proposeProject?.employeesOfDepartment?.department;
 
+			const headOrCreator = res.locals.headOrCreator;
+
 			await tx.historyOfTask.create({
 				data: {
 					id: generateId("HITA"),
 					idTask: updatedTaskOfWork.idTask,
 					date: new Date().toISOString(),
 					content: JSON.stringify({
-						...pick(updatedTask, ["finishDateET", "startDate"]),
+						...pick(updatedTaskOfWork, ["finishDateET", "startDate"]),
 						name: updatedTaskOfWork?.task?.name,
-						employeeEdit: employee?.fullName,
-						department: department?.name,
+						employeeEdit:
+							employee?.fullName ?? headOrCreator?.employee?.fullName,
+						department:
+							department?.name ??
+							(headOrCreator?.isHead
+								? "Người phụ trách dự án"
+								: "Người tạo dự án"),
 					}),
 					note: updatedTaskOfWork.note,
 				},
@@ -429,14 +537,10 @@ export const history = async (req: IWorkProjectRequest, res: Response) => {
 	const _page = !isNaN(page as unknown as number) ? parseInt(page!) : NaN;
 	const _limit = !isNaN(limit as any) ? parseInt(limit!) : NaN;
 	try {
-		const { idWorkProject } = req.params;
+		const { idWork } = req.params;
 		const totalItems = await prismaClient.historyOfWork.count({
 			where: {
-				employees: {
-					worksOfProject: {
-						id: idWorkProject,
-					},
-				},
+				idWork,
 			},
 		});
 
@@ -445,11 +549,7 @@ export const history = async (req: IWorkProjectRequest, res: Response) => {
 				? { take: _limit, skip: _page * _limit }
 				: {}),
 			where: {
-				employees: {
-					worksOfProject: {
-						id: idWorkProject,
-					},
-				},
+				idWork,
 			},
 			orderBy: {
 				createdDate: "desc",

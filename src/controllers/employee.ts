@@ -8,108 +8,138 @@ const PREFIX_KEY = "EMPL";
 const prismaClient = new PrismaClient();
 
 export const getList = async (req: IEmployeeRequest, res: any) => {
-	let { page, limit, search = "", idDepartment } = req.query ?? {};
+	let { page, limit, search = "", idDepartment, code } = req.query ?? {};
 	const _page = !isNaN(page as unknown as number) ? parseInt(page!) : 0;
 	const _limit = !isNaN(limit as any) ? parseInt(limit!) : 10;
 
-	const totalItems = await prismaClient.employee.count({
-		where: {
-			AND: [
-				{ isActive: true },
-				{
-					...((idDepartment
-						? {
-								departments: {
-									some: {
-										idDepartment,
-										endDate: null,
+	try {
+		const totalItems = await prismaClient.employee.count({
+			where: {
+				...(code
+					? {
+							positions: {
+								some: {
+									position: {
+										code,
 									},
+									endDate: null,
 								},
-						  }
-						: {}) as any),
-				},
-			],
-			OR: [
-				{
-					fullName: {
-						contains: search,
+							},
+					  }
+					: null),
+				AND: [
+					{ isActive: true },
+					{
+						...((idDepartment
+							? {
+									departments: {
+										some: {
+											idDepartment,
+											endDate: null,
+										},
+									},
+							  }
+							: {}) as any),
 					},
-				},
-				{
-					identifyNumber: {
-						contains: search,
+				],
+				OR: [
+					{
+						fullName: {
+							contains: search,
+						},
 					},
-				},
-				{
-					phone: {
-						contains: search,
+					{
+						identifyNumber: {
+							contains: search,
+						},
 					},
-				},
-			],
-		},
-		orderBy: {
-			fullName: "desc",
-		},
-	});
+					{
+						phone: {
+							contains: search,
+						},
+					},
+				],
+			},
+			orderBy: {
+				fullName: "desc",
+			},
+		});
 
-	const employees = await prismaClient.employee.findMany({
-		take: _limit,
-		skip: _page * _limit,
-		include: {
-			account: true,
-			departments: {
-				include: {
-					department: true,
+		const employees = await prismaClient.employee.findMany({
+			take: _limit,
+			skip: _page * _limit,
+
+			include: {
+				account: true,
+				departments: {
+					include: {
+						department: true,
+					},
 				},
-			},
-			positions: {
-				include: {
-					position: true,
+				positions: {
+					include: {
+						position: true,
+					},
 				},
+				ward: true,
+				district: true,
+				province: true,
 			},
-			ward: true,
-			district: true,
-			province: true,
-		},
-		where: {
-			AND: [
-				{ isActive: true },
-				{
-					...((idDepartment
-						? {
-								departments: {
-									some: {
-										idDepartment,
-										endDate: null,
+			where: {
+				...(code
+					? {
+							positions: {
+								some: {
+									position: {
+										code,
 									},
+									endDate: null,
 								},
-						  }
-						: {}) as any),
-				},
-			],
-			OR: [
-				{
-					fullName: {
-						contains: search,
+							},
+					  }
+					: null),
+				AND: [
+					{ isActive: true },
+					{
+						...((idDepartment
+							? {
+									departments: {
+										some: {
+											idDepartment,
+											endDate: null,
+										},
+									},
+							  }
+							: {}) as any),
 					},
-				},
-				{
-					identifyNumber: {
-						contains: search,
+				],
+				OR: [
+					{
+						fullName: {
+							contains: search,
+						},
 					},
-				},
-				{
-					phone: {
-						contains: search,
+					{
+						identifyNumber: {
+							contains: search,
+						},
 					},
-				},
-			],
-		},
-		orderBy: {
-			fullName: "desc",
-		},
-	});
-	return res.status(200).json({ employees, totalItems });
+					{
+						phone: {
+							contains: search,
+						},
+					},
+				],
+			},
+			orderBy: {
+				fullName: "desc",
+			},
+		});
+		return res.status(200).json({ employees, totalItems });
+	} catch (error) {
+		console.log(error);
+		return res.status(500).json("Server error");
+	}
 };
 export const update = async (req: IEmployeeRequest, res: Response) => {
 	const { id } = req.params;

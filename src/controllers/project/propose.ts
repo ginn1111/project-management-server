@@ -22,6 +22,18 @@ export const propose = async (
 		if (!idEmployee || !idProject)
 			return res.status(422).json("invalid parameter");
 
+		const isHeadOrCreator = await prismaClient.manageProject.findFirst({
+			where: {
+				endDate: null,
+				idEmpHead: idEmployee,
+				idProject,
+			},
+		});
+
+		if (isHeadOrCreator) {
+			return res.status(409).json("Bạn đã thuộc dự án!");
+		}
+
 		const departmentOfEmployee =
 			await prismaClient.employeesOfDepartment.findFirst({
 				where: {
@@ -363,6 +375,12 @@ export const addProposeResource = async (
 	try {
 		const { empOfProject } = res.locals;
 		const { resource, description } = req.body ?? {};
+
+		if (res.locals.headOrCreator) {
+			return res
+				.status(409)
+				.json("Bạn không cần phải tạo đề xuất mà có thể thêm trực tiếp");
+		}
 
 		if (!empOfProject || !resource?.length)
 			return res.status(422).json("invalid parameter");
