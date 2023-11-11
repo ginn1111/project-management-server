@@ -9,6 +9,7 @@ import {
 	EmployeesOfProject,
 	Ingredient,
 	PermissionWork,
+	PermissionWorksOfEmployee,
 	Position,
 	PositionsOfEmployee,
 	Project,
@@ -135,7 +136,7 @@ interface IResourceOfTaskRequest<T = any> extends Request {
 	body?: Partial<ResourceOfTask & T>;
 }
 
-interface IPermissionOfWork<T = any> extends Request {
+interface IPermissionOfWorkRequest<T = any> extends Request {
 	query?: QueryParams;
-	body?: Partial<PermissionWork & T>;
+	body?: Partial<PermissionWorksOfEmployee & T>;
 }

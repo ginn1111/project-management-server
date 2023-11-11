@@ -2,16 +2,15 @@ import { PrismaClient } from "@prisma/client";
 import { Response } from "express";
 import { isEmpty, isNull, omit, pick } from "lodash";
 import {
+	IPermissionOfWorkRequest,
 	IResourceOfTaskRequest,
 	ITaskOfWorkRequest,
 	IWorkOfEmpRequest,
 	IWorkProjectRequest,
 } from "../../@types/request";
+import { PERMISSION } from "../../constants/general";
 import { getEmpOfProject } from "../../services/get-emp-of-project";
 import { generateId } from "../../utils/generate-id";
-import { getPositionOfEmp } from "../../services/get-position";
-import { getHeadOrCreatorOfProject } from "../../services/get-head-of-project";
-import { PERMISSION } from "../../constants/general";
 
 const prismaClient = new PrismaClient();
 
@@ -77,26 +76,24 @@ export const getList = async (req: IWorkProjectRequest, res: Response) => {
 			const workOfProject = await prismaClient.worksOfProject.findMany({
 				where: {
 					idProject: id,
-					worksOfEmployee: {
-						some: {
-							OR: [
-								{
-									idEmployee: empOfProject.id,
-								},
-								{
-									employee: {
-										permissionOfWork: {
-											some: {
-												permissionWork: {
-													code: PERMISSION.XEM,
-												},
-											},
-										},
+					OR: [
+						{
+							permissionWorkOfEmployee: {
+								some: {
+									permissionWork: {
+										code: PERMISSION.XEM,
 									},
 								},
-							],
+							},
 						},
-					},
+						{
+							worksOfEmployee: {
+								some: {
+									idEmployee: empOfProject.id,
+								},
+							},
+						},
+					],
 				},
 				include: {
 					worksOfEmployee: {
@@ -353,6 +350,10 @@ export const createTask = async (req: ITaskOfWorkRequest, res: Response) => {
 		return res.status(409).json("invalid parameter");
 
 	try {
+		if (!idEmployee && !res.locals.headOrCreator) {
+			return res.status(409).json("Bạn không có quyền để tạo công việc");
+		}
+
 		const empOfWork = await prismaClient.worksOfEmployee.findFirst({
 			where: {
 				idEmployee: idEmployee,
@@ -720,6 +721,109 @@ export const addResourceForTask = async (
 		});
 
 		return res.json("Thêm nguồn lực thành công");
+	} catch (error) {
+		console.log(error);
+		return res.status(500).json("Server error");
+	}
+};
+export const assignPermission = async (
+	req: IPermissionOfWorkRequest<{
+		permissions: { id: string; isGrant: boolean }[];
+	}>,
+	res: Response,
+) => {
+	const { idWorkProject } = req.params;
+	const { permissions, idEmpProject } = req.body ?? {};
+	try {
+		if (!idWorkProject || !permissions?.length || !idEmpProject)
+			return res.status(422).json("invalid parameter");
+
+		// check if work been assign
+		const workOfEmp = await prismaClient.worksOfEmployee.findFirst({
+			where: {
+				idWorksProject: idWorkProject,
+				idEmployee: idEmpProject,
+			},
+		});
+
+		if (!isEmpty(workOfEmp)) {
+			return res
+				.status(409)
+				.json("Nhân viên này đã được giao việc, không thể phân quyền!");
+		}
+
+		// check if emp have this permission
+		const existPermissions = await Promise.all(
+			permissions.map(({ id }) =>
+				prismaClient.permissionWorksOfEmployee.findFirst({
+					where: {
+						idPermission: id,
+						idEmpProject,
+					},
+				}),
+			),
+		);
+
+		// for delete
+		const noneIsGrantPermission = permissions.filter(({ isGrant }) => !isGrant);
+
+		// for add new
+		const noneExistIsGrantPermission = permissions.filter(
+			({ id, isGrant }) =>
+				!existPermissions.find(
+					(permission) => permission?.idPermission === id && isGrant,
+				),
+		);
+
+		if (!noneExistIsGrantPermission?.length) {
+			return res.status(409).json("Không có thay đổi nào!");
+		}
+
+		await prismaClient.$transaction(async (tx) => {
+			await tx.permissionWorksOfEmployee.createMany({
+				data: permissions.map(({ id }) => ({
+					id: generateId("PEWO"),
+					idEmpProject,
+					idPermission: id,
+					idWorkProject,
+				})),
+			});
+
+			await tx.permissionWorksOfEmployee.deleteMany({
+				where: {
+					idPermission: {
+						in: noneIsGrantPermission.map(({ id }) => id),
+					},
+				},
+			});
+			return res.json("Thêm quyền cho nhân viên thành công");
+		});
+	} catch (error) {
+		console.log(error);
+		return res.status(500).json("Server error");
+	}
+};
+
+export const getWorkPermissions = async (
+	req: IWorkProjectRequest,
+	res: Response,
+) => {
+	try {
+		const { idWorkProject, idEmpProject } = req.params;
+		if (!idWorkProject || !idEmpProject)
+			return res.status(409).json("invalid parameter");
+
+		const permissionOfWork =
+			await prismaClient.permissionWorksOfEmployee.findMany({
+				where: {
+					idEmpProject,
+					workOfProject: {
+						id: idWorkProject,
+					},
+				},
+			});
+
+		return res.json({ permissions: permissionOfWork });
 	} catch (error) {
 		console.log(error);
 		return res.status(500).json("Server error");

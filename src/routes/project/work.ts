@@ -11,6 +11,8 @@ import {
 	done,
 	doneTask,
 	addResourceForTask,
+	assignPermission,
+	getWorkPermissions,
 } from "../../controllers/project/work";
 import { isInProject } from "../../middlewares/in-project";
 import { doneProject } from "../../middlewares/done-project";
@@ -38,5 +40,12 @@ workRouter.post("/:idTaskOfWork/task/done", doneTask);
 
 // assignment
 workRouter.post("/:idWorksProject/assign", isHeadOrCreator, assign);
+
+//permission
+workRouter.post("/:idWorkProject/permission", assignPermission);
+workRouter.get(
+	"/:idWorkProject/permission/:idEmpProject/work",
+	getWorkPermissions,
+);
 
 export default workRouter;

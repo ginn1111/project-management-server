@@ -1,4 +1,4 @@
-import { Router } from "express";
+import { Response, Router } from "express";
 
 import {
 	getDistricts,
@@ -24,6 +24,7 @@ import {
 	getPermissionOfProject,
 	getPermissionOfWork,
 } from "../controllers/utils/permission";
+import { generateId } from "../utils/generate-id";
 
 const router = Router();
 
@@ -45,5 +46,8 @@ router.get("/utils/districts/:id", getDistricts);
 router.get("/utils/wards/:id", getWards);
 router.get("/utils/permission/work", getPermissionOfWork);
 router.get("/utils/permission/project", getPermissionOfProject);
+router.get("/utils/generate-id", (_: unknown, res: Response) =>
+	res.json(generateId("")),
+);
 
 export default router;

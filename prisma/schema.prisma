@@ -146,16 +146,17 @@ model Project {
 }
 
 model WorksOfProject {
-  id              String            @id(clustered: false, map: "PK_DU_AN_DAU_VIEC") @map("ID_DADV") @db.Char(31)
-  idProject       String?           @map("ID_DA") @db.Char(31)
-  idWork          String?           @map("ID_DVC") @db.Char(31)
-  startDate       DateTime          @map("NGAY_BD_DADV") @db.DateTime
-  finishDate      DateTime?         @map("NGAY_HT_DADV") @db.DateTime
-  finishDateET    DateTime?         @map("NGAY_HT_DK_DADV") @db.DateTime
-  note            String?           @map("GHI_CHU_DADV") @db.NVarChar(511)
-  work            Work?             @relation(fields: [idWork], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_DU_AN_DA_RELATIONS_DAU_VIEC")
-  project         Project?          @relation(fields: [idProject], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_DU_AN_DA_RELATIONS_DU_AN")
-  worksOfEmployee WorksOfEmployee[]
+  id                       String                      @id(clustered: false, map: "PK_DU_AN_DAU_VIEC") @map("ID_DADV") @db.Char(31)
+  idProject                String?                     @map("ID_DA") @db.Char(31)
+  idWork                   String?                     @map("ID_DVC") @db.Char(31)
+  startDate                DateTime                    @map("NGAY_BD_DADV") @db.DateTime
+  finishDate               DateTime?                   @map("NGAY_HT_DADV") @db.DateTime
+  finishDateET             DateTime?                   @map("NGAY_HT_DK_DADV") @db.DateTime
+  note                     String?                     @map("GHI_CHU_DADV") @db.NVarChar(511)
+  work                     Work?                       @relation(fields: [idWork], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_DU_AN_DA_RELATIONS_DAU_VIEC")
+  project                  Project?                    @relation(fields: [idProject], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_DU_AN_DA_RELATIONS_DU_AN")
+  worksOfEmployee          WorksOfEmployee[]
+  permissionWorkOfEmployee PermissionWorksOfEmployee[]
 
   @@index([idProject], map: "RELATIONSHIP_61_FK")
   @@index([idWork], map: "RELATIONSHIP_62_FK")
@@ -381,7 +382,7 @@ model EmployeesOfProject {
   proposeProject             ProposeProject?               @relation(fields: [idProposeProject], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_NHAN_VIE_RELATIONS_DUYET_NH")
   headOfProject              EmployeesOfProject?           @relation("NHAN_VIEN_DU_ANToNHAN_VIEN_DU_AN", fields: [idHead], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_NHAN_VIE_RELATIONS_NHAN_VIE5")
   other_NHAN_VIEN_DU_AN      EmployeesOfProject[]          @relation("NHAN_VIEN_DU_ANToNHAN_VIEN_DU_AN")
-  permissionOfWork   PermissionWorksOfEmployee[]
+  permissionOfWork           PermissionWorksOfEmployee[]
   permissionsOfProject       PermissionProjectOfEmployee[]
 
   @@index([idProject], map: "RELATIONSHIP_10_FK")
@@ -412,12 +413,14 @@ model EmployeesOfDepartment {
 }
 
 model PermissionWorksOfEmployee {
-  id              String              @id(clustered: false, map: "PK_NHAN_VIEN_QUYEN_DAU_VIEC") @map("ID_NVQDV") @db.Char(31)
-  idEmpProject         String?             @db.Char(31) @map("ID_NVDA")
-  idPermission    String?             @map("ID_QDV") @db.Char(31)
-  note            String?             @map("GHI_CHU_NVQDV") @db.NVarChar(511)
-  empOfProject EmployeesOfProject? @relation(fields: [idEmpProject], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_NHAN_VIE_RELATIONS_NHAN_VIE")
-  permissionWork  PermissionWork?     @relation(fields: [idPermission], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_NHAN_VIE_RELATIONS_QUYEN_DA")
+  id             String              @id(clustered: false, map: "PK_NHAN_VIEN_QUYEN_DAU_VIEC") @map("ID_NVQDV") @db.Char(31)
+  idEmpProject   String?             @map("ID_NVDA") @db.Char(31)
+  idPermission   String?             @map("ID_QDV") @db.Char(31)
+  idWorkProject        String?             @db.Char(31) @map("ID_DADV")
+  note           String?             @map("GHI_CHU_NVQDV") @db.NVarChar(511)
+  empOfProject   EmployeesOfProject? @relation(fields: [idEmpProject], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_NHAN_VIE_RELATIONS_NHAN_VIE")
+  permissionWork PermissionWork?     @relation(fields: [idPermission], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_NHAN_VIE_RELATIONS_QUYEN_DA")
+  workOfProject WorksOfProject?     @relation(fields: [idWorkProject], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_NHAN_VIEN_QUYEN_DAU_VIEC_DU_AN_DAU_VIEC")
 
   @@index([idEmpProject], map: "RELATIONSHIP_76_FK")
   @@index([idPermission], map: "RELATIONSHIP_77_FK")
@@ -475,7 +478,7 @@ model PermissionWork {
   id               String                      @id(clustered: false, map: "PK_QUYEN_DAU_VIEC") @map("ID_QDV") @db.Char(31)
   name             String                      @map("TEN_QDV") @db.NVarChar(255)
   note             String?                     @map("GHI_CHU_QDV") @db.NVarChar(511)
-  code             String?                     @db.VarChar(64) @map("CODE")
+  code             String?                     @map("CODE") @db.VarChar(64)
   worksOfEmployees PermissionWorksOfEmployee[]
 
   @@map("QUYEN_DAU_VIEC")
