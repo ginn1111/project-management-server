@@ -17,6 +17,7 @@ import {
 import { isInProject } from "../../middlewares/in-project";
 import { doneProject } from "../../middlewares/done-project";
 import { isHeadOrCreator } from "../../middlewares/is-head-or-creator";
+import { isInTask } from "../../middlewares/in-task";
 
 const workRouter = Router();
 
@@ -30,13 +31,19 @@ workRouter.post("/:idWork/task/create", isInProject, createTask);
 workRouter.post(
 	"/:id/:idTask/task/add-resource",
 	isInProject,
+	isInTask,
 	addResourceForTask,
 );
 // update
-workRouter.patch("/:idTasksOfWork/task/update", isInProject, updatedTask);
+workRouter.patch(
+	"/:idTaskOfWork/task/update",
+	isInProject,
+	isInTask,
+	updatedTask,
+);
 // read
 workRouter.post("/:idTask/task/history", isInProject, historyOfTask);
-workRouter.post("/:idTaskOfWork/task/done", doneTask);
+workRouter.post("/:idTaskOfWork/task/done", isInTask, doneTask);
 
 // assignment
 workRouter.post("/:idWorksProject/assign", isHeadOrCreator, assign);

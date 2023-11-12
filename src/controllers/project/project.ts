@@ -2,9 +2,10 @@ import { PrismaClient } from "@prisma/client";
 import { Response } from "express";
 import { intersection, isEmpty, isNaN, isNull, omit } from "lodash";
 import { IProjectRequest } from "../../@types/request";
-import { generateId } from "../../utils/generate-id";
+import { Role } from "../../constants/general";
 import { getDepartment } from "../../services/get-department";
-import { StatePropose } from "../../constants/review";
+import { getPositionOfEmp } from "../../services/get-position";
+import { generateId } from "../../utils/generate-id";
 
 const prismaClient = new PrismaClient();
 
@@ -141,60 +142,106 @@ export const addNew = async (
 		req.body ?? {};
 
 	try {
-		if (!name || !idEmpHead || isEmpty(req.body)) {
+		if (!name || !startDate || !finishDateET) {
 			return res.status(422).json("invalid parameters ");
 		}
 
-		await prismaClient.$transaction(async (tx) => {
-			// create new project
-			const createdProj = await tx.project.create({
+		const positionOfEmp = await getPositionOfEmp(res.locals.idEmpLogin);
+
+		// logon employee is head of department
+		if (positionOfEmp?.position?.code === Role.TRUONG_PHONG) {
+			const departmentOfEmp = await getDepartment(res.locals.idEmpLogin);
+			if (!departmentOfEmp?.idDepartment)
+				return res.status(409).json("Không tồn tại phòng ban của trưởng phòng");
+			await prismaClient.project.create({
 				data: {
 					id: generateId("PROJ"),
 					name,
+					isSingle: true,
 					createdDate: new Date().toISOString(),
 					startDate: startDate ? new Date(startDate).toISOString() : undefined,
 					finishDateET: finishDateET
 						? new Date(finishDateET).toISOString()
 						: undefined,
 					note,
+					departments: {
+						create: {
+							id: generateId("DEPR"),
+							idDepartment: departmentOfEmp.idDepartment,
+							createdDate: new Date().toISOString(),
+						},
+					},
+					manageProjects: {
+						create: {
+							id: generateId("MAPR"),
+							startDate: new Date().toISOString(),
+							idEmpHead: res.locals.idEmpLogin,
+							isHead: true,
+						},
+					},
 				},
 			});
+			return res.json("Tạo dự án đơn phòng ban thành công!");
+		}
 
-			if (departments?.length) {
-				// create department of project
-				await tx.departmentOfProject.createMany({
-					data: departments.map((department) => ({
-						id: generateId("DEPR"),
-						idDepartment: department,
-						idProject: createdProj.id,
+		if (
+			positionOfEmp?.position?.code === Role.QUAN_LY_TRUONG_PHONG &&
+			idEmpHead
+		) {
+			await prismaClient.$transaction(async (tx) => {
+				// create new project
+				const createdProj = await tx.project.create({
+					data: {
+						id: generateId("PROJ"),
+						name,
 						createdDate: new Date().toISOString(),
-					})),
+						startDate: startDate
+							? new Date(startDate).toISOString()
+							: undefined,
+						finishDateET: finishDateET
+							? new Date(finishDateET).toISOString()
+							: undefined,
+						note,
+					},
 				});
-			}
 
-			// create creator of project
-			await tx.manageProject.create({
-				data: {
-					id: generateId("MAPR"),
-					startDate: new Date().toISOString(),
-					idEmpHead: res.locals.idEmpLogin,
-					idProject: createdProj.id,
-				},
+				if (departments?.length) {
+					// create department of project
+					await tx.departmentOfProject.createMany({
+						data: departments.map((department) => ({
+							id: generateId("DEPR"),
+							idDepartment: department,
+							idProject: createdProj.id,
+							createdDate: new Date().toISOString(),
+						})),
+					});
+				}
+
+				// create creator of project
+				await tx.manageProject.create({
+					data: {
+						id: generateId("MAPR"),
+						startDate: new Date().toISOString(),
+						idEmpHead: res.locals.idEmpLogin,
+						idProject: createdProj.id,
+					},
+				});
+
+				// create head of project
+				await tx.manageProject.create({
+					data: {
+						id: generateId("MAPR"),
+						startDate: new Date().toISOString(),
+						idEmpHead,
+						idProject: createdProj.id,
+						isHead: true,
+					},
+				});
 			});
+			return res.json("Tạo dự án đa phòng ban thành công!");
+		}
 
-			await tx.manageProject.create({
-				data: {
-					id: generateId("MAPR"),
-					startDate: new Date().toISOString(),
-					idEmpHead,
-					idProject: createdProj.id,
-					isHead: true,
-				},
-			});
-			// create head of project
-		});
-
-		return res.json("ok");
+		return res.status(409).json("Có lỗi xảy ra, tạo dự án không thành công");
 	} catch (error) {
 		console.log(error);
 		return res.status(500).json((error as Error).message ?? "Server error");
@@ -223,6 +270,8 @@ export const update = async (req: IProjectRequest, res: Response) => {
 			},
 		});
 
+		console.log(existProject);
+
 		if (isEmpty(existProject))
 			return res.status(409).json("Dự án không tồn tại");
 
@@ -237,7 +286,7 @@ export const update = async (req: IProjectRequest, res: Response) => {
 				finishDateET: finishDateET
 					? new Date(finishDateET).toISOString()
 					: undefined,
-				note,
+				note: note,
 			},
 		);
 

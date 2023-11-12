@@ -133,6 +133,7 @@ model Project {
   startDate        DateTime?             @map("NGAY_BAT_DAU_DA") @db.DateTime
   finishDateET     DateTime?             @map("NGAY_KT_DU_KIEN_DA") @db.DateTime
   finishDate       DateTime?             @map("NGAY_KET_THUC_DA") @db.DateTime
+  isSingle Boolean? @map("IS_DON_PB") 
   note             String?               @map("GHI_CHU_DA") @db.NVarChar(511)
   proposeProject   ProposeProject[]
   worksOfProject   WorksOfProject[]

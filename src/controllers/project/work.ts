@@ -394,45 +394,13 @@ export const createTask = async (req: ITaskOfWorkRequest, res: Response) => {
 	}
 };
 export const updatedTask = async (req: ITaskOfWorkRequest, res: Response) => {
-	const { idTasksOfWork } = req.params;
+	const { idTaskOfWork } = req.params;
 	const { name, startDate, finishDateET, note } = req.body ?? {};
 	try {
-		if (!idTasksOfWork || isEmpty(req.body))
+		if (!idTaskOfWork || isEmpty(req.body))
 			return res.status(422).json("invalid parameters");
 
-		const existTaskOfWork = await prismaClient.tasksOfWork.findFirst({
-			where: {
-				id: idTasksOfWork,
-			},
-			include: {
-				employee: {
-					include: {
-						employee: {
-							include: {
-								proposeProject: {
-									include: {
-										employeesOfDepartment: {
-											include: {
-												employee: true,
-											},
-										},
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-		});
-
-		// update task of login's emp!
-		if (
-			existTaskOfWork?.employee?.employee?.proposeProject?.employeesOfDepartment
-				?.employee?.id !== res.locals.idEmpLogin &&
-			!res.locals.headOrCreator
-		) {
-			return res.status(409).json("Nhân viên không có quyền sửa");
-		}
+		const { existTaskOfWork } = res.locals;
 
 		const _updatedTaskOfWork = Object.assign(
 			{},
@@ -449,7 +417,7 @@ export const updatedTask = async (req: ITaskOfWorkRequest, res: Response) => {
 		await prismaClient.$transaction(async (tx) => {
 			const updatedTaskOfWork = await tx.tasksOfWork.update({
 				where: {
-					id: idTasksOfWork,
+					id: idTaskOfWork,
 				},
 				data: {
 					..._updatedTaskOfWork,
@@ -759,6 +727,7 @@ export const assignPermission = async (
 					where: {
 						idPermission: id,
 						idEmpProject,
+						idWorkProject,
 					},
 				}),
 			),

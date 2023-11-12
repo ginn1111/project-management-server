@@ -45,7 +45,7 @@ export const isInProject = async (
 		const headOrCreator = await prismaClient.manageProject.findFirst({
 			where: {
 				endDate: null,
-				idProject,
+				idProject: id || idProject,
 				idEmpHead: res.locals.idEmpLogin,
 			},
 			include: {
