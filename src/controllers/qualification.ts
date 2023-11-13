@@ -150,7 +150,7 @@ export const addRole = async (req: IQualificationRequest, res: Response) => {
 		});
 
 		if (isEmpty(departmentOfEmp))
-			return res.status(409).json("Phòng ban không tồn tại!");
+			return res.status(409).json("Nhân viên chưa tham gia phòng ban!");
 
 		// if the qualification is exist a role is the same department
 		// -> this will auto set endDate to the startDate of new role!

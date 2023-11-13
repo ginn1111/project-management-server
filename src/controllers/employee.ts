@@ -254,16 +254,27 @@ export const remove = async (req: IEmployeeRequest, res: Response) => {
 		if (!id) {
 			return res.status(422);
 		}
-		const employee = await prismaClient.employee.update({
-			data: {
-				isActive: false,
-			},
-			where: {
-				id,
-			},
-		});
+		await prismaClient.$transaction(async (tx) => {
+			const employee = await tx.employee.update({
+				data: {
+					isActive: false,
+				},
+				where: {
+					id,
+				},
+				include: {
+					account: true,
+				},
+			});
 
-		return res.status(200).json(employee);
+			await tx.account.delete({
+				where: {
+					username: employee.account?.username,
+				},
+			});
+
+			return res.status(200).json(employee);
+		});
 	} catch (error) {
 		console.log(error);
 		return res.status(500).json("Server error");
