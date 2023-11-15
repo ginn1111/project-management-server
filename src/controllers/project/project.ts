@@ -31,17 +31,25 @@ export const getList = async (req: IProjectRequest, res: Response) => {
 						},
 					},
 					{
-						OR: [
+						AND: [
 							{
 								startDate: {
-									gte: startDate ? new Date(startDate) : undefined,
-									lte: finishDateET ? new Date(finishDateET) : undefined,
+									gte: startDate
+										? new Date(startDate).toISOString()
+										: undefined,
+									lte: finishDateET
+										? new Date(finishDateET).toISOString()
+										: undefined,
 								},
 							},
 							{
 								finishDateET: {
-									gte: startDate ? new Date(startDate) : undefined,
-									lte: finishDateET ? new Date(finishDateET) : undefined,
+									gte: startDate
+										? new Date(startDate).toISOString()
+										: undefined,
+									lte: finishDateET
+										? new Date(finishDateET).toISOString()
+										: undefined,
 								},
 							},
 							{
@@ -91,7 +99,7 @@ export const getList = async (req: IProjectRequest, res: Response) => {
 						},
 					},
 					{
-						OR: [
+						AND: [
 							{
 								startDate: {
 									gte: startDate ? new Date(startDate) : undefined,
@@ -255,6 +263,8 @@ export const update = async (req: IProjectRequest, res: Response) => {
 		if (!id || !idEmpHead || isEmpty(req.body))
 			return res.status(422).json("invalid parameters");
 
+		console.log(idEmpHead);
+
 		const existProject = await prismaClient.project.findFirst({
 			where: {
 				id,
@@ -270,13 +280,14 @@ export const update = async (req: IProjectRequest, res: Response) => {
 			},
 		});
 
-		console.log(existProject);
-
 		if (isEmpty(existProject))
 			return res.status(409).json("Dự án không tồn tại");
 
 		const isHeadChange =
+			existProject?.manageProjects?.length === 0 ||
 			existProject?.manageProjects?.[0]?.idEmpHead !== idEmpHead;
+
+		console.log(existProject.manageProjects);
 
 		const _updatedProject = Object.assign(
 			omit(existProject, "manageProjects"),
@@ -330,21 +341,25 @@ export const update = async (req: IProjectRequest, res: Response) => {
 				},
 			});
 
-			if (isHeadChange && existProject?.manageProjects?.[0]?.id) {
-				await tx.manageProject.update({
-					where: {
-						id: existProject.manageProjects?.[0]?.id,
-					},
-					data: {
-						endDate: new Date().toISOString(),
-					},
-				});
+			if (isHeadChange) {
+				if (existProject?.manageProjects?.[0]?.id) {
+					await tx.manageProject.update({
+						where: {
+							id: existProject.manageProjects?.[0]?.id,
+						},
+						data: {
+							endDate: new Date().toISOString(),
+						},
+					});
+				}
+
 				await tx.manageProject.create({
 					data: {
 						id: generateId("MAPR"),
 						startDate: new Date().toISOString(),
 						idEmpHead,
 						idProject: id,
+						isHead: true,
 					},
 				});
 			}
@@ -365,6 +380,11 @@ export const detail = async (req: IProjectRequest, res: Response) => {
 				id,
 			},
 			include: {
+				departments: {
+					include: {
+						department: true,
+					},
+				},
 				worksOfProject: {
 					include: {
 						work: true,
@@ -402,6 +422,12 @@ export const detail = async (req: IProjectRequest, res: Response) => {
 								statePropose: true,
 							},
 						},
+					},
+				},
+				manageProjects: {
+					where: {
+						endDate: null,
+						isHead: true,
 					},
 				},
 			},

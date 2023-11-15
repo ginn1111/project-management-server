@@ -8,6 +8,7 @@ import {
 	propose,
 	review,
 	reviewProposeResource,
+	getListDepartment,
 } from "../../controllers/project/propose";
 import { generateId } from "../../utils/generate-id";
 import { isInProject } from "../../middlewares/in-project";
@@ -18,6 +19,7 @@ const prismaClient = new PrismaClient();
 const proposeRouter = Router();
 
 proposeRouter.get("/list", getList);
+proposeRouter.get("/list/head-department", getListDepartment);
 proposeRouter.post("/", doneProject, propose);
 proposeRouter.post("/:id/review", doneProject, review);
 proposeRouter.get("/:id/review", getDetail);

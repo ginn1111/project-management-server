@@ -9,6 +9,7 @@ import {
 } from "../../@types/request";
 import { StatePropose } from "../../constants/review";
 import { generateId } from "../../utils/generate-id";
+import { Role } from "../../constants/general";
 
 const prismaClient = new PrismaClient();
 
@@ -249,6 +250,11 @@ export const getList = async (req: IReviewProposeProject, res: Response) => {
 						department: {
 							id: idDepartment || undefined,
 						},
+						employee: {
+							id: {
+								not: res.locals.idEmpLogin,
+							},
+						},
 					},
 				},
 			},
@@ -279,6 +285,95 @@ export const getList = async (req: IReviewProposeProject, res: Response) => {
 					employeesOfDepartment: {
 						department: {
 							id: idDepartment || undefined,
+						},
+						employee: {
+							id: {
+								not: res.locals.idEmpLogin,
+							},
+						},
+					},
+				},
+			},
+			orderBy: {
+				proposeProject: {
+					createdDate: "desc",
+				},
+			},
+		});
+
+		return res.json({ reviewProposes, totalItems });
+	} catch (error) {
+		console.log(error);
+		return res.status(500).json((error as Error).message ?? "Server error");
+	}
+};
+
+export const getListDepartment = async (
+	req: IReviewProposeProject,
+	res: Response,
+) => {
+	const { page, limit, idProject } = req.query ?? {};
+	const _page = !isNaN(page as unknown as number) ? parseInt(page!) : NaN;
+	const _limit = !isNaN(limit as any) ? parseInt(limit!) : NaN;
+
+	if (!idProject) return res.status(422).json("invalid parameter");
+
+	try {
+		const totalItems = await prismaClient.reviewingProposeProject.count({
+			where: {
+				proposeProject: {
+					project: {
+						id: idProject,
+					},
+					employeesOfDepartment: {
+						employee: {
+							positions: {
+								some: {
+									endDate: null,
+									position: {
+										code: Role.TRUONG_PHONG,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		});
+
+		const reviewProposes = await prismaClient.reviewingProposeProject.findMany({
+			...(!isNaN(_page) && !isNaN(_limit)
+				? { take: _limit, skip: _page * _limit }
+				: {}),
+			include: {
+				statePropose: true,
+				proposeProject: {
+					include: {
+						employeesOfDepartment: {
+							include: {
+								department: true,
+								employee: true,
+							},
+						},
+						project: true,
+					},
+				},
+			},
+			where: {
+				proposeProject: {
+					project: {
+						id: idProject,
+					},
+					employeesOfDepartment: {
+						employee: {
+							positions: {
+								some: {
+									endDate: null,
+									position: {
+										code: Role.TRUONG_PHONG,
+									},
+								},
+							},
 						},
 					},
 				},

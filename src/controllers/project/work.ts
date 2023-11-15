@@ -2,6 +2,7 @@ import { PrismaClient } from "@prisma/client";
 import { Response } from "express";
 import { isEmpty, isNull, omit, pick } from "lodash";
 import {
+	IEvaluationWorkRequest,
 	IPermissionOfWorkRequest,
 	IResourceOfTaskRequest,
 	ITaskOfWorkRequest,
@@ -793,6 +794,19 @@ export const getWorkPermissions = async (
 			});
 
 		return res.json({ permissions: permissionOfWork });
+	} catch (error) {
+		console.log(error);
+		return res.status(500).json("Server error");
+	}
+};
+
+export const evaluateWork = async (
+	req: IEvaluationWorkRequest,
+	res: Response,
+) => {
+	const { idWorkProject } = req.params;
+	try {
+		if (!idWorkProject) return res.status(422).json("invalid parameter");
 	} catch (error) {
 		console.log(error);
 		return res.status(500).json("Server error");

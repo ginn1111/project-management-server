@@ -3,6 +3,9 @@ import { IEmployeeRequest } from "../@types/request";
 import { generateId } from "../utils/generate-id";
 import { Response } from "express";
 import { isEmpty, omit } from "lodash";
+import { getPositionOfEmp } from "../services/get-position";
+import { Role } from "../constants/general";
+import { getDepartment } from "../services/get-department";
 
 const PREFIX_KEY = "EMPL";
 const prismaClient = new PrismaClient();
@@ -178,6 +181,13 @@ export const update = async (req: IEmployeeRequest, res: Response) => {
 	}
 };
 export const addNew = async (req: IEmployeeRequest, res: Response) => {
+	const [positionOfEmp, departmentOfEmp] = await Promise.all([
+		getPositionOfEmp(res.locals.idEmpLogin),
+		getDepartment(res.locals.idEmpLogin),
+	]);
+
+	const isHead = positionOfEmp?.position?.code === Role.TRUONG_PHONG;
+
 	try {
 		const employee = await prismaClient.employee.create({
 			data: {
@@ -186,6 +196,17 @@ export const addNew = async (req: IEmployeeRequest, res: Response) => {
 				birthday: req.body?.birthday
 					? new Date(req.body.birthday).toISOString()
 					: null,
+				...(isHead
+					? {
+							departments: {
+								create: {
+									idDepartment: departmentOfEmp?.idDepartment,
+									startDate: new Date().toISOString(),
+									id: generateId("EMDE"),
+								},
+							},
+					  }
+					: null),
 			},
 		});
 		return res.status(200).json(employee);

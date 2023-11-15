@@ -25,20 +25,26 @@ import {
 	getPermissionOfWork,
 } from "../controllers/utils/permission";
 import { generateId } from "../utils/generate-id";
+import {
+	generateRankEvaluationWork,
+	getRankEvaluationWork,
+} from "../controllers/utils/rank-evaluation";
 
 const router = Router();
 
 router.use("/authentication", authenticationRouter);
 router.use("/project", verifyToken, projectRouter);
-router.use("/account", accountRouter);
+router.use("/account", verifyToken, accountRouter);
 router.use("/department", departmentRouter);
 router.use("/certificate", certificateRouter);
 router.use("/qualification", qualificationRouter);
-router.use("/employee", employeeRoute);
+router.use("/employee", verifyToken, employeeRoute);
 router.use("/position", positionRouter);
 router.use("/resource", resourceRouter);
 router.use("/statistic", statisticRouter);
 
+router.get("/utils/rank-evaluation-work", getRankEvaluationWork);
+router.get("/utils/rank-evaluation-work/random", generateRankEvaluationWork);
 router.get("/utils/resource-type/gen", generateResourceType);
 router.get("/utils/resource-type", getResourceType);
 router.get("/utils/provinces", getProvinces);

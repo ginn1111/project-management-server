@@ -8,7 +8,7 @@ import { ROUND_SALT } from "../constants/authentication";
 const prismaClient = new PrismaClient();
 
 export const getList = async (req: IAccountRequest, res: Response) => {
-	let { page, limit, search = "" } = req.query ?? {};
+	let { page, limit, search = "", idDepartment } = req.query ?? {};
 	const _page = !isNaN(page as unknown as number) ? parseInt(page!) : 0;
 	const _limit = !isNaN(limit as any) ? parseInt(limit!) : 10;
 
@@ -21,13 +21,19 @@ export const getList = async (req: IAccountRequest, res: Response) => {
 							contains: search,
 						},
 					},
-
-					{
-						username: {
-							startsWith: search,
-						},
-					},
 				],
+				...(idDepartment
+					? {
+							employee: {
+								departments: {
+									some: {
+										endDate: null,
+										idDepartment,
+									},
+								},
+							},
+					  }
+					: null),
 			},
 		});
 
@@ -47,13 +53,19 @@ export const getList = async (req: IAccountRequest, res: Response) => {
 							contains: search,
 						},
 					},
-
-					{
-						username: {
-							startsWith: search,
-						},
-					},
 				],
+				...(idDepartment
+					? {
+							employee: {
+								departments: {
+									some: {
+										endDate: null,
+										idDepartment,
+									},
+								},
+							},
+					  }
+					: null),
 			},
 		});
 

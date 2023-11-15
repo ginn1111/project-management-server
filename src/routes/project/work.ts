@@ -13,6 +13,7 @@ import {
 	addResourceForTask,
 	assignPermission,
 	getWorkPermissions,
+	evaluateWork,
 } from "../../controllers/project/work";
 import { isInProject } from "../../middlewares/in-project";
 import { doneProject } from "../../middlewares/done-project";
@@ -43,7 +44,7 @@ workRouter.patch(
 );
 // read
 workRouter.post("/:idTask/task/history", isInProject, historyOfTask);
-workRouter.post("/:idTaskOfWork/task/done", isInTask, doneTask);
+workRouter.post("/:idTaskOfWork/task/done", isInProject, isInTask, doneTask);
 
 // assignment
 workRouter.post("/:idWorksProject/assign", isHeadOrCreator, assign);
@@ -54,5 +55,8 @@ workRouter.get(
 	"/:idWorkProject/permission/:idEmpProject/work",
 	getWorkPermissions,
 );
+
+// evaluation
+workRouter.post("/:idWorkOfProject/evaluation", evaluateWork);
 
 export default workRouter;

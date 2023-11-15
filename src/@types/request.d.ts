@@ -8,6 +8,7 @@ import {
 	EmployeesOfDepartment,
 	EmployeesOfProject,
 	Ingredient,
+	ManageProject,
 	PermissionWork,
 	PermissionWorksOfEmployee,
 	Position,
@@ -56,7 +57,7 @@ interface IPositionRequest<T = any> extends Request {
 }
 
 interface IAccountRequest<T = any> extends Request {
-	query?: QueryParams;
+	query?: QueryParams & { idDepartment?: string };
 	body?: Partial<Account & AccountEmployee & T>;
 }
 interface IToolRequest<T = any> extends Request {
@@ -139,4 +140,14 @@ interface IResourceOfTaskRequest<T = any> extends Request {
 interface IPermissionOfWorkRequest<T = any> extends Request {
 	query?: QueryParams;
 	body?: Partial<PermissionWorksOfEmployee & T>;
+}
+
+interface IEvaluationWorkRequest<T = any> extends Request {
+	query?: QueryParams;
+	body?: Partial<IEvaluationWork & T>;
+}
+
+interface IManageProjectRequest<T = any> extends Request {
+	query?: QueryParams;
+	body?: Partial<ManageProject & T>;
 }
