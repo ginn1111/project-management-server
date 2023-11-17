@@ -20,7 +20,6 @@ export const login = async (req: IAuthenticationRequest, res: Response) => {
 		if (!username || !password)
 			return res.status(422).json("invalid parameters");
 
-		console.log(username?.length);
 		// check exist username
 		const account = await prismaClient.account.findFirst({
 			where: {
@@ -32,6 +31,9 @@ export const login = async (req: IAuthenticationRequest, res: Response) => {
 						departments: {
 							where: {
 								endDate: null,
+							},
+							include: {
+								department: true,
 							},
 						},
 						positions: {

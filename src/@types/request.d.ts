@@ -77,6 +77,7 @@ interface IProjectRequest<T = any> extends Request {
 		startDate?: string;
 		finishDateET?: string;
 		idDepartment?: string;
+		idEmployee?: string;
 	};
 	body?: Partial<Project & T>;
 }
@@ -150,4 +151,15 @@ interface IEvaluationWorkRequest<T = any> extends Request {
 interface IManageProjectRequest<T = any> extends Request {
 	query?: QueryParams;
 	body?: Partial<ManageProject & T>;
+}
+
+interface IStatisticRequest<T = any> extends Request {
+	query?: QueryParams & {
+		startDate?: string;
+		finishDate?: string;
+		idProject?: string;
+		isExpired?: "true" | "false";
+		idEmployee?: string;
+		idEmpProject?: string;
+	};
 }

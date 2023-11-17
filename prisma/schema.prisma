@@ -50,19 +50,16 @@ model Task {
 }
 
 model WorkEvaluation {
-  id                  String              @id(clustered: false, map: "PK_DANH_GIA_DAU_VIEC") @map("ID_DGDV") @db.Char(31)
-  idEvaluation        String?             @map("ID_MDDGDV") @db.Char(31)
-  idWorkOfProject             String?             @db.Char(31) @map("ID_DADV")
-  idEmployeeInProject String?             @map("ID_NVDA") @db.Char(31)
-  date                DateTime?           @map("NGAY_DGDV") @db.DateTime
-  note                String?             @map("GHI_CHU_DGDV") @db.NVarChar(511)
-  rankWorkEvaluation  RankWorkEvaluation? @relation(fields: [idEvaluation], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_DANH_GIA_RELATIONS_MUC_DO_D")
-  employeeProject     EmployeesOfProject? @relation(fields: [idEmployeeInProject], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_DANH_GIA_RELATIONS_NHAN_VIE")
+  id                 String              @id(clustered: false, map: "PK_DANH_GIA_DAU_VIEC") @map("ID_DGDV") @db.Char(31)
+  idEvaluation       String?             @map("ID_MDDGDV") @db.Char(31)
+  idWorkOfProject    String?             @map("ID_DADV") @db.Char(31)
+  date               DateTime?           @map("NGAY_DGDV") @db.DateTime
+  note               String?             @map("GHI_CHU_DGDV") @db.NVarChar(511)
+  rankWorkEvaluation RankWorkEvaluation? @relation(fields: [idEvaluation], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_DANH_GIA_RELATIONS_MUC_DO_D")
   workOfProject      WorksOfProject?     @relation(fields: [idWorkOfProject], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_DANH_GIA_RELATIONS_NHAN_VIE4")
 
   @@index([idWorkOfProject], map: "RELATIONSHIP_67_FK")
   @@index([idEvaluation], map: "RELATIONSHIP_68_FK")
-  @@index([idEmployeeInProject], map: "RELATIONSHIP_69_FK")
   @@map("DANH_GIA_DAU_VIEC")
 }
 
@@ -154,7 +151,7 @@ model WorksOfProject {
   finishDate               DateTime?                   @map("NGAY_HT_DADV") @db.DateTime
   finishDateET             DateTime?                   @map("NGAY_HT_DK_DADV") @db.DateTime
   note                     String?                     @map("GHI_CHU_DADV") @db.NVarChar(511)
-  DANH_GIA_DAU_VIEC        WorkEvaluation[]
+  workEvaluation        WorkEvaluation[]
   work                     Work?                       @relation(fields: [idWork], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_DU_AN_DA_RELATIONS_DAU_VIEC")
   project                  Project?                    @relation(fields: [idProject], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_DU_AN_DA_RELATIONS_DU_AN")
   worksOfEmployee          WorksOfEmployee[]
@@ -375,7 +372,6 @@ model EmployeesOfProject {
   startDate                  DateTime?                     @map("NGAY_BAT_DAU_NVDA") @db.DateTime
   endDate                    DateTime?                     @map("NGAY_KET_THUC_NVDA") @db.DateTime
   note                       String?                       @map("GHI_CHU_NVDA") @db.NVarChar(511)
-  workEvaluations            WorkEvaluation[]
   employeeProjectEvaluations EmployeeProjectEvaluation[]
   proposeResource            ProposeResource[]
   worksOfEmployees           WorksOfEmployee[]
