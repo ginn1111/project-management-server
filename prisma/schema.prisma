@@ -63,23 +63,6 @@ model WorkEvaluation {
   @@map("DANH_GIA_DAU_VIEC")
 }
 
-model EmployeeProjectEvaluation {
-  id                    String                         @id(clustered: false, map: "PK_DANH_GIA_NV_DA") @map("ID_DGNV") @db.Char(31)
-  idEvaluation          String?                        @map("ID_MDDGNVDA") @db.Char(31)
-  idEmployeeProject     String?                        @map("ID_NVDA") @db.Char(31)
-  idEmployeeDepartment  String?                        @map("ID_NVPB") @db.Char(31)
-  date                  DateTime                       @map("NGAY_DGNVDA") @db.DateTime
-  note                  String?                        @map("GHI_CHU_DGNVDA") @db.NVarChar(255)
-  rankProjectEvaluation RankEmployeeProjectEvaluation? @relation(fields: [idEvaluation], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_DANH_GIA_RELATIONS_MUC_DO_D2")
-  employeeDepartment    EmployeesOfDepartment?         @relation(fields: [idEmployeeDepartment], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_DANH_GIA_RELATIONS_NHAN_VIE2")
-  employeeProject       EmployeesOfProject?            @relation(fields: [idEmployeeProject], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_DANH_GIA_RELATIONS_NHAN_VIE3")
-
-  @@index([idEmployeeDepartment], map: "RELATIONSHIP_21_FK")
-  @@index([idEmployeeProject], map: "RELATIONSHIP_22_FK")
-  @@index([idEvaluation], map: "RELATIONSHIP_23_FK")
-  @@map("DANH_GIA_NV_DA")
-}
-
 model Work {
   id            String           @id(clustered: false, map: "PK_DAU_VIEC") @map("ID_DVC") @db.Char(31)
   name          String           @map("TEN_DVC") @db.NVarChar(255)
@@ -151,7 +134,7 @@ model WorksOfProject {
   finishDate               DateTime?                   @map("NGAY_HT_DADV") @db.DateTime
   finishDateET             DateTime?                   @map("NGAY_HT_DK_DADV") @db.DateTime
   note                     String?                     @map("GHI_CHU_DADV") @db.NVarChar(511)
-  workEvaluation        WorkEvaluation[]
+  workEvaluation           WorkEvaluation[]
   work                     Work?                       @relation(fields: [idWork], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_DU_AN_DA_RELATIONS_DAU_VIEC")
   project                  Project?                    @relation(fields: [idProject], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_DU_AN_DA_RELATIONS_DU_AN")
   worksOfEmployee          WorksOfEmployee[]
@@ -252,15 +235,6 @@ model RankWorkEvaluation {
   @@map("MUC_DO_DANH_GIA_DAU_VIEC")
 }
 
-model RankEmployeeProjectEvaluation {
-  id                        String                      @id(clustered: false, map: "PK_MUC_DO_DANH_GIA_NV_DA") @map("ID_MDDGNVDA") @db.Char(31)
-  name                      String                      @map("TEN_MDGNVDA") @db.NVarChar(255)
-  note                      String?                     @map("GHI_CHU_MDDGNVDA") @db.NVarChar(511)
-  employeeProjectEvaluation EmployeeProjectEvaluation[]
-
-  @@map("MUC_DO_DANH_GIA_NV_DA")
-}
-
 model Employee {
   id             String                     @id(clustered: false, map: "PK_NHAN_VIEN") @map("ID_NV") @db.Char(31)
   fullName       String?                    @map("HO_TEN_NV") @db.NVarChar(127)
@@ -304,15 +278,14 @@ model QualificationsOfEmployee {
 }
 
 model PositionsOfEmployee {
-  id                 String                @id(clustered: false, map: "PK_NHAN_VIEN_CHUC_VU") @map("ID_NVCV") @db.Char(31)
-  idEmployee         String?               @map("ID_NV") @db.Char(31)
-  idPosition         String?               @map("ID_CHV") @db.Char(31)
-  startDate          DateTime?             @map("NGAY_BD_NVCV") @db.DateTime
-  endDate            DateTime?             @map("NGAY_KT_NVCV") @db.DateTime
-  note               String?               @map("GHI_CHU_NVCV") @db.NVarChar(511)
-  position           Position?             @relation(fields: [idPosition], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_NHAN_VIE_RELATIONS_CHUC_VU")
-  employee           Employee?             @relation(fields: [idEmployee], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_NHAN_VIE_RELATIONS_NHAN_VIE8")
-  permissionPosition PermissionsPosition[]
+  id         String    @id(clustered: false, map: "PK_NHAN_VIEN_CHUC_VU") @map("ID_NVCV") @db.Char(31)
+  idEmployee String?   @map("ID_NV") @db.Char(31)
+  idPosition String?   @map("ID_CHV") @db.Char(31)
+  startDate  DateTime? @map("NGAY_BD_NVCV") @db.DateTime
+  endDate    DateTime? @map("NGAY_KT_NVCV") @db.DateTime
+  note       String?   @map("GHI_CHU_NVCV") @db.NVarChar(511)
+  position   Position? @relation(fields: [idPosition], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_NHAN_VIE_RELATIONS_CHUC_VU")
+  employee   Employee? @relation(fields: [idEmployee], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_NHAN_VIE_RELATIONS_NHAN_VIE8")
 
   @@index([idPosition], map: "RELATIONSHIP_70_FK")
   @@index([idEmployee], map: "RELATIONSHIP_71_FK")
@@ -365,22 +338,20 @@ model WorksOfEmployee {
 }
 
 model EmployeesOfProject {
-  id                         String                        @id(clustered: false, map: "PK_NHAN_VIEN_DU_AN") @map("ID_NVDA") @db.Char(31)
-  idHead                     String?                       @map("ID_TDA") @db.Char(31)
-  idProject                  String?                       @map("ID_DA") @db.Char(31)
-  idProposeProject           String?                       @map("ID_DXDA") @db.Char(31)
-  startDate                  DateTime?                     @map("NGAY_BAT_DAU_NVDA") @db.DateTime
-  endDate                    DateTime?                     @map("NGAY_KET_THUC_NVDA") @db.DateTime
-  note                       String?                       @map("GHI_CHU_NVDA") @db.NVarChar(511)
-  employeeProjectEvaluations EmployeeProjectEvaluation[]
-  proposeResource            ProposeResource[]
-  worksOfEmployees           WorksOfEmployee[]
-  project                    Project?                      @relation(fields: [idProject], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_NHAN_VIE_RELATIONS_DU_AN")
-  proposeProject             ProposeProject?               @relation(fields: [idProposeProject], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_NHAN_VIE_RELATIONS_DUYET_NH")
-  headOfProject              EmployeesOfProject?           @relation("NHAN_VIEN_DU_ANToNHAN_VIEN_DU_AN", fields: [idHead], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_NHAN_VIE_RELATIONS_NHAN_VIE5")
-  other_NHAN_VIEN_DU_AN      EmployeesOfProject[]          @relation("NHAN_VIEN_DU_ANToNHAN_VIEN_DU_AN")
-  permissionOfWork           PermissionWorksOfEmployee[]
-  permissionsOfProject       PermissionProjectOfEmployee[]
+  id                    String                      @id(clustered: false, map: "PK_NHAN_VIEN_DU_AN") @map("ID_NVDA") @db.Char(31)
+  idHead                String?                     @map("ID_TDA") @db.Char(31)
+  idProject             String?                     @map("ID_DA") @db.Char(31)
+  idProposeProject      String?                     @map("ID_DXDA") @db.Char(31)
+  startDate             DateTime?                   @map("NGAY_BAT_DAU_NVDA") @db.DateTime
+  endDate               DateTime?                   @map("NGAY_KET_THUC_NVDA") @db.DateTime
+  note                  String?                     @map("GHI_CHU_NVDA") @db.NVarChar(511)
+  proposeResource       ProposeResource[]
+  worksOfEmployees      WorksOfEmployee[]
+  project               Project?                    @relation(fields: [idProject], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_NHAN_VIE_RELATIONS_DU_AN")
+  proposeProject        ProposeProject?             @relation(fields: [idProposeProject], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_NHAN_VIE_RELATIONS_DUYET_NH")
+  headOfProject         EmployeesOfProject?         @relation("NHAN_VIEN_DU_ANToNHAN_VIEN_DU_AN", fields: [idHead], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_NHAN_VIE_RELATIONS_NHAN_VIE5")
+  other_NHAN_VIEN_DU_AN EmployeesOfProject[]        @relation("NHAN_VIEN_DU_ANToNHAN_VIEN_DU_AN")
+  permissionOfWork      PermissionWorksOfEmployee[]
 
   @@index([idProject], map: "RELATIONSHIP_10_FK")
   @@index([idHead], map: "RELATIONSHIP_TRUONG_DA_FK")
@@ -388,20 +359,19 @@ model EmployeesOfProject {
 }
 
 model EmployeesOfDepartment {
-  id                        String                      @id(clustered: false, map: "PK_NHAN_VIEN_PHONG_BAN") @map("ID_NVPB") @db.Char(31)
-  idEmployee                String?                     @map("ID_NV") @db.Char(31)
-  idHead                    String?                     @map("ID_TPB") @db.Char(31)
-  idDepartment              String?                     @map("ID_PB") @db.Char(31)
-  startDate                 DateTime?                   @map("NGAY_BD_NVPB") @db.DateTime
-  endDate                   DateTime?                   @map("NGAY_KT_NVPB") @db.DateTime
-  note                      String?                     @map("GHI_CHU_NVPB") @db.NVarChar(511)
-  employeeProjectEvaluation EmployeeProjectEvaluation[]
+  id                        String                  @id(clustered: false, map: "PK_NHAN_VIEN_PHONG_BAN") @map("ID_NVPB") @db.Char(31)
+  idEmployee                String?                 @map("ID_NV") @db.Char(31)
+  idHead                    String?                 @map("ID_TPB") @db.Char(31)
+  idDepartment              String?                 @map("ID_PB") @db.Char(31)
+  startDate                 DateTime?               @map("NGAY_BD_NVPB") @db.DateTime
+  endDate                   DateTime?               @map("NGAY_KT_NVPB") @db.DateTime
+  note                      String?                 @map("GHI_CHU_NVPB") @db.NVarChar(511)
   proposeProject            ProposeProject[]
   roleOfEmployees           RolesOfEmployee[]
-  employee                  Employee?                   @relation(fields: [idEmployee], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_NHAN_VIE_R_NV_PN_NHAN_VIE")
-  headOfDepartment          EmployeesOfDepartment?      @relation("NHAN_VIEN_PHONG_BANToNHAN_VIEN_PHONG_BAN", fields: [idHead], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_NHAN_VIE_R_TP_NHAN_VIE")
-  other_NHAN_VIEN_PHONG_BAN EmployeesOfDepartment[]     @relation("NHAN_VIEN_PHONG_BANToNHAN_VIEN_PHONG_BAN")
-  department                Department?                 @relation(fields: [idDepartment], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_NHAN_VIE_RELATIONS_PHONG_BA")
+  employee                  Employee?               @relation(fields: [idEmployee], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_NHAN_VIE_R_NV_PN_NHAN_VIE")
+  headOfDepartment          EmployeesOfDepartment?  @relation("NHAN_VIEN_PHONG_BANToNHAN_VIEN_PHONG_BAN", fields: [idHead], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_NHAN_VIE_R_TP_NHAN_VIE")
+  other_NHAN_VIEN_PHONG_BAN EmployeesOfDepartment[] @relation("NHAN_VIEN_PHONG_BANToNHAN_VIEN_PHONG_BAN")
+  department                Department?             @relation(fields: [idDepartment], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_NHAN_VIE_RELATIONS_PHONG_BA")
 
   @@index([idEmployee], map: "RELATIONSHIP_3_FK")
   @@index([idDepartment], map: "RELATIONSHIP_4_FK")
@@ -424,19 +394,6 @@ model PermissionWorksOfEmployee {
   @@map("NHAN_VIEN_QUYEN_DAU_VIEC")
 }
 
-model PermissionProjectOfEmployee {
-  id                  String              @id(clustered: false, map: "PK_NHAN_VIEN_QUYEN_DU_AN") @map("ID_NVQDA") @db.Char(31)
-  idPermissionProject String?             @map("ID_QDA") @db.Char(31)
-  idEmpOfProject      String?             @map("ID_NVDA") @db.Char(31)
-  note                String?             @map("GHI_CHU_NVQDA") @db.NVarChar(511)
-  employeesOfProject  EmployeesOfProject? @relation(fields: [idEmpOfProject], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_NHAN_VIE_RELATIONS_NHAN_VIE9")
-  permissionsProject  PermissionsProject? @relation(fields: [idPermissionProject], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_NHAN_VIE_RELATIONS_QUYEN_DU")
-
-  @@index([idEmpOfProject], map: "RELATIONSHIP_74_FK")
-  @@index([idPermissionProject], map: "RELATIONSHIP_75_FK")
-  @@map("NHAN_VIEN_QUYEN_DU_AN")
-}
-
 model Department {
   id                    String                  @id(clustered: false, map: "PK_PHONG_BAN") @map("ID_PB") @db.Char(31)
   name                  String?                 @map("TEN_PB") @db.NVarChar(127)
@@ -449,28 +406,6 @@ model Department {
   @@map("PHONG_BAN")
 }
 
-model Permission {
-  id                    String                @id(clustered: false, map: "PK_QUYEN") @map("ID_QUYEN") @db.Char(31)
-  name                  String                @map("TEN_QUYEN") @db.NVarChar(255)
-  note                  String?               @map("GHI_CHU_QUYEN") @db.NVarChar(511)
-  permissionsPermission PermissionsPosition[]
-
-  @@map("QUYEN")
-}
-
-model PermissionsPosition {
-  id                  String               @id(clustered: false, map: "PK_QUYEN_CHUC_VU") @map("ID_QCHV") @db.Char(31)
-  idEmployee          String?              @map("ID_NVCV") @db.Char(31)
-  idPermission        String?              @map("ID_QUYEN") @db.Char(31)
-  note                String?              @map("GHI_CHU_QCHV") @db.NVarChar(511)
-  positionsOfEmployee PositionsOfEmployee? @relation(fields: [idEmployee], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_QUYEN_CH_RELATIONS_NHAN_VIE")
-  permission          Permission?          @relation(fields: [idPermission], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_QUYEN_CH_RELATIONS_QUYEN")
-
-  @@index([idPermission], map: "RELATIONSHIP_72_FK")
-  @@index([idEmployee], map: "RELATIONSHIP_73_FK")
-  @@map("QUYEN_CHUC_VU")
-}
-
 model PermissionWork {
   id               String                      @id(clustered: false, map: "PK_QUYEN_DAU_VIEC") @map("ID_QDV") @db.Char(31)
   name             String                      @map("TEN_QDV") @db.NVarChar(255)
@@ -479,15 +414,6 @@ model PermissionWork {
   worksOfEmployees PermissionWorksOfEmployee[]
 
   @@map("QUYEN_DAU_VIEC")
-}
-
-model PermissionsProject {
-  id                           String                        @id(clustered: false, map: "PK_QUYEN_DU_AN") @map("ID_QDA") @db.Char(31)
-  name                         String                        @map("TEN_QDA") @db.NVarChar(255)
-  note                         String?                       @map("GHI_CHU_QDA") @db.NVarChar(511)
-  permissionProjectOfEmployees PermissionProjectOfEmployee[]
-
-  @@map("QUYEN_DU_AN")
 }
 
 model Account {
