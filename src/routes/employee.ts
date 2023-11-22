@@ -7,6 +7,7 @@ import {
 	getList,
 	remove,
 	update,
+	getListByProjectAndDepartment,
 } from "../controllers/employee";
 import { generateId } from "../utils/generate-id";
 
@@ -14,6 +15,7 @@ const prismaClient = new PrismaClient();
 const employeeRouter = Router();
 
 employeeRouter.get("/", getList);
+employeeRouter.get("/:idProject/:idDepartment", getListByProjectAndDepartment);
 employeeRouter.get("/:id", getDetail);
 employeeRouter.post("/add", addNew);
 employeeRouter.delete("/:id/remove", remove);

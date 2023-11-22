@@ -57,6 +57,6 @@ workRouter.get(
 );
 
 // evaluation
-workRouter.post("/:idWorkOfProject/evaluation", evaluateWork);
+workRouter.post("/:idWorkOfProject/evaluation", isHeadOrCreator, evaluateWork);
 
 export default workRouter;

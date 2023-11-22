@@ -1,4 +1,7 @@
+import { PrismaClient } from "@prisma/client";
 import { generateId } from "./generate-id";
+
+const prismaClient = new PrismaClient();
 
 export const importData = () =>
 	fetch("https://provinces.open-api.vn/api/?depth=3")
@@ -38,13 +41,13 @@ export const importData = () =>
 				return province;
 			});
 
-			// await primaClient.province.createMany({
-			// 	data: provinces,
-			// });
-			// await primaClient.district.createMany({
-			// 	data: districtMap.flat(),
-			// });
-			// await primaClient.ward.createMany({
-			// 	data: wardMap.flat(),
-			// });
+			await prismaClient.province.createMany({
+				data: provinces,
+			});
+			await prismaClient.district.createMany({
+				data: districtMap.flat(),
+			});
+			await prismaClient.ward.createMany({
+				data: wardMap.flat(),
+			});
 		});

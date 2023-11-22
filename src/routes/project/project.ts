@@ -7,6 +7,7 @@ import {
 	getList,
 	update,
 	done,
+	addEmployees,
 } from "../../controllers/project/project";
 import { generateId } from "../../utils/generate-id";
 import { addNew } from "../../controllers/project/project";
@@ -20,6 +21,7 @@ const primaClient = new PrismaClient();
 const projectRouter = Router();
 
 projectRouter.get("/", getList);
+projectRouter.post("/:id/add/employees", addEmployees);
 projectRouter.post("/:id/done", isHeadOrCreator, doneProject, done);
 projectRouter.get("/:id", detail);
 projectRouter.post("/add", addNew);

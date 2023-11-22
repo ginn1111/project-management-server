@@ -12,14 +12,3 @@ export const getPermissionOfWork = async (_: unknown, res: Response) => {
 		return res.status(500).json("Server error");
 	}
 };
-
-export const getPermissionOfProject = async (_: unknown, res: Response) => {
-	try {
-		const permissionsOfProject =
-			await prismaClient.permissionsProject.findMany();
-		return res.json({ permissions: permissionsOfProject });
-	} catch (error) {
-		console.log(error);
-		return res.status(500).json("Server error");
-	}
-};

@@ -1,6 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 import { Response } from "express";
-import { isEmpty } from "lodash";
+import { isEmpty, omit } from "lodash";
 import { IDepartmentRequest } from "../@types/request";
 import { Role } from "../constants/general";
 import { getPositionOfEmp } from "../services/get-position";
@@ -155,7 +155,11 @@ export const update = async (req: IDepartmentRequest, res: Response) => {
 		if (isEmpty(department)) return res.status(422).json("invalid parameters");
 
 		const { id: _, ...rest } = department;
-		const _updatedDepartment = Object.assign(rest, req.body);
+		const _updatedDepartment = Object.assign(
+			{},
+			omit(rest, "employeesOfDepartment"),
+			req.body,
+		);
 
 		const updatedDepartment = await prismaClient.department.update({
 			data: {

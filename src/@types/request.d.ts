@@ -78,6 +78,7 @@ interface IProjectRequest<T = any> extends Request {
 		finishDateET?: string;
 		idDepartment?: string;
 		idEmployee?: string;
+		isDone?: "true" | "false";
 	};
 	body?: Partial<Project & T>;
 }
@@ -161,5 +162,6 @@ interface IStatisticRequest<T = any> extends Request {
 		isExpired?: "true" | "false";
 		idEmployee?: string;
 		idEmpProject?: string;
+		idDepartment?: string;
 	};
 }

@@ -16,12 +16,29 @@ export const isInProject = async (
 		return res.status(422).json("in-project middleware invalid parameters");
 
 	try {
+		const empLogin = await prismaClient.employee.findFirst({
+			where: {
+				id: res.locals.idEmpLogin,
+			},
+			include: {
+				departments: {
+					where: {
+						endDate: null,
+					},
+					include: {
+						department: true,
+					},
+				},
+			},
+		});
+
 		// normal emp
 		const empOfProject = await prismaClient.employeesOfProject.findFirst({
 			where: {
 				idProject: id || idProject,
 				proposeProject: {
 					employeesOfDepartment: {
+						idDepartment: empLogin?.departments?.[0]?.idDepartment,
 						idEmployee: res.locals.idEmpLogin,
 					},
 				},
@@ -52,6 +69,14 @@ export const isInProject = async (
 				employee: true,
 			},
 		});
+
+		if (
+			empLogin?.departments?.[0]?.idDepartment !==
+				empOfProject?.proposeProject?.employeesOfDepartment?.idDepartment &&
+			isEmpty(headOrCreator)
+		) {
+			return res.status(409).json("Phòng ban hiện tại của bạn không hợp lệ!");
+		}
 
 		if (isEmpty(empOfProject) && isEmpty(headOrCreator)) {
 			return res.status(409).json("Bạn không có trong dự án này");

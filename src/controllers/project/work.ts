@@ -25,6 +25,11 @@ export const getList = async (req: IWorkProjectRequest, res: Response) => {
 					idProject: id,
 				},
 				include: {
+					workEvaluation: {
+						include: {
+							rankWorkEvaluation: true,
+						},
+					},
 					worksOfEmployee: {
 						include: {
 							employee: {
@@ -81,6 +86,7 @@ export const getList = async (req: IWorkProjectRequest, res: Response) => {
 						{
 							permissionWorkOfEmployee: {
 								some: {
+									idEmpProject: empOfProject.id,
 									permissionWork: {
 										code: PERMISSION.XEM,
 									},
@@ -804,9 +810,40 @@ export const evaluateWork = async (
 	req: IEvaluationWorkRequest,
 	res: Response,
 ) => {
-	const { idWorkProject } = req.params;
+	const { idWorkOfProject } = req.params;
+	const { idEvaluation } = req.body ?? {};
+
 	try {
-		if (!idWorkProject) return res.status(422).json("invalid parameter");
+		if (!idEvaluation || !idWorkOfProject)
+			return res.status(422).json("invalid parameter");
+
+		const workOfProject = await prismaClient.worksOfProject.findFirst({
+			where: {
+				id: idWorkOfProject,
+			},
+			include: {
+				workEvaluation: true,
+			},
+		});
+
+		if (!workOfProject?.finishDate) {
+			return res.status(409).json("Đầu việc chưa hoàn thành");
+		}
+
+		if (workOfProject.workEvaluation?.length) {
+			return res.status(409).json("Đầu việc đã được đánh giá!");
+		}
+
+		const evaluation = await prismaClient.workEvaluation.create({
+			data: {
+				id: generateId("WOEV"),
+				idEvaluation,
+				idWorkOfProject,
+				date: new Date().toISOString(),
+			},
+		});
+
+		return res.json(evaluation);
 	} catch (error) {
 		console.log(error);
 		return res.status(500).json("Server error");

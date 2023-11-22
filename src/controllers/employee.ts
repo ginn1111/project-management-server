@@ -1,11 +1,11 @@
 import { Employee, PrismaClient } from "@prisma/client";
-import { IEmployeeRequest } from "../@types/request";
-import { generateId } from "../utils/generate-id";
 import { Response } from "express";
-import { isEmpty, omit } from "lodash";
-import { getPositionOfEmp } from "../services/get-position";
+import { identity, isEmpty, omit, pickBy } from "lodash";
+import { IEmployeeRequest } from "../@types/request";
 import { Role } from "../constants/general";
 import { getDepartment } from "../services/get-department";
+import { getPositionOfEmp } from "../services/get-position";
+import { generateId } from "../utils/generate-id";
 
 const PREFIX_KEY = "EMPL";
 const prismaClient = new PrismaClient();
@@ -191,7 +191,7 @@ export const addNew = async (req: IEmployeeRequest, res: Response) => {
 	try {
 		const employee = await prismaClient.employee.create({
 			data: {
-				...(req.body as Employee),
+				...(pickBy(req.body, identity) as Employee),
 				id: generateId(PREFIX_KEY),
 				birthday: req.body?.birthday
 					? new Date(req.body.birthday).toISOString()
@@ -288,14 +288,107 @@ export const remove = async (req: IEmployeeRequest, res: Response) => {
 				},
 			});
 
-			await tx.account.delete({
-				where: {
-					username: employee.account?.username,
-				},
-			});
+			if (employee.account) {
+				await tx.account.delete({
+					where: {
+						username: employee.account?.username,
+					},
+				});
+			}
+
+			// delete from project
+
+			// reject propose project
 
 			return res.status(200).json(employee);
 		});
+	} catch (error) {
+		console.log(error);
+		return res.status(500).json("Server error");
+	}
+};
+
+export const getListByProjectAndDepartment = async (
+	req: IEmployeeRequest,
+	res: Response,
+) => {
+	try {
+		const { idDepartment, idProject } = req.params;
+		const project = await prismaClient.project.findFirst({
+			where: {
+				id: idProject,
+				employees: {
+					some: {
+						endDate: null,
+						proposeProject: {
+							employeesOfDepartment: {
+								idDepartment,
+								employee: {
+									isActive: true,
+								},
+							},
+						},
+					},
+				},
+			},
+			include: {
+				employees: {
+					where: {
+						endDate: null,
+					},
+					include: {
+						proposeProject: {
+							include: {
+								employeesOfDepartment: {
+									include: {
+										employee: true,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		});
+
+		const employeeOfDepartment =
+			await prismaClient.employeesOfDepartment.findMany({
+				where: {
+					idEmployee: {
+						not: res.locals.idEmpLogin, // exclude head of department (logon emp!)
+					},
+					idDepartment,
+					endDate: null,
+					employee: {
+						isActive: true,
+					},
+				},
+				include: {
+					employee: true,
+					roleOfEmployees: {
+						where: {
+							endDate: null,
+						},
+					},
+				},
+			});
+
+		const empOfProject = project?.employees
+			.map(
+				(project) => project.proposeProject?.employeesOfDepartment?.idEmployee,
+			)
+			.filter(Boolean);
+
+		console.log(empOfProject);
+
+		const employeeNotExistInProject = employeeOfDepartment
+			.filter((empOfDe) => !empOfProject?.includes(empOfDe.idEmployee))
+			.map((empOfDe) => ({
+				...empOfDe?.employee,
+				roles: empOfDe.roleOfEmployees,
+			}));
+
+		return res.json({ employees: employeeNotExistInProject });
 	} catch (error) {
 		console.log(error);
 		return res.status(500).json("Server error");

@@ -1,11 +1,12 @@
 import { PrismaClient } from "@prisma/client";
 import { Response } from "express";
-import { intersection, isEmpty, isNaN, isNull, omit } from "lodash";
+import { intersection, isEmpty, isNaN, isNil, isNull, omit } from "lodash";
 import { IProjectRequest } from "../../@types/request";
 import { Role } from "../../constants/general";
 import { getDepartment } from "../../services/get-department";
 import { getPositionOfEmp } from "../../services/get-position";
 import { generateId } from "../../utils/generate-id";
+import { StatePropose } from "../../constants/review";
 
 const prismaClient = new PrismaClient();
 
@@ -18,6 +19,7 @@ export const getList = async (req: IProjectRequest, res: Response) => {
 		finishDateET,
 		idDepartment,
 		idEmployee,
+		isDone,
 	} = req.query ?? {};
 	const _page = !isNaN(page as unknown as number) ? parseInt(page!) : NaN;
 	const _limit = !isNaN(limit as any) ? parseInt(limit!) : NaN;
@@ -25,6 +27,11 @@ export const getList = async (req: IProjectRequest, res: Response) => {
 	try {
 		const totalItems = await prismaClient.project.count({
 			where: {
+				...(isNil(isDone)
+					? undefined
+					: {
+							finishDate: isDone === "true" ? { not: null } : null,
+					  }),
 				...(idEmployee
 					? {
 							employees: {
@@ -91,6 +98,7 @@ export const getList = async (req: IProjectRequest, res: Response) => {
 			...(!isNaN(_page) && !isNaN(_limit)
 				? { take: _limit, skip: _page * _limit }
 				: {}),
+
 			include: {
 				departments: {
 					include: {
@@ -106,6 +114,11 @@ export const getList = async (req: IProjectRequest, res: Response) => {
 				},
 			},
 			where: {
+				...(isNil(isDone)
+					? undefined
+					: {
+							finishDate: isDone === "true" ? { not: null } : null,
+					  }),
 				...(idEmployee
 					? {
 							employees: {
@@ -635,5 +648,118 @@ export const done = async (req: IProjectRequest, res: Response) => {
 	} catch (error) {
 		console.log(error);
 		return res.status(500).json((error as Error).message ?? "Server error");
+	}
+};
+
+export const addEmployees = async (
+	req: IProjectRequest<{ employees: string[] }>,
+	res: Response,
+) => {
+	try {
+		const { id } = req.params;
+		const { employees } = req.body ?? {};
+		if (!id || !employees?.length)
+			return res.status(422).json("Invalid parameter");
+
+		// employeesOfDepartment list with employees
+		const deEmpList = await Promise.all(
+			employees.map((idEmployee) =>
+				prismaClient.employeesOfDepartment.findFirst({
+					where: {
+						endDate: null,
+						idEmployee,
+					},
+				}),
+			),
+		);
+
+		const approvedStatePropose = await prismaClient.statePropose.findFirst({
+			where: {
+				name: StatePropose.Approve,
+			},
+		});
+
+		if (!approvedStatePropose) {
+			return res.status(409).json("Trạng thái duyệt không hợp lệ!");
+		}
+
+		// find propose with state pending after that approve these
+		await Promise.all(
+			deEmpList.filter(Boolean).map(async (deEmp) => {
+				const pendingPropose = await prismaClient.proposeProject.findFirst({
+					where: {
+						idProject: id,
+						idDeEmp: deEmp?.id,
+						reviewingProposeProject: {
+							some: {
+								statePropose: {
+									name: StatePropose.Pending,
+								},
+							},
+						},
+					},
+					include: {
+						reviewingProposeProject: true,
+					},
+				});
+
+				if (pendingPropose) {
+					prismaClient.$transaction(async (tx) => {
+						// update pending propose to approve
+						await tx.reviewingProposeProject.update({
+							where: {
+								id: pendingPropose.reviewingProposeProject[0].id,
+							},
+							data: {
+								idProposeProject: pendingPropose.id,
+								note: "Trưởng phòng điều phối nhân viên vào dự án",
+								reviewingDate: new Date().toISOString(),
+								idState: approvedStatePropose.id,
+							},
+						});
+
+						// create new employee in project
+						await tx.employeesOfProject.create({
+							data: {
+								id: generateId("EMPR"),
+								idProject: id,
+								idProposeProject: pendingPropose.id,
+								startDate: new Date().toISOString(),
+							},
+						});
+					});
+				} else {
+					// create propose, review and employeesOfProject
+					await prismaClient.proposeProject.create({
+						data: {
+							id: generateId("PRPR"),
+							createdDate: new Date().toISOString(),
+							content: "Trưởng phòng điều phối nhân viên vào dự án",
+							idDeEmp: deEmp?.id,
+							idProject: id,
+							reviewingProposeProject: {
+								create: {
+									id: generateId("REVW"),
+									idState: approvedStatePropose.id,
+									reviewingDate: new Date().toISOString(),
+								},
+							},
+							employeesOfProject: {
+								create: {
+									id: generateId("EMPR"),
+									idProject: id,
+									startDate: new Date().toISOString(),
+								},
+							},
+						},
+					});
+				}
+			}),
+		);
+
+		return res.json("Thêm nhân viên vào dự án thành công");
+	} catch (error) {
+		console.log(error);
+		return res.status(500).json("Server error");
 	}
 };

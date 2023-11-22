@@ -1,9 +1,8 @@
 import { PrismaClient } from "@prisma/client";
-import { IStatisticRequest } from "../../@types/request";
-import { Response } from "express";
 import dayjs from "dayjs";
-import { isUndefined } from "lodash";
-
+import { Response } from "express";
+import { groupBy, isEmpty, isUndefined, pick } from "lodash";
+import { IStatisticRequest } from "../../@types/request";
 const prismaClient = new PrismaClient();
 
 export const statisticProject = async (
@@ -177,6 +176,133 @@ export const statisticWork = async (req: IStatisticRequest, res: Response) => {
 		});
 
 		return res.json({ workOfEmployee });
+	} catch (error) {
+		console.log(error);
+		return res.status(500).json("Server error");
+	}
+};
+
+export const statisticProjectOfEmployee = async (
+	req: IStatisticRequest,
+	res: Response,
+) => {
+	try {
+		const { idDepartment, startDate, finishDate } = req.query ?? {};
+
+		if (!idDepartment) return res.status(422).json("invalid parameter");
+		const empOfProjectPromise = prismaClient.employeesOfProject.findMany({
+			where: {
+				endDate: null,
+				project: {
+					finishDate: null,
+					...(startDate && finishDate
+						? {
+								startDate: {
+									lte: finishDate && new Date(finishDate).toISOString(),
+								},
+								finishDateET: {
+									gte: startDate && new Date(startDate).toISOString(),
+								},
+						  }
+						: null),
+				},
+				proposeProject: {
+					employeesOfDepartment: {
+						idDepartment,
+						employee: {
+							isActive: true,
+						},
+					},
+				},
+			},
+			include: {
+				project: true,
+				proposeProject: {
+					include: {
+						employeesOfDepartment: {
+							include: {
+								employee: true,
+							},
+						},
+					},
+				},
+			},
+		});
+
+		const empOfDepartmentPromise = prismaClient.employeesOfDepartment.findMany({
+			where: {
+				endDate: null,
+				idDepartment,
+				employee: {
+					isActive: true,
+				},
+			},
+			include: {
+				employee: true,
+			},
+		});
+
+		const [empOfProject, empOfDepartment] = await Promise.all([
+			empOfProjectPromise,
+			empOfDepartmentPromise,
+		]);
+
+		const projectGroupByEmp = groupBy(
+			empOfProject,
+			"proposeProject.employeesOfDepartment.idEmployee",
+		);
+
+		const _projectsOfEmp = empOfDepartment.map((empOfDepart) => ({
+			projects: (
+				projectGroupByEmp[
+					empOfDepart.idEmployee as keyof typeof projectGroupByEmp
+				] ?? []
+			).map((value) => pick(value, "project")),
+			employee: empOfDepart.employee,
+		}));
+
+		const projectsOfEmp = await Promise.all(
+			_projectsOfEmp.map(async ({ projects, employee }) => {
+				const _projects = await prismaClient.manageProject.findMany({
+					where: {
+						project: {
+							finishDate: null,
+							...(startDate && finishDate
+								? {
+										startDate: {
+											lte: finishDate && new Date(finishDate).toISOString(),
+										},
+										finishDateET: {
+											gte: startDate && new Date(startDate).toISOString(),
+										},
+								  }
+								: null),
+						},
+						endDate: null,
+						idEmpHead: employee?.id,
+					},
+					include: {
+						project: true,
+					},
+				});
+
+				const newProjects = [
+					...projects,
+					...(_projects
+						?.map((manageProject) => ({ project: manageProject.project }))
+						?.filter(({ project }) => !isEmpty(project)) ?? []),
+				];
+
+				return {
+					projects: newProjects,
+					employee,
+				};
+			}),
+		);
+
+		return res.json({
+			projectsOfEmp,
+		});
 	} catch (error) {
 		console.log(error);
 		return res.status(500).json("Server error");
