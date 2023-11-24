@@ -5,6 +5,7 @@ import {
 	getProvinces,
 	getWards,
 } from "../controllers/utils/address";
+import { initialSystem } from "../controllers/utils/initial-system";
 import { getPermissionOfWork } from "../controllers/utils/permission";
 import {
 	generateRankEvaluationWork,
@@ -26,7 +27,6 @@ import projectRouter from "./project";
 import qualificationRouter from "./qualification";
 import resourceRouter from "./resource";
 import statisticRouter from "./statistic";
-import { initialSystem } from "../controllers/utils/initial-system";
 
 const router = Router();
 

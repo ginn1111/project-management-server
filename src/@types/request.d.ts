@@ -165,3 +165,8 @@ interface IStatisticRequest<T = any> extends Request {
 		idDepartment?: string;
 	};
 }
+
+interface IReportRequest<T = any> extends Request {
+	query?: QueryParams & { idProject?: string };
+	body?: Partial<Report & T>;
+}
