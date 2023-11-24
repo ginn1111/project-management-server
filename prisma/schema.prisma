@@ -345,6 +345,7 @@ model EmployeesOfProject {
   startDate             DateTime?                   @map("NGAY_BAT_DAU_NVDA") @db.DateTime
   endDate               DateTime?                   @map("NGAY_KET_THUC_NVDA") @db.DateTime
   note                  String?                     @map("GHI_CHU_NVDA") @db.NVarChar(511)
+  reports               Report[]
   proposeResource       ProposeResource[]
   worksOfEmployees      WorksOfEmployee[]
   project               Project?                    @relation(fields: [idProject], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_NHAN_VIE_RELATIONS_DU_AN")
@@ -563,4 +564,14 @@ model ManageProject {
   employee  Employee  @relation(fields: [idEmpHead], references: [id], onUpdate: NoAction, map: "FK_QUAN_LY_DU_AN_NHAN_VIEN")
 
   @@map("QUAN_LY_DU_AN")
+}
+
+model Report {
+  id           String             @id(map: "PK_BAO_CAO") @map("ID_BC") @db.Char(31)
+  content      String             @map("NOI_DUNG_BC") @db.NVarChar(Max)
+  createdDate  DateTime           @map("NGAY_TAO_BC") @db.DateTime
+  idEmpProject String             @map("ID_NV_BC") @db.Char(31)
+  empProject   EmployeesOfProject @relation(fields: [idEmpProject], references: [id], onUpdate: NoAction, map: "FK_BAO_CAO_NHAN_VIEN_DU_AN")
+
+  @@map("BAO_CAO")
 }
