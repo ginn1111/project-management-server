@@ -271,6 +271,7 @@ export const getList = async (req: IReviewProposeProject, res: Response) => {
 						employeesOfDepartment: {
 							include: {
 								employee: true,
+								roleOfEmployees: true,
 							},
 						},
 						project: true,

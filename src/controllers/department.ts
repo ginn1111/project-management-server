@@ -292,8 +292,19 @@ export const addToEmployee = async (
 						where: {
 							id: idOld,
 						},
+						// auto make endDate of role is end
 						data: {
 							endDate: new Date().toISOString(),
+							roleOfEmployees: {
+								updateMany: {
+									where: {
+										endDate: null,
+									},
+									data: {
+										endDate: new Date().toISOString(),
+									},
+								},
+							},
 						},
 					});
 				}

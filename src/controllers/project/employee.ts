@@ -50,6 +50,7 @@ export const getList = async (req: IEmployeeProjectRequest, res: Response) => {
 							include: {
 								department: true,
 								employee: true,
+								roleOfEmployees: true,
 							},
 						},
 					},
@@ -57,7 +58,10 @@ export const getList = async (req: IEmployeeProjectRequest, res: Response) => {
 			},
 		});
 
-		return res.json({ employeesOfProject, totalItems });
+		return res.json({
+			employeesOfProject,
+			totalItems,
+		});
 	} catch (error) {
 		console.log(error);
 		return res.status(500).json("Server error");

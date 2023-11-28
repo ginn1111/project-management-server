@@ -5,7 +5,7 @@
 	"license": "MIT",
 	"scripts": {
 		"ts:watch": "tsc --watch",
-		"dev": "nodemon ./dist/index.js ",
+		"dev": "nodemon ./dist/index.js",
 		"prisma:gen": "npx prisma generate",
 		"prisma:db-push": "npx prisma db push",
 		"prisma:db-pull": "npx prisma db pull",
@@ -36,6 +36,7 @@
 		"@types/jsonwebtoken": "^9.0.3",
 		"@types/lodash": "^4.14.199",
 		"@types/node": "^20.8.2",
+		"concurrently": "^8.2.2",
 		"dotenv": "^16.3.1",
 		"typescript": "^5.2.2"
 	}

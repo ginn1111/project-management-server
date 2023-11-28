@@ -20,7 +20,15 @@ export const getList = async (req: IQualificationRequest, res: Response) => {
 		include: {
 			qualification: {
 				include: {
-					rolesOfEmployee: true,
+					rolesOfEmployee: {
+						include: {
+							departmentOfEmp: {
+								include: {
+									department: true,
+								},
+							},
+						},
+					},
 				},
 			},
 		},

@@ -150,7 +150,6 @@ model DepartmentOfProject {
   idProject    String?     @map("ID_DA") @db.Char(31)
   idDepartment String?     @map("ID_PB") @db.Char(31)
   createdDate  DateTime    @map("NGAY_THAM_GIA_DAPB") @db.DateTime
-  endDate      DateTime?   @map("NGAY_KET_THUC_DAPB") @db.DateTime
   note         String?     @map("GHI_CHU_DAPB") @db.NVarChar(511)
   project      Project?    @relation(fields: [idProject], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_DU_AN_PH_RELATIONS_DU_AN")
   department   Department? @relation(fields: [idDepartment], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_DU_AN_PH_RELATIONS_PHONG_BA")
@@ -316,7 +315,7 @@ model RolesOfEmployee {
   endDate         DateTime?              @map("NGAY_KET_THUC_NVCM") @db.DateTime
   note            String?                @map("GHI_CHU_NVCM") @db.NVarChar(511)
   qualification   Qualification?         @relation(fields: [idQualification], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_NHAN_VIE_RELATIONS_BANG_CAP2")
-  employee        EmployeesOfDepartment? @relation(fields: [idDepartmentEmp], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_NHAN_VIE_RELATIONS_NHAN_VIE2")
+  departmentOfEmp EmployeesOfDepartment? @relation(fields: [idDepartmentEmp], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_NHAN_VIE_RELATIONS_NHAN_VIE2")
 
   @@index([idQualification], map: "RELATIONSHIP_8_FK")
   @@index([idDepartmentEmp], map: "RELATIONSHIP_9_FK")
@@ -338,24 +337,20 @@ model WorksOfEmployee {
 }
 
 model EmployeesOfProject {
-  id                    String                      @id(clustered: false, map: "PK_NHAN_VIEN_DU_AN") @map("ID_NVDA") @db.Char(31)
-  idHead                String?                     @map("ID_TDA") @db.Char(31)
-  idProject             String?                     @map("ID_DA") @db.Char(31)
-  idProposeProject      String?                     @map("ID_DXDA") @db.Char(31)
-  startDate             DateTime?                   @map("NGAY_BAT_DAU_NVDA") @db.DateTime
-  endDate               DateTime?                   @map("NGAY_KET_THUC_NVDA") @db.DateTime
-  note                  String?                     @map("GHI_CHU_NVDA") @db.NVarChar(511)
-  reports               Report[]
-  proposeResource       ProposeResource[]
-  worksOfEmployees      WorksOfEmployee[]
-  project               Project?                    @relation(fields: [idProject], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_NHAN_VIE_RELATIONS_DU_AN")
-  proposeProject        ProposeProject?             @relation(fields: [idProposeProject], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_NHAN_VIE_RELATIONS_DUYET_NH")
-  headOfProject         EmployeesOfProject?         @relation("NHAN_VIEN_DU_ANToNHAN_VIEN_DU_AN", fields: [idHead], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_NHAN_VIE_RELATIONS_NHAN_VIE5")
-  other_NHAN_VIEN_DU_AN EmployeesOfProject[]        @relation("NHAN_VIEN_DU_ANToNHAN_VIEN_DU_AN")
-  permissionOfWork      PermissionWorksOfEmployee[]
+  id               String                      @id(clustered: false, map: "PK_NHAN_VIEN_DU_AN") @map("ID_NVDA") @db.Char(31)
+  idProject        String?                     @map("ID_DA") @db.Char(31)
+  idProposeProject String?                     @map("ID_DXDA") @db.Char(31)
+  startDate        DateTime?                   @map("NGAY_BAT_DAU_NVDA") @db.DateTime
+  endDate          DateTime?                   @map("NGAY_KET_THUC_NVDA") @db.DateTime
+  note             String?                     @map("GHI_CHU_NVDA") @db.NVarChar(511)
+  reports          Report[]
+  proposeResource  ProposeResource[]
+  worksOfEmployees WorksOfEmployee[]
+  project          Project?                    @relation(fields: [idProject], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_NHAN_VIE_RELATIONS_DU_AN")
+  proposeProject   ProposeProject?             @relation(fields: [idProposeProject], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_NHAN_VIE_RELATIONS_DUYET_NH")
+  permissionOfWork PermissionWorksOfEmployee[]
 
   @@index([idProject], map: "RELATIONSHIP_10_FK")
-  @@index([idHead], map: "RELATIONSHIP_TRUONG_DA_FK")
   @@map("NHAN_VIEN_DU_AN")
 }
 
