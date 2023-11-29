@@ -27,6 +27,7 @@ import projectRouter from "./project";
 import qualificationRouter from "./qualification";
 import resourceRouter from "./resource";
 import statisticRouter from "./statistic";
+import customerRouter from "./customer";
 
 const router = Router();
 
@@ -40,6 +41,7 @@ router.use("/employee", verifyToken, employeeRoute);
 router.use("/position", verifyToken, positionRouter);
 router.use("/resource", verifyToken, resourceRouter);
 router.use("/statistic", verifyToken, statisticRouter);
+router.use("/customer", verifyToken, customerRouter);
 
 router.get("/utils/rank-evaluation-work", getRankEvaluationWork);
 router.get("/utils/rank-evaluation-work/random", generateRankEvaluationWork);

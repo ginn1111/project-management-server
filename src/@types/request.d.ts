@@ -3,6 +3,7 @@ import {
 	AccountEmployee,
 	Certificate,
 	CertificationsOfEmployee,
+	Customer,
 	Department,
 	Employee,
 	EmployeesOfDepartment,
@@ -169,4 +170,9 @@ interface IStatisticRequest<T = any> extends Request {
 interface IReportRequest<T = any> extends Request {
 	query?: QueryParams & { idProject?: string };
 	body?: Partial<Report & T>;
+}
+
+interface ICustomerRequest<T = any> extends Request {
+	query?: QueryParams;
+	body?: Partial<Customer & T>;
 }
