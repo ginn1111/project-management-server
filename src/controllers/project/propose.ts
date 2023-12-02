@@ -135,7 +135,7 @@ export const propose = async (
 				reviewingProposeProject: {
 					create: {
 						id: generateId("REVW"),
-						idState: pendingState?.id,
+						idState: pendingState?.id!,
 					},
 				},
 			},

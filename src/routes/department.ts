@@ -36,6 +36,7 @@ departmentRouter.post("/random-depa", async (_, res: Response) => {
 				create: {
 					id: generateId("EMDE"),
 					idEmployee: "EMPL_01HCYJHDATA3XECHSYBBPNF28K",
+					startDate: new Date().toISOString(),
 				},
 			},
 		},

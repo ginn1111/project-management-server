@@ -200,7 +200,7 @@ export const addNew = async (req: IEmployeeRequest, res: Response) => {
 					? {
 							departments: {
 								create: {
-									idDepartment: departmentOfEmp?.idDepartment,
+									idDepartment: departmentOfEmp?.idDepartment!,
 									startDate: new Date().toISOString(),
 									id: generateId("EMDE"),
 								},

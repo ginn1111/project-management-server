@@ -100,16 +100,19 @@ export const getList = async (req: IProjectRequest, res: Response) => {
 				: {}),
 
 			include: {
+				customers: { where: { endDate: null }, include: { customer: true } },
 				departments: {
 					include: {
 						department: true,
 					},
 				},
-				customers: true,
 				manageProjects: {
 					where: {
 						endDate: null,
 						isHead: true,
+					},
+					include: {
+						employee: true,
 					},
 				},
 			},
@@ -183,11 +186,22 @@ export const getList = async (req: IProjectRequest, res: Response) => {
 	}
 };
 export const addNew = async (
-	req: IProjectRequest<{ departments: string[]; idEmpHead: string }>,
+	req: IProjectRequest<{
+		departments: string[];
+		idEmpHead: string;
+		idCustomer?: string;
+	}>,
 	res: Response,
 ) => {
-	const { name, startDate, idEmpHead, finishDateET, departments, note } =
-		req.body ?? {};
+	const {
+		name,
+		startDate,
+		idEmpHead,
+		finishDateET,
+		departments,
+		note,
+		idCustomer,
+	} = req.body ?? {};
 
 	try {
 		if (!name || !startDate || !finishDateET) {
@@ -227,6 +241,17 @@ export const addNew = async (
 							isHead: true,
 						},
 					},
+					...(idCustomer
+						? {
+								customers: {
+									create: {
+										id: generateId("CUPR"),
+										createdDate: new Date().toISOString(),
+										idCustomer,
+									},
+								},
+						  }
+						: null),
 				},
 			});
 			return res.json("Tạo dự án đơn phòng ban thành công!");
@@ -250,6 +275,18 @@ export const addNew = async (
 							? new Date(finishDateET).toISOString()
 							: undefined,
 						note,
+
+						...(idCustomer
+							? {
+									customers: {
+										create: {
+											id: generateId("CUPR"),
+											createdDate: new Date().toISOString(),
+											idCustomer,
+										},
+									},
+							  }
+							: null),
 					},
 				});
 
@@ -297,19 +334,25 @@ export const addNew = async (
 };
 export const update = async (req: IProjectRequest, res: Response) => {
 	const { id } = req.params;
-	const { name, startDate, finishDateET, departments, note, idEmpHead } =
-		req.body ?? {};
+	const {
+		name,
+		startDate,
+		finishDateET,
+		departments,
+		note,
+		idEmpHead,
+		idCustomer,
+	} = req.body ?? {};
 	try {
 		if (!id || !idEmpHead || isEmpty(req.body))
 			return res.status(422).json("invalid parameters");
-
-		console.log(idEmpHead);
 
 		const existProject = await prismaClient.project.findFirst({
 			where: {
 				id,
 			},
 			include: {
+				customers: { where: { endDate: null } },
 				departments: true,
 				manageProjects: {
 					where: {
@@ -327,7 +370,9 @@ export const update = async (req: IProjectRequest, res: Response) => {
 			existProject?.manageProjects?.length === 0 ||
 			existProject?.manageProjects?.[0]?.idEmpHead !== idEmpHead;
 
-		console.log(existProject.manageProjects);
+		const isDeleteCustomer =
+			!existProject?.customers?.[0]?.idCustomer ||
+			existProject?.customers?.[0]?.idCustomer !== idCustomer;
 
 		const _updatedProject = Object.assign(
 			omit(existProject, "manageProjects"),
@@ -357,7 +402,7 @@ export const update = async (req: IProjectRequest, res: Response) => {
 					id,
 				},
 				data: {
-					...omit(_updatedProject, "departments"),
+					...omit(_updatedProject, ["departments", "customers"]),
 					...(departments?.length
 						? {
 								departments: {
@@ -404,6 +449,42 @@ export const update = async (req: IProjectRequest, res: Response) => {
 				});
 			}
 
+			// handle customer change
+			// handle case have old customer and do not have customer
+			if (isDeleteCustomer) {
+				const customerProject = await tx.customersOfProject.findFirst({
+					where: {
+						idCustomer: existProject.customers?.[0]?.idCustomer,
+						idProject: id,
+						endDate: null,
+					},
+				});
+
+				// case do not have old idCustomer
+				if (customerProject) {
+					await tx.customersOfProject.update({
+						where: {
+							id: customerProject.id,
+						},
+						data: {
+							endDate: new Date().toISOString(),
+						},
+					});
+				}
+
+				// case idCustomer is null -> cover it
+				if (idCustomer) {
+					await tx.customersOfProject.create({
+						data: {
+							id: generateId("CUPR"),
+							createdDate: new Date().toISOString(),
+							idCustomer,
+							idProject: id,
+						},
+					});
+				}
+			}
+
 			return res.json(updatedProject);
 		});
 	} catch (error) {
@@ -420,6 +501,7 @@ export const detail = async (req: IProjectRequest, res: Response) => {
 				id,
 			},
 			include: {
+				customers: { where: { endDate: null }, include: { customer: true } },
 				departments: {
 					include: {
 						department: true,
@@ -468,6 +550,9 @@ export const detail = async (req: IProjectRequest, res: Response) => {
 					where: {
 						endDate: null,
 						isHead: true,
+					},
+					include: {
+						employee: true,
 					},
 				},
 			},
@@ -735,7 +820,7 @@ export const addEmployees = async (
 							id: generateId("PRPR"),
 							createdDate: new Date().toISOString(),
 							content: "Trưởng phòng điều phối nhân viên vào dự án",
-							idDeEmp: deEmp?.id,
+							idDeEmp: deEmp?.id!,
 							idProject: id,
 							reviewingProposeProject: {
 								create: {

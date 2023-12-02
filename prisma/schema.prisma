@@ -436,7 +436,7 @@ model ProjectResource {
   idResource     String           @map("ID_NL") @db.Char(31)
   amount         Int              @map("SL")
   note           String?          @map("GHI_CHU_NLDA") @db.NVarChar(511)
-  resourceOfTask ResourceOfTask[]
+  resourceOfTasks ResourceOfTask[]
   project        Project          @relation(fields: [idProject], references: [id], onUpdate: NoAction, map: "FK_NGUON_LUC_DU_AN_DU_AN")
   resource       Resource         @relation(fields: [idResource], references: [id], onUpdate: NoAction, map: "FK_NGUON_LUC_DU_AN_NGUON_LUC")
 
@@ -451,7 +451,7 @@ model ResourceOfTask {
   amount          Int             @map("SL_CVNL")
   note            String?         @map("GHI_CHI_CVNL") @db.NVarChar(511)
   task            Task            @relation(fields: [idTask], references: [id], onUpdate: NoAction, map: "FK_CONG_VIEC_NGUON_LUC_CONG_VIEC")
-  projectResource ProjectResource @relation(fields: [idResource], references: [id], onUpdate: NoAction, map: "FK_CONG_VIEC_NGUON_LUC_NGUON_LUC_DU_AN")
+  resource ProjectResource @relation(fields: [idResource], references: [id], onUpdate: NoAction, map: "FK_CONG_VIEC_NGUON_LUC_NGUON_LUC_DU_AN")
 
   @@id([idResource, idTask], map: "PK_CONG_VIEC_NGUON_LUC")
   @@map("CONG_VIEC_NGUON_LUC")

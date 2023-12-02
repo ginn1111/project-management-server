@@ -67,6 +67,14 @@ export const statisticProject = async (
 						employee: true,
 					},
 				},
+				customers: {
+					where: {
+						endDate: null,
+					},
+					include: {
+						customer: true,
+					},
+				},
 			},
 		});
 

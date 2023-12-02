@@ -12,6 +12,8 @@ import {
 import { PERMISSION } from "../../constants/general";
 import { getEmpOfProject } from "../../services/get-emp-of-project";
 import { generateId } from "../../utils/generate-id";
+import dayjs from "dayjs";
+import { sendMail } from "../../services/send-mail";
 
 const prismaClient = new PrismaClient();
 
@@ -501,6 +503,59 @@ export const assign = async (req: IWorkOfEmpRequest, res: Response) => {
 				idWorksProject,
 			},
 		});
+
+		const assignee = await prismaClient.employeesOfProject.findFirst({
+			where: {
+				id: idEmployee,
+			},
+			include: {
+				proposeProject: {
+					include: {
+						employeesOfDepartment: {
+							include: {
+								employee: true,
+							},
+						},
+					},
+				},
+			},
+		});
+
+		const reporter = await prismaClient.employee.findFirst({
+			where: {
+				id: res.locals.idEmpLogin,
+			},
+		});
+
+		const work = await prismaClient.worksOfProject.findFirst({
+			where: {
+				id: idWorksProject,
+			},
+			include: {
+				project: true,
+				work: true,
+			},
+		});
+
+		const data = {
+			project: work?.project?.name,
+			reporter: reporter?.fullName,
+			work: work?.work?.name,
+			startDate: dayjs(work?.startDate).format("ddd, DD/MM/YYYY"),
+			finishDateET: dayjs(work?.finishDateET).format("ddd, DD/MM/YYYY"),
+			content: work?.note,
+			assignee:
+				assignee?.proposeProject?.employeesOfDepartment?.employee?.fullName,
+			link: `http://localhost:3000/du-an/${work?.project?.id}`,
+		};
+
+		if (assignee?.proposeProject?.employeesOfDepartment?.employee?.email) {
+			sendMail({
+				subject: work?.work?.name!,
+				to: assignee?.proposeProject?.employeesOfDepartment?.employee?.email!,
+				templateData: data as Record<string, string>,
+			});
+		}
 
 		return res.json(createdAssign);
 	} catch (error) {
