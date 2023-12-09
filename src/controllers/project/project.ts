@@ -596,6 +596,8 @@ export const addResource = async (
 ) => {
 	const { id } = req.params;
 	const { resource } = req.body ?? {};
+
+	let isMinus = false;
 	try {
 		if (!id || !resource?.length)
 			return res.status(422).json("invalid parameter");
@@ -668,7 +670,7 @@ export const addResource = async (
 					);
 				}
 
-				await Promise.all(
+				const removedResource = await Promise.all(
 					resourceFind.map((r) => {
 						return tx.resource.update({
 							where: {
@@ -680,6 +682,9 @@ export const addResource = async (
 						});
 					}),
 				);
+
+				isMinus = removedResource.some((item) => item.amount < 0);
+				if (isMinus) throw Error();
 			},
 			{
 				timeout: 20000,
@@ -688,7 +693,9 @@ export const addResource = async (
 		return res.json("Thêm nguồn lực thành công");
 	} catch (error) {
 		console.log(error);
-		return res.status(500).json((error as Error).message ?? "Server error");
+		return res
+			.status(500)
+			.json(isMinus ? "Không đủ nguồn lực để thêm!" : "Server error");
 	}
 };
 

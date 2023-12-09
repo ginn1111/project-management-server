@@ -105,6 +105,11 @@ export const getList = async (req: IWorkProjectRequest, res: Response) => {
 					],
 				},
 				include: {
+					workEvaluation: {
+						include: {
+							rankWorkEvaluation: true,
+						},
+					},
 					worksOfEmployee: {
 						include: {
 							employee: {
@@ -482,7 +487,7 @@ export const assign = async (req: IWorkOfEmpRequest, res: Response) => {
 	const { idWorksProject } = req.params;
 	const { idEmployee } = req.body ?? {};
 	try {
-		if (!idWorksProject || isEmpty(req.body))
+		if (!idWorksProject || !idEmployee || isEmpty(req.body))
 			return res.status(409).json("invalid parameters");
 
 		const workOfProject = await prismaClient.worksOfEmployee.findFirst({
@@ -629,6 +634,7 @@ export const historyOfTask = async (req: ITaskOfWorkRequest, res: Response) => {
 export const doneTask = async (req: ITaskOfWorkRequest, res: Response) => {
 	const { idTaskOfWork } = req.params;
 	const { percentOfDone } = req.body ?? {};
+
 	try {
 		if (!idTaskOfWork || !percentOfDone)
 			return res.status(422).json("invalid parameter");
@@ -663,6 +669,7 @@ export const addResourceForTask = async (
 ) => {
 	const { idTask } = req.params;
 	const { resource } = req.body ?? {};
+	let isMinus = false;
 	try {
 		if (!idTask || !resource?.length)
 			return res.status(422).json("invalid parameters");
@@ -735,7 +742,7 @@ export const addResourceForTask = async (
 				);
 			}
 
-			await Promise.all(
+			const removedResourceProj = await Promise.all(
 				resourcesOfProject.map(({ id, amount }) => {
 					console.log(amount, resourceIndex[id]);
 					return tx.projectResource.update({
@@ -748,12 +755,17 @@ export const addResourceForTask = async (
 					});
 				}),
 			);
+
+			isMinus = removedResourceProj.some((item) => item.amount < 0);
+			if (isMinus) throw Error("");
 		});
 
 		return res.json("Thêm nguồn lực thành công");
 	} catch (error) {
 		console.log(error);
-		return res.status(500).json("Server error");
+		return res
+			.status(500)
+			.json(isMinus ? "Nguồn lực không đủ để sử dụng" : "Server error");
 	}
 };
 export const assignPermission = async (

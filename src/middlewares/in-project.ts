@@ -70,16 +70,16 @@ export const isInProject = async (
 			},
 		});
 
-		if (isEmpty(empOfProject) && isEmpty(headOrCreator)) {
-			return res.status(409).json("Bạn không có trong dự án này");
-		}
-
 		if (
 			empLogin?.departments?.[0]?.idDepartment !==
 				empOfProject?.proposeProject?.employeesOfDepartment?.idDepartment &&
 			isEmpty(headOrCreator)
 		) {
-			return res.status(409).json("Phòng ban hiện tại của bạn không hợp lệ!");
+			return res.status(409).json("Bạn không có quyền vào dự án");
+		}
+
+		if (isEmpty(empOfProject) && isEmpty(headOrCreator)) {
+			return res.status(409).json("Bạn không có trong dự án này");
 		}
 
 		res.locals.empOfProject = empOfProject;
