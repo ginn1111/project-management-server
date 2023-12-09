@@ -6,6 +6,7 @@ import { Role } from "../constants/general";
 import { getDepartment } from "../services/get-department";
 import { getPositionOfEmp } from "../services/get-position";
 import { generateId } from "../utils/generate-id";
+import { checkValidEmployeeInfo } from "../services/check-valid-employee-info";
 
 const PREFIX_KEY = "EMPL";
 const prismaClient = new PrismaClient();
@@ -148,6 +149,15 @@ export const update = async (req: IEmployeeRequest, res: Response) => {
 	const { id } = req.params;
 	const bodyData = omit(req.body, ["account", "departments"]) ?? {};
 
+	const msgError = await checkValidEmployeeInfo({
+		id,
+		...req?.body,
+	} as Employee);
+
+	if (msgError) {
+		return res.status(422).json(msgError);
+	}
+
 	try {
 		if (!id || isEmpty(bodyData)) {
 			return res.status(422).json("invalid parameters");
@@ -181,10 +191,19 @@ export const update = async (req: IEmployeeRequest, res: Response) => {
 	}
 };
 export const addNew = async (req: IEmployeeRequest, res: Response) => {
+	if (!req.body) {
+		return res.status(402).json("invalid parameter");
+	}
 	const [positionOfEmp, departmentOfEmp] = await Promise.all([
 		getPositionOfEmp(res.locals.idEmpLogin),
 		getDepartment(res.locals.idEmpLogin),
 	]);
+
+	const msgError = await checkValidEmployeeInfo(req?.body as Employee);
+
+	if (msgError) {
+		return res.status(422).json(msgError);
+	}
 
 	const isHead = positionOfEmp?.position?.code === Role.TRUONG_PHONG;
 

@@ -1,8 +1,9 @@
-import { PrismaClient } from "@prisma/client";
+import { Customer, PrismaClient } from "@prisma/client";
 import { Response } from "express";
 import { isEmpty } from "lodash";
 import { ICustomerRequest } from "../@types/request";
 import { generateId } from "../utils/generate-id";
+import { checkValidCustomerInfo } from "../services/check-valid-customer-info";
 
 const prismaClient = new PrismaClient();
 
@@ -66,6 +67,11 @@ export const addNew = async (req: ICustomerRequest, res: Response) => {
 			return res.status(422).json("invalid parameters");
 		}
 
+		const msgErr = await checkValidCustomerInfo(req.body as Customer);
+		if (msgErr) {
+			return res.status(422).json(msgErr);
+		}
+
 		const createCustomer = await prismaClient.customer.create({
 			data: {
 				id: generateId("CUST"),
@@ -87,6 +93,15 @@ export const update = async (req: ICustomerRequest, res: Response) => {
 	try {
 		if (!idCustomer || isEmpty(req.body))
 			return res.status(422).json("invalid parameters");
+
+		const msgErr = await checkValidCustomerInfo({
+			id: idCustomer,
+			...req.body,
+		} as Customer);
+
+		if (msgErr) {
+			return res.status(422).json(msgErr);
+		}
 
 		const updatedCustomer = await prismaClient.customer.update({
 			where: {
