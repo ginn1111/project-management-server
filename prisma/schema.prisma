@@ -165,7 +165,7 @@ model District {
   code       Int        @map("CODE_HUYEN")
   name       String     @map("TEN_HUYEN") @db.NVarChar(255)
   province   Province?  @relation(fields: [idProvince], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_HUYEN_RELATIONS_TINH")
-  KHACH_HANG Customer[]
+  cusomter Customer[]
   employees  Employee[]
   ward       Ward[]
 
@@ -200,8 +200,7 @@ model CustomersOfProject {
   idProject   String?   @map("ID_DA") @db.Char(31)
   idCustomer  String?   @map("ID_KH") @db.Char(31)
   createdDate DateTime  @map("NGAY_TAO_KHDA") @db.DateTime
-  finishDate  DateTime? @map("NGAY_BAN_GIAO") @db.DateTime
-  isRemove    Boolean   @default(false, map: "DEFAULT_KHACH_HANG_DU_AN_HUY_KHDA") @map("HUY_KHDA")
+  endDate  DateTime? @map("NGAY_KT") @db.DateTime
   note        String?   @map("GHI_CHU_KHDA") @db.NVarChar(511)
   project     Project?  @relation(fields: [idProject], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_KHACH_HA_RELATIONS_DU_AN")
   customer    Customer? @relation(fields: [idCustomer], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_KHACH_HA_RELATIONS_KHACH_HA")
@@ -438,7 +437,7 @@ model Province {
   code       Int        @map("CODE_TINH")
   name       String     @map("TEN_TINH") @db.NVarChar(255)
   district   District[]
-  KHACH_HANG Customer[]
+  customers Customer[]
   employees  Employee[]
 
   @@map("TINH")
