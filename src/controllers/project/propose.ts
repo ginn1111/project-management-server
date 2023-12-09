@@ -468,6 +468,7 @@ export const addProposeResource = async (
 	req: IProposeResourceRequest<{ resource: { id: string; amount: number }[] }>,
 	res: Response,
 ) => {
+	let isMinus = false;
 	try {
 		const { empOfProject } = res.locals;
 		const { resource, description } = req.body ?? {};
@@ -537,7 +538,7 @@ export const addProposeResource = async (
 			});
 
 			// subtract amount of resource in warehouse
-			await Promise.all(
+			const subtractedAmount = await Promise.all(
 				resourceFind.map((r) => {
 					return tx.resource.update({
 						where: {
@@ -549,11 +550,16 @@ export const addProposeResource = async (
 					});
 				}),
 			);
+
+			isMinus = subtractedAmount.some((item) => item.amount < 0);
+			if (isMinus) throw Error("");
 		});
 		return res.json("Tạo đề xuất thành công!");
 	} catch (error) {
 		console.log(error);
-		return res.status(500).json("Server error");
+		return res
+			.status(500)
+			.json(isMinus ? "Không còn đủ số lượng để để xuất!" : "Server error");
 	}
 };
 
