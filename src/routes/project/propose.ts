@@ -47,7 +47,12 @@ proposeRouter.post("/random/state-propose", async (_, res: Response) => {
 
 // propose resource
 proposeRouter.get("/resource/:id/review", getListProposeResource);
-proposeRouter.post("/resource/create", isInProject, addProposeResource);
+proposeRouter.post(
+	"/resource/create",
+	isInProject,
+	doneProject,
+	addProposeResource,
+);
 proposeRouter.post("/resource/:id/review", reviewProposeResource);
 
 export default proposeRouter;

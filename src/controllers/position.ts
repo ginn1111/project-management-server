@@ -106,11 +106,22 @@ export const update = async (req: IPositionRequest, res: Response) => {
 		if (!id || isEmpty(req.body)) {
 			return res.status(422).json("invalid parameters");
 		}
+
 		const position = await prismaClient.position.findUnique({
 			where: {
 				id,
 			},
 		});
+
+		const existPositionCode = await prismaClient.position.findFirst({
+			where: {
+				code: position?.code,
+				isActive: true,
+			},
+		});
+
+		if (!isEmpty(existPositionCode))
+			return res.status(409).json("Tên chức vụ đã tồn tại");
 
 		if (isEmpty(position)) return res.status(422).json("invalid parameters");
 
@@ -183,6 +194,7 @@ export const addNew = async (req: IPositionRequest, res: Response) => {
 		const existPositionCode = await prismaClient.position.findFirst({
 			where: {
 				code,
+				isActive: true,
 			},
 		});
 

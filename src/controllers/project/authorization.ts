@@ -46,8 +46,6 @@ export const addManageProject = async (
 	const manageProjectAdd = manageProject.filter((manage) => manage.isAdd);
 	const manageProjectRemove = manageProject.filter((manage) => !manage.isAdd);
 
-	console.log(manageProject);
-
 	await prismaClient.$transaction(async (tx) => {
 		await tx.manageProject.createMany({
 			data: manageProjectAdd.map(({ id }) => ({
