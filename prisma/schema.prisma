@@ -67,6 +67,8 @@ model Work {
   id            String           @id(clustered: false, map: "PK_DAU_VIEC") @map("ID_DVC") @db.Char(31)
   name          String           @map("TEN_DVC") @db.NVarChar(255)
   note          String?          @map("GHI_CHU_DVC") @db.NVarChar(1)
+  idState       String?          @db.Char(31) @map("ID_TTDV")
+  state WorkState?       @relation(fields: [idState], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_DAU_VIEC_TRANG_THAI_DV")
   projects      WorksOfProject[]
   historyOfWork HistoryOfWork[]
 
@@ -115,7 +117,9 @@ model Project {
   finishDate       DateTime?             @map("NGAY_KET_THUC_DA") @db.DateTime
   note             String?               @map("GHI_CHU_DA") @db.NVarChar(511)
   isSingle         Boolean?              @map("IS_DON_PB")
+  idState          String?               @db.Char(31) @map("ID_TTDA")
   proposeProject   ProposeProject[]
+  state    ProjectState?         @relation(fields: [idState], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_DU_AN_TRANG_THAI_DA")
   worksOfProject   WorksOfProject[]
   departments      DepartmentOfProject[]
   customers        CustomersOfProject[]
@@ -165,7 +169,7 @@ model District {
   code       Int        @map("CODE_HUYEN")
   name       String     @map("TEN_HUYEN") @db.NVarChar(255)
   province   Province?  @relation(fields: [idProvince], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_HUYEN_RELATIONS_TINH")
-  cusomter Customer[]
+  cusomter   Customer[]
   employees  Employee[]
   ward       Ward[]
 
@@ -174,23 +178,23 @@ model District {
 }
 
 model Customer {
-  id           String               @id(clustered: false, map: "PK_KHACH_HANG") @map("ID_KH") @db.Char(31)
-  fullName     String?              @map("TEN_KH") @db.NVarChar(255)
-  address      String?              @map("DIA_CHI_KH") @db.NVarChar(255)
-  phone        String?              @map("DIEN_THOAI_KH") @db.NVarChar(23)
-  fax          String?              @map("FAX_KH") @db.NVarChar(23)
-  email        String?              @map("EMAIL_KH") @db.NVarChar(255)
-  note         String?              @map("GHI_CHU_KH") @db.NVarChar(511)
-  isActive     Boolean              @default(true, map: "DEFAULT_KHACH_HANG_IS_ACTIVE") @map("IS_ACTIVE")
-  idProvince   String?              @map("ID_TINH") @db.Char(31)
-  idDistrict   String?              @map("ID_HUYEN") @db.Char(31)
-  idWard       String?              @map("ID_XA") @db.Char(31)
-  identityNumber         String?              @db.VarChar(20) @map("CCCD")
-  gender String?              @db.VarChar(5) @map("GIOI_TINH_KH")
-  district     District?            @relation(fields: [idDistrict], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_KHACH_HANG_HUYEN_1")
-  province     Province?            @relation(fields: [idProvince], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_KHACH_HANG_TINH")
-  ward         Ward?                @relation(fields: [idWard], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_KHACH_HANG_XA_2")
-  customers    CustomersOfProject[]
+  id             String               @id(clustered: false, map: "PK_KHACH_HANG") @map("ID_KH") @db.Char(31)
+  fullName       String?              @map("TEN_KH") @db.NVarChar(255)
+  address        String?              @map("DIA_CHI_KH") @db.NVarChar(255)
+  phone          String?              @map("DIEN_THOAI_KH") @db.NVarChar(23)
+  fax            String?              @map("FAX_KH") @db.NVarChar(23)
+  email          String?              @map("EMAIL_KH") @db.NVarChar(255)
+  note           String?              @map("GHI_CHU_KH") @db.NVarChar(511)
+  isActive       Boolean              @default(true, map: "DEFAULT_KHACH_HANG_IS_ACTIVE") @map("IS_ACTIVE")
+  idProvince     String?              @map("ID_TINH") @db.Char(31)
+  idDistrict     String?              @map("ID_HUYEN") @db.Char(31)
+  idWard         String?              @map("ID_XA") @db.Char(31)
+  identityNumber String?              @map("CCCD") @db.VarChar(20)
+  gender         String?              @map("GIOI_TINH_KH") @db.VarChar(5)
+  district       District?            @relation(fields: [idDistrict], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_KHACH_HANG_HUYEN_1")
+  province       Province?            @relation(fields: [idProvince], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_KHACH_HANG_TINH")
+  ward           Ward?                @relation(fields: [idWard], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_KHACH_HANG_XA_2")
+  customers      CustomersOfProject[]
 
   @@map("KHACH_HANG")
 }
@@ -200,8 +204,8 @@ model CustomersOfProject {
   idProject   String?   @map("ID_DA") @db.Char(31)
   idCustomer  String?   @map("ID_KH") @db.Char(31)
   createdDate DateTime  @map("NGAY_TAO_KHDA") @db.DateTime
-  endDate  DateTime? @map("NGAY_KT") @db.DateTime
   note        String?   @map("GHI_CHU_KHDA") @db.NVarChar(511)
+  endDate     DateTime? @map("NGAY_KT") @db.DateTime
   project     Project?  @relation(fields: [idProject], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_KHACH_HA_RELATIONS_DU_AN")
   customer    Customer? @relation(fields: [idCustomer], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_KHACH_HA_RELATIONS_KHACH_HA")
 
@@ -433,12 +437,12 @@ model Account {
 }
 
 model Province {
-  id         String     @id(clustered: false, map: "PK_TINH") @map("ID_TINH") @db.Char(31)
-  code       Int        @map("CODE_TINH")
-  name       String     @map("TEN_TINH") @db.NVarChar(255)
-  district   District[]
+  id        String     @id(clustered: false, map: "PK_TINH") @map("ID_TINH") @db.Char(31)
+  code      Int        @map("CODE_TINH")
+  name      String     @map("TEN_TINH") @db.NVarChar(255)
+  district  District[]
   customers Customer[]
-  employees  Employee[]
+  employees Employee[]
 
   @@map("TINH")
 }
@@ -505,7 +509,9 @@ model Resource {
   name             String             @map("TEN_NL") @db.NVarChar(127)
   amount           Int                @default(0, map: "DEFAULT_NGUON_LUC_SL_NL") @map("SL_NL")
   note             String?            @map("GHI_CHU_NL") @db.NVarChar(511)
+  idState          String?            @db.Char(31) @map("ID_TTNL")
   resourceType     ResourceType?      @relation(fields: [idResourceType], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_NGUON_LUC_LOAI_NGUON_LUC")
+  state    ResourceState?     @relation(fields: [idState], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_NGUON_LUC_TRANG_THAI_NL")
   resourcesPropose ResourcesPropose[]
   resourceProject  ProjectResource[]
 
@@ -580,4 +586,31 @@ model Report {
   empProject   EmployeesOfProject @relation(fields: [idEmpProject], references: [id], onUpdate: NoAction, map: "FK_BAO_CAO_NHAN_VIEN_DU_AN")
 
   @@map("BAO_CAO")
+}
+
+model ProjectState {
+  id       String    @id(map: "PK_TRANG_THAI_DA") @map("ID_TTDA") @db.Char(31)
+  name     String    @map("TEN_TTDA") @db.NVarChar(127)
+  isActive Boolean   @default(true, map: "DEFAULT_TRANG_THAI_DA_IS_ACTIVE") @map("IS_ACTIVE")
+  projects    Project[]
+
+  @@map("TRANG_THAI_DA")
+}
+
+model WorkState {
+  id       String  @id(map: "PK_TRANG_THAI_DV") @map("ID_TTDV") @db.Char(31)
+  name     String  @map("TEN_TTDV") @db.NVarChar(127)
+  isActive Boolean @default(true, map: "DEFAULT_TRANG_THAI_DV_IS_ACTIVE") @map("IS_ACTIVE")
+  works Work[]
+
+  @@map("TRANG_THAI_DV")
+}
+
+model ResourceState {
+  id        String     @id(map: "PK_TRANG_THAI_NL") @map("ID_TTNL") @db.Char(31)
+  name      String     @map("TEN_TTNL") @db.NVarChar(127)
+  isActive  Boolean    @default(true, map: "DEFAULT_TRANG_THAI_NL_IS_ACTIVE") @map("IS_ACTIVE")
+  resources Resource[]
+
+  @@map("TRANG_THAI_NL")
 }
