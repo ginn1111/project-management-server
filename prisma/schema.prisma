@@ -117,9 +117,8 @@ model Project {
   finishDate       DateTime?             @map("NGAY_KET_THUC_DA") @db.DateTime
   note             String?               @map("GHI_CHU_DA") @db.NVarChar(511)
   isSingle         Boolean?              @map("IS_DON_PB")
-  idState          String?               @map("ID_TTDA") @db.Char(31)
+  canceledDate      DateTime?             @db.DateTime @map("NGAY_HUY_DA")
   proposeProject   ProposeProject[]
-  state            ProjectState?         @relation(fields: [idState], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_DU_AN_TRANG_THAI_DA")
   worksOfProject   WorksOfProject[]
   departments      DepartmentOfProject[]
   customers        CustomersOfProject[]
@@ -509,7 +508,7 @@ model Resource {
   name             String             @map("TEN_NL") @db.NVarChar(127)
   amount           Int                @default(0, map: "DEFAULT_NGUON_LUC_SL_NL") @map("SL_NL")
   note             String?            @map("GHI_CHU_NL") @db.NVarChar(511)
-  isActive        Boolean            @default(true, map: "DEFAULT_NGUON_LUC_IS_ACTIVE") @map("IS_ACTIVE")
+  isActive         Boolean            @default(true, map: "DEFAULT_NGUON_LUC_IS_ACTIVE") @map("IS_ACTIVE")
   resourceType     ResourceType?      @relation(fields: [idResourceType], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_NGUON_LUC_LOAI_NGUON_LUC")
   resourcesPropose ResourcesPropose[]
   resourceProject  ProjectResource[]
@@ -585,15 +584,6 @@ model Report {
   empProject   EmployeesOfProject @relation(fields: [idEmpProject], references: [id], onUpdate: NoAction, map: "FK_BAO_CAO_NHAN_VIEN_DU_AN")
 
   @@map("BAO_CAO")
-}
-
-model ProjectState {
-  id       String    @id(map: "PK_TRANG_THAI_DA") @map("ID_TTDA") @db.Char(31)
-  name     String    @map("TEN_TTDA") @db.NVarChar(127)
-  isActive Boolean   @default(true, map: "DEFAULT_TRANG_THAI_DA_IS_ACTIVE") @map("IS_ACTIVE")
-  projects Project[]
-
-  @@map("TRANG_THAI_DA")
 }
 
 model WorkState {
