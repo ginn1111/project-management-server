@@ -14,6 +14,7 @@ import { getEmpOfProject } from "../../services/get-emp-of-project";
 import { generateId } from "../../utils/generate-id";
 import dayjs from "dayjs";
 import { sendMail } from "../../services/send-mail";
+import { WorkStateNames } from "../../migrations/work-state";
 
 const prismaClient = new PrismaClient();
 
@@ -70,7 +71,11 @@ export const getList = async (req: IWorkProjectRequest, res: Response) => {
 							},
 						},
 					},
-					work: true,
+					work: {
+						include: {
+							state: true,
+						},
+					},
 				},
 				orderBy: {
 					startDate: "asc",
@@ -148,7 +153,11 @@ export const getList = async (req: IWorkProjectRequest, res: Response) => {
 							},
 						},
 					},
-					work: true,
+					work: {
+						include: {
+							state: true,
+						},
+					},
 				},
 				orderBy: {
 					startDate: "asc",
@@ -170,6 +179,18 @@ export const add = async (req: IWorkProjectRequest, res: Response) => {
 			return res.status(422).json("invalid parameters");
 
 		const empOfProject = await getEmpOfProject(id, res.locals.idEmpLogin);
+		const workState = await prismaClient.workState.findFirst({
+			where: {
+				isActive: true,
+				name: WorkStateNames.Planing,
+			},
+		});
+
+		if (!workState) {
+			return res
+				.status(422)
+				.json("Có lỗi xảy ra, không tìm thấy trạng thái công việc");
+		}
 
 		await prismaClient.$transaction(async (tx) => {
 			const createdWork = await prismaClient.worksOfProject.create({
@@ -186,12 +207,14 @@ export const add = async (req: IWorkProjectRequest, res: Response) => {
 					work: {
 						create: {
 							id: generateId("WORK"),
+							idState: workState.id,
 							name,
 						},
 					},
 					worksOfEmployee: {
 						create: {
 							id: generateId("WOEM"),
+							// idEmployee when create alway null
 							idEmployee: empOfProject?.id,
 						},
 					},
