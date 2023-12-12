@@ -15,6 +15,7 @@ import { generateId } from "../../utils/generate-id";
 import dayjs from "dayjs";
 import { sendMail } from "../../services/send-mail";
 import { WorkStateNames } from "../../migrations/work-state";
+import { WorkServices } from "../../services";
 
 const prismaClient = new PrismaClient();
 
@@ -565,6 +566,9 @@ export const assign = async (req: IWorkOfEmpRequest, res: Response) => {
 			},
 		});
 
+		if (work?.idWork)
+			await WorkServices.processingWork(prismaClient, work.idWork);
+
 		const data = {
 			project: work?.project?.name,
 			reporter: reporter?.fullName,
@@ -830,8 +834,12 @@ export const assignPermission = async (
 			),
 		);
 
+		console.log(existPermissions);
+
 		// for delete
 		const noneIsGrantPermission = permissions.filter(({ isGrant }) => !isGrant);
+
+		console.log(noneIsGrantPermission);
 
 		// for add new
 		const noneExistIsGrantPermission = permissions.filter(
@@ -857,6 +865,8 @@ export const assignPermission = async (
 
 			await tx.permissionWorksOfEmployee.deleteMany({
 				where: {
+					idEmpProject,
+					idWorkProject,
 					idPermission: {
 						in: noneIsGrantPermission.map(({ id }) => id),
 					},
@@ -934,6 +944,76 @@ export const evaluateWork = async (
 		});
 
 		return res.json(evaluation);
+	} catch (error) {
+		console.log(error);
+		return res.status(500).json("Server error");
+	}
+};
+
+export const cancelWork = async (req: IWorkProjectRequest, res: Response) => {
+	try {
+		const { idWorkProject } = req.params;
+		if (!idWorkProject) return res.status(422).json("invalid parameter");
+
+		const workOfProj = await prismaClient.worksOfProject.findFirst({
+			where: {
+				id: idWorkProject,
+			},
+			include: {
+				work: true,
+			},
+		});
+
+		if (!workOfProj?.work) {
+			return res.status(409).json("Đầu việc không tồn tại");
+		}
+
+		const canceledWork = await WorkServices.cancelWork(
+			prismaClient,
+			workOfProj.work.id,
+		);
+		if (!canceledWork) {
+			return res
+				.status(409)
+				.json("Có lỗi xảy ra, không thể huỷ đầu việc, vui lòng thử lại");
+		}
+
+		return res.json("Đầu việc đã bị huỷ");
+	} catch (error) {
+		console.log(error);
+		return res.status(500).json("Server error");
+	}
+};
+
+export const startWork = async (req: IWorkProjectRequest, res: Response) => {
+	try {
+		const { idWorkProject } = req.params;
+		if (!idWorkProject) return res.status(422).json("invalid parameter");
+
+		const workOfProj = await prismaClient.worksOfProject.findFirst({
+			where: {
+				id: idWorkProject,
+			},
+			include: {
+				work: true,
+			},
+		});
+
+		if (!workOfProj?.work) {
+			return res.status(409).json("Đầu việc không tồn tại");
+		}
+
+		const updatedWork = await WorkServices.processingWork(
+			prismaClient,
+			workOfProj.work.id,
+		);
+		if (!updatedWork) {
+			return res
+				.status(409)
+				.json("Có lỗi xảy ra, không thể bắt đầu đầu việc, vui lòng thử lại");
+		}
+
+		return res.json("Đầu việc đã bắt đầu");
 	} catch (error) {
 		console.log(error);
 		return res.status(500).json("Server error");

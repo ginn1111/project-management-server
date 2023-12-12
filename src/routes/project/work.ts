@@ -14,6 +14,8 @@ import {
 	assignPermission,
 	getWorkPermissions,
 	evaluateWork,
+	startWork,
+	cancelWork,
 } from "../../controllers/project/work";
 import { isInProject } from "../../middlewares/in-project";
 import { doneProject } from "../../middlewares/done-project";
@@ -58,5 +60,9 @@ workRouter.get(
 
 // evaluation
 workRouter.post("/:idWorkOfProject/evaluation", isHeadOrCreator, evaluateWork);
+
+// process state of work
+workRouter.put("/:idWorkProject/start", startWork);
+workRouter.put("/:idWorkProject/cancel", cancelWork);
 
 export default workRouter;

@@ -510,7 +510,11 @@ export const detail = async (req: IProjectRequest, res: Response) => {
 				},
 				worksOfProject: {
 					include: {
-						work: true,
+						work: {
+							include: {
+								state: true,
+							},
+						},
 						worksOfEmployee: {
 							include: {
 								employee: true,
