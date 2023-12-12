@@ -8,6 +8,7 @@ import {
 	update,
 	done,
 	addEmployees,
+	cancel,
 } from "../../controllers/project/project";
 import { generateId } from "../../utils/generate-id";
 import { addNew } from "../../controllers/project/project";
@@ -42,6 +43,7 @@ projectRouter.post(
 );
 
 projectRouter.patch("/:id/update", isHeadOrCreator, doneProject, update);
+projectRouter.put("/:id/cancel", isHeadOrCreator, doneProject, cancel);
 projectRouter.post("/random", async (_, res: Response) => {
 	const projects = Array(10)
 		.fill(0)

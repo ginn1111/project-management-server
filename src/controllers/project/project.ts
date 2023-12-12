@@ -7,6 +7,7 @@ import { getDepartment } from "../../services/get-department";
 import { getPositionOfEmp } from "../../services/get-position";
 import { generateId } from "../../utils/generate-id";
 import { StatePropose } from "../../constants/review";
+import { WorkStateNames } from "../../migrations/work-state";
 
 const prismaClient = new PrismaClient();
 
@@ -850,6 +851,116 @@ export const addEmployees = async (
 		);
 
 		return res.json("Thêm nhân viên vào dự án thành công");
+	} catch (error) {
+		console.log(error);
+		return res.status(500).json("Server error");
+	}
+};
+
+export const cancel = async (req: IProjectRequest, res: Response) => {
+	try {
+		const { id } = req.params;
+		if (!id) {
+			return res.status(409).json("invalid parameter");
+		}
+
+		const projectInfo = await prismaClient.project.findFirst({
+			where: {
+				id,
+			},
+		});
+
+		if (!projectInfo) {
+			return res.status(422).json("Dự án không tồn tại");
+		}
+
+		if (projectInfo.canceledDate) {
+			return res.status(422).json("Dự án đã bị huỷ");
+		}
+
+		// find processing or done works of project
+		const processOrDoneWorksOfProj = await prismaClient.worksOfProject.findMany(
+			{
+				where: {
+					idProject: id,
+					work: {
+						state: {
+							AND: [
+								{
+									name: {
+										not: WorkStateNames.Planing,
+									},
+								},
+								{
+									name: {
+										not: WorkStateNames.Canceled,
+									},
+								},
+							],
+						},
+					},
+				},
+			},
+		);
+
+		if (processOrDoneWorksOfProj?.length) {
+			return res.status(422).json("Dự án đã bắt đầu, không thể huỷ");
+		}
+
+		const planingWorksOfProject = await prismaClient.worksOfProject.findMany({
+			where: {
+				idProject: id,
+				work: {
+					state: {
+						name: WorkStateNames.Planing,
+					},
+				},
+			},
+			include: {
+				work: true,
+			},
+		});
+
+		const canceledState = await prismaClient.workState.findFirst({
+			where: {
+				name: WorkStateNames.Canceled,
+			},
+		});
+
+		if (!canceledState) {
+			return res
+				.status(422)
+				.json("Có lỗi xảy ra, không tìm thấy trạng thái huỷ");
+		}
+
+		await prismaClient.$transaction(async (tx) => {
+			// cancel all planing works
+			if (planingWorksOfProject?.length) {
+				await Promise.all(
+					planingWorksOfProject.map((wOfP) =>
+						prismaClient.work.update({
+							where: {
+								id: wOfP.idWork as string,
+							},
+							data: {
+								idState: canceledState.id,
+							},
+						}),
+					),
+				);
+			}
+
+			await prismaClient.project.update({
+				where: {
+					id,
+				},
+				data: {
+					canceledDate: new Date().toISOString(),
+				},
+			});
+
+			return res.json("Huỷ dự án thành công");
+		});
 	} catch (error) {
 		console.log(error);
 		return res.status(500).json("Server error");
