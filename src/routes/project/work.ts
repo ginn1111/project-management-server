@@ -16,37 +16,78 @@ import {
 	evaluateWork,
 	startWork,
 	cancelWork,
+	cancelTask,
 } from "../../controllers/project/work";
 import { isInProject } from "../../middlewares/in-project";
 import { doneProject } from "../../middlewares/done-project";
 import { isHeadOrCreator } from "../../middlewares/is-head-or-creator";
 import { isInTask } from "../../middlewares/in-task";
+import { isUpdateDatesWork } from "../../middlewares/is-update-dates-work";
+import { isValidateCreateTask } from "../../middlewares/is-validate-date-task";
+import { isCancelOrDoneTask } from "../../middlewares/is-cancel-or-done-task";
 
 const workRouter = Router();
 
 workRouter.get("/:id", isInProject, getList);
 workRouter.post("/:id/create", doneProject, add);
-workRouter.post("/:idWorkProject/update", isInProject, update);
+
+workRouter.post(
+	"/:idWorkProject/update",
+	isInProject,
+	isUpdateDatesWork,
+	update,
+);
+
 workRouter.post("/:idWork/history", history);
+
 workRouter.post("/:idWorkProject/done", done);
+
 // task
-workRouter.post("/:idWork/task/create", isInProject, createTask);
+workRouter.post(
+	"/:idWork/task/create",
+	isInProject,
+	isValidateCreateTask,
+	createTask,
+);
+
+// add resource
 workRouter.post(
 	"/:id/:idTask/task/add-resource",
 	isInProject,
 	isInTask,
+	isCancelOrDoneTask,
 	addResourceForTask,
 );
+
+// cancel
+workRouter.put(
+	"/:id/:idTask/task/cancel",
+	isInProject,
+	isInTask,
+	isCancelOrDoneTask,
+	cancelTask,
+);
+
 // update
 workRouter.patch(
 	"/:idTaskOfWork/task/update",
 	isInProject,
 	isInTask,
+	isCancelOrDoneTask,
 	updatedTask,
 );
+
 // read
 workRouter.post("/:idTask/task/history", isInProject, historyOfTask);
-workRouter.post("/:idTaskOfWork/task/done", isInProject, isInTask, doneTask);
+
+// done task
+workRouter.post(
+	"/:idTaskOfWork/task/done",
+	isInProject,
+	isInTask,
+	isCancelOrDoneTask,
+	doneTask,
+);
 
 // assignment
 workRouter.post("/:idWorksProject/assign", isHeadOrCreator, assign);

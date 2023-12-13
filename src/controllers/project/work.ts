@@ -15,7 +15,7 @@ import { generateId } from "../../utils/generate-id";
 import dayjs from "dayjs";
 import { sendMail } from "../../services/send-mail";
 import { WorkStateNames } from "../../migrations/work-state";
-import { WorkServices } from "../../services";
+import { TaskServices, WorkServices } from "../../services";
 
 const prismaClient = new PrismaClient();
 
@@ -335,7 +335,11 @@ export const done = async (req: ITaskOfWorkRequest, res: Response) => {
 			include: {
 				worksOfEmployee: {
 					include: {
-						tasksOfWork: true,
+						tasksOfWork: {
+							include: {
+								task: true,
+							},
+						},
 					},
 				},
 			},
@@ -346,7 +350,7 @@ export const done = async (req: ITaskOfWorkRequest, res: Response) => {
 		);
 		const isAllTaskDone =
 			flatTasksOfWork?.length === 0 ||
-			flatTasksOfWork?.some((task) => task.finishDate);
+			flatTasksOfWork?.every((tOfW) => tOfW.finishDate || !tOfW.task?.isActive);
 
 		if (!isAllTaskDone) {
 			return res.status(409).json("Các công việc chưa hoàn thành!");
@@ -1017,5 +1021,23 @@ export const startWork = async (req: IWorkProjectRequest, res: Response) => {
 	} catch (error) {
 		console.log(error);
 		return res.status(500).json("Server error");
+	}
+};
+
+export const cancelTask = async (req: IWorkProjectRequest, res: Response) => {
+	try {
+		const { idTask } = req.params;
+
+		const cancelTask = await TaskServices.cancelTask(prismaClient, idTask);
+
+		if (!cancelTask)
+			return res
+				.status(422)
+				.json("Có lỗi xảy ra, không thể huỷ công việc, vui lòng thử lại");
+
+		return res.json("Huỷ công việc thành công");
+	} catch (error) {
+		console.log(error);
+		return res.status(500).json("Công việc đang thực hiện, không thể huỷ");
 	}
 };
