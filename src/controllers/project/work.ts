@@ -363,8 +363,20 @@ export const done = async (req: ITaskOfWorkRequest, res: Response) => {
 		});
 
 		if (workOfProject?.finishDate) {
-			return res.status(309).json("Đầu việc này đã hoàn thành");
+			return res.status(409).json("Đầu việc này đã hoàn thành");
 		}
+
+		const doneState = await prismaClient.workState.findFirst({
+			where: {
+				isActive: true,
+				name: WorkStateNames.Done,
+			},
+		});
+
+		if (!doneState)
+			return res
+				.status(409)
+				.json("Có lỗi xảy ra, không thể hoàn thành đầu việc");
 
 		await prismaClient.worksOfProject.update({
 			where: {
@@ -372,6 +384,11 @@ export const done = async (req: ITaskOfWorkRequest, res: Response) => {
 			},
 			data: {
 				finishDate: new Date().toISOString(),
+				work: {
+					update: {
+						idState: doneState.id,
+					},
+				},
 			},
 		});
 
@@ -512,15 +529,15 @@ export const updatedTask = async (req: ITaskOfWorkRequest, res: Response) => {
 
 // assign
 export const assign = async (req: IWorkOfEmpRequest, res: Response) => {
-	const { idWorksProject } = req.params;
+	const { idWorkProject } = req.params;
 	const { idEmployee } = req.body ?? {};
 	try {
-		if (!idWorksProject || !idEmployee || isEmpty(req.body))
+		if (!idWorkProject || !idEmployee || isEmpty(req.body))
 			return res.status(409).json("invalid parameters");
 
 		const workOfProject = await prismaClient.worksOfEmployee.findFirst({
 			where: {
-				idWorksProject: idWorksProject,
+				idWorksProject: idWorkProject,
 				idEmployee,
 			},
 		});
@@ -533,7 +550,7 @@ export const assign = async (req: IWorkOfEmpRequest, res: Response) => {
 			data: {
 				id: generateId("WOEM"),
 				idEmployee,
-				idWorksProject,
+				idWorksProject: idWorkProject,
 			},
 		});
 
@@ -562,7 +579,7 @@ export const assign = async (req: IWorkOfEmpRequest, res: Response) => {
 
 		const work = await prismaClient.worksOfProject.findFirst({
 			where: {
-				id: idWorksProject,
+				id: idWorkProject,
 			},
 			include: {
 				project: true,

@@ -25,6 +25,7 @@ import { isInTask } from "../../middlewares/in-task";
 import { isUpdateDatesWork } from "../../middlewares/is-update-dates-work";
 import { isValidateCreateTask } from "../../middlewares/is-validate-date-task";
 import { isCancelOrDoneTask } from "../../middlewares/is-cancel-or-done-task";
+import { isCancelOrDoneWork } from "../../middlewares/is-cancel-or-done-work";
 
 const workRouter = Router();
 
@@ -34,13 +35,14 @@ workRouter.post("/:id/create", doneProject, add);
 workRouter.post(
 	"/:idWorkProject/update",
 	isInProject,
+	isCancelOrDoneWork,
 	isUpdateDatesWork,
 	update,
 );
 
 workRouter.post("/:idWork/history", history);
 
-workRouter.post("/:idWorkProject/done", done);
+workRouter.post("/:idWorkProject/done", isCancelOrDoneWork, done);
 
 // task
 workRouter.post(
@@ -90,10 +92,20 @@ workRouter.post(
 );
 
 // assignment
-workRouter.post("/:idWorksProject/assign", isHeadOrCreator, assign);
+workRouter.post(
+	"/:idWorkProject/assign",
+	isHeadOrCreator,
+	isCancelOrDoneWork,
+	assign,
+);
 
 //permission
-workRouter.post("/:idWorkProject/permission", assignPermission);
+workRouter.post(
+	"/:idWorkProject/permission",
+	isCancelOrDoneWork,
+	assignPermission,
+);
+
 workRouter.get(
 	"/:idWorkProject/permission/:idEmpProject/work",
 	getWorkPermissions,
