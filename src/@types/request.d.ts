@@ -85,7 +85,7 @@ interface IProjectRequest<T = any> extends Request {
 }
 interface IResourceRequest<T = any> extends Request {
 	query?: QueryParams & { idResourceType?: string; idProject?: string };
-	body?: Partial<Resource>;
+	body?: Partial<Resource & T>;
 }
 
 interface IProposeProject<T = any> extends Request {

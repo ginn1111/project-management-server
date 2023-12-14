@@ -736,9 +736,23 @@ export const addResourceForTask = async (
 			resource.map(({ id }) =>
 				prismaClient.resourceOfTask.findFirst({
 					where: { idResource: id, idTask },
+					include: {
+						resource: {
+							include: {
+								resource: true,
+							},
+						},
+					},
 				}),
 			),
 		);
+
+		const hasStopUsing = resourceOfTask.some(
+			(rOfTask) => !rOfTask?.resource?.resource?.isActive,
+		);
+
+		if (hasStopUsing)
+			return res.status(409).json("Nguồn lực bạn đề xuất đã ngưng sử dụng");
 
 		// exist will update
 		const existResourceInTask = resourceOfTask.filter(Boolean);

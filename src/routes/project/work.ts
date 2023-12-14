@@ -1,31 +1,31 @@
 import { Router } from "express";
 import {
-	getList,
 	add,
-	update,
-	createTask,
-	updatedTask,
+	addResourceForTask,
 	assign,
-	history,
-	historyOfTask,
+	assignPermission,
+	cancelTask,
+	cancelWork,
+	createTask,
 	done,
 	doneTask,
-	addResourceForTask,
-	assignPermission,
-	getWorkPermissions,
 	evaluateWork,
+	getList,
+	getWorkPermissions,
+	history,
+	historyOfTask,
 	startWork,
-	cancelWork,
-	cancelTask,
+	update,
+	updatedTask,
 } from "../../controllers/project/work";
-import { isInProject } from "../../middlewares/in-project";
 import { doneProject } from "../../middlewares/done-project";
-import { isHeadOrCreator } from "../../middlewares/is-head-or-creator";
+import { isInProject } from "../../middlewares/in-project";
 import { isInTask } from "../../middlewares/in-task";
-import { isUpdateDatesWork } from "../../middlewares/is-update-dates-work";
-import { isValidateCreateTask } from "../../middlewares/is-validate-date-task";
 import { isCancelOrDoneTask } from "../../middlewares/is-cancel-or-done-task";
 import { isCancelOrDoneWork } from "../../middlewares/is-cancel-or-done-work";
+import { isHeadOrCreator } from "../../middlewares/is-head-or-creator";
+import { isUpdateDatesWork } from "../../middlewares/is-update-dates-work";
+import { isValidateCreateTask } from "../../middlewares/is-validate-date-task";
 
 const workRouter = Router();
 

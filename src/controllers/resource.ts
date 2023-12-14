@@ -2,7 +2,7 @@ import { Response } from "express";
 import { IResourceRequest } from "../@types/request";
 import { PrismaClient } from "@prisma/client";
 import { generateId } from "../utils/generate-id";
-import { isEmpty } from "lodash";
+import { isEmpty, isNil } from "lodash";
 
 const prismaClient = new PrismaClient();
 
@@ -125,5 +125,29 @@ export const update = async (req: IResourceRequest, res: Response) => {
 	} catch (error) {
 		console.log(error);
 		return res.status(500).json((error as Error).message ?? "Server error");
+	}
+};
+
+export const toggleUsing = async (req: IResourceRequest, res: Response) => {
+	try {
+		const { id } = req.params;
+		const { isActive } = req.body ?? {};
+
+		if (!id || isNil(isActive))
+			return res.status(422).json("invalid parameter");
+
+		await prismaClient.resource.update({
+			where: {
+				id,
+			},
+			data: {
+				isActive,
+			},
+		});
+
+		return res.json("Tạm dừng sử dụng nguồn lực");
+	} catch (error) {
+		console.log(error);
+		return res.status(500).json("Server error");
 	}
 };

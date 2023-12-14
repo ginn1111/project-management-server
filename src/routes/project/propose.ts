@@ -13,6 +13,7 @@ import {
 import { generateId } from "../../utils/generate-id";
 import { isInProject } from "../../middlewares/in-project";
 import { doneProject } from "../../middlewares/done-project";
+import { isStopUsingResource } from "../../middlewares/is-stop-using-resource";
 
 const prismaClient = new PrismaClient();
 
@@ -51,6 +52,7 @@ proposeRouter.post(
 	"/resource/create",
 	isInProject,
 	doneProject,
+	isStopUsingResource,
 	addProposeResource,
 );
 proposeRouter.post("/resource/:id/review", reviewProposeResource);

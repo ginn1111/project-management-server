@@ -16,6 +16,7 @@ import { isInProject } from "../../middlewares/in-project";
 import { IProjectRequest } from "../../@types/request";
 import { doneProject } from "../../middlewares/done-project";
 import { isHeadOrCreator } from "../../middlewares/is-head-or-creator";
+import { isStopUsingResource } from "../../middlewares/is-stop-using-resource";
 
 const primaClient = new PrismaClient();
 
@@ -39,6 +40,7 @@ projectRouter.post(
 	"/:id/add-resource",
 	isHeadOrCreator,
 	doneProject,
+	isStopUsingResource,
 	addResource,
 );
 
