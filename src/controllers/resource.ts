@@ -151,3 +151,56 @@ export const toggleUsing = async (req: IResourceRequest, res: Response) => {
 		return res.status(500).json("Server error");
 	}
 };
+
+export const returnResource = async (req: IResourceRequest, res: Response) => {
+	try {
+		const { id } = req.params;
+
+		if (!id) return res.status(422).json("invalid parameter");
+
+		const resourceProject = await prismaClient.projectResource.findFirst({
+			where: {
+				id,
+			},
+			include: {
+				resource: true,
+			},
+		});
+
+		if (!resourceProject)
+			return res.status(409).json("Nguồn lực không tồn tại trong dự án");
+
+		const resource = await prismaClient.resource.findFirst({
+			where: {
+				id: resourceProject.idResource as string,
+			},
+		});
+
+		if (!resource) return res.status(409).json("Nguồn lực không tồn tại");
+
+		await prismaClient.$transaction(async (tx) => {
+			await tx.projectResource.update({
+				where: {
+					id,
+				},
+				data: {
+					amount: 0,
+				},
+			});
+
+			await tx.resource.update({
+				where: {
+					id: resource.id,
+				},
+				data: {
+					amount: resourceProject.amount + resource.amount,
+				},
+			});
+		});
+
+		return res.json("Hoàn tác nguồn lực thành công");
+	} catch (error) {
+		console.log(error);
+		return res.status(500).json("Server error");
+	}
+};

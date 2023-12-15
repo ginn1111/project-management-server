@@ -1,7 +1,13 @@
 import { faker } from "@faker-js/faker";
 import { PrismaClient } from "@prisma/client";
 import { Response, Router } from "express";
-import { addNew, getList, update, toggleUsing } from "../controllers/resource";
+import {
+	addNew,
+	getList,
+	update,
+	toggleUsing,
+	returnResource,
+} from "../controllers/resource";
 import { generateId } from "../utils/generate-id";
 
 const prismaClient = new PrismaClient();
@@ -12,6 +18,7 @@ resourceRouter.get("/", getList);
 resourceRouter.patch("/:id", update);
 resourceRouter.post("/add", addNew);
 resourceRouter.put("/:id/toggle-using", toggleUsing);
+resourceRouter.put("/:id/return", returnResource);
 resourceRouter.post("/random", async (_, res: Response) => {
 	const resourceType = [
 		{

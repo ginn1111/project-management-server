@@ -692,7 +692,7 @@ export const doneTask = async (req: ITaskOfWorkRequest, res: Response) => {
 		});
 
 		if (taskOfWork?.finishDate) {
-			return res.status(309).json("Công việc đã hoàn thành");
+			return res.status(409).json("Công việc đã hoàn thành");
 		}
 
 		await prismaClient.tasksOfWork.update({
@@ -747,8 +747,19 @@ export const addResourceForTask = async (
 			),
 		);
 
-		const hasStopUsing = resourceOfTask.some(
-			(rOfTask) => !rOfTask?.resource?.resource?.isActive,
+		const dbProjResource = await Promise.all(
+			resource.map(({ id }) =>
+				prismaClient.projectResource.findFirst({
+					where: { id },
+					include: {
+						resource: true,
+					},
+				}),
+			),
+		);
+
+		const hasStopUsing = dbProjResource.some(
+			(projResource) => !projResource?.resource?.isActive,
 		);
 
 		if (hasStopUsing)
