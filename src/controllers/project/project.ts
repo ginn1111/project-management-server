@@ -116,6 +116,15 @@ export const getList = async (req: IProjectRequest, res: Response) => {
 						employee: true,
 					},
 				},
+				worksOfProject: {
+					include: {
+						work: {
+							include: {
+								state: true,
+							},
+						},
+					},
+				},
 			},
 			where: {
 				...(isNil(isDone)
@@ -180,7 +189,22 @@ export const getList = async (req: IProjectRequest, res: Response) => {
 			},
 		});
 
-		return res.json({ projects, totalItems });
+		const fmtAlreadyDoneProjects = projects.map((p) => {
+			const isAlreadyDone =
+				p.worksOfProject?.length > 0 &&
+				p.worksOfProject.every((wOPrj) => {
+					return [WorkStateNames.Done, WorkStateNames.Canceled].includes(
+						wOPrj.work?.state?.name ?? "",
+					);
+				});
+
+			return {
+				...omit(p, "worksOfProject"),
+				isAlreadyDone: isAlreadyDone && !p.canceledDate && !p.finishDate,
+			};
+		});
+
+		return res.json({ projects: fmtAlreadyDoneProjects, totalItems });
 	} catch (error) {
 		console.log(error);
 		return res.status(500).json("Server error");
@@ -712,16 +736,36 @@ export const done = async (req: IProjectRequest, res: Response) => {
 				id,
 			},
 			include: {
-				worksOfProject: true,
+				worksOfProject: {
+					include: {
+						work: {
+							include: {
+								state: true,
+							},
+						},
+					},
+				},
 			},
 		});
 
-		if (!project?.worksOfProject?.length) {
+		if (!project?.worksOfProject.length) {
 			return res.status(409).json("Dự án chưa có đầu việc nào");
 		}
 
+		const allCancelWork = project?.worksOfProject.every(
+			(workOfPrj) => workOfPrj.work?.state?.name === WorkStateNames.Canceled,
+		);
+
+		if (allCancelWork) {
+			return res
+				.status(409)
+				.json("Tất cả đầu việc của dự án đã bị huỷ, không thể hoàn thành!");
+		}
+
 		const allWorkDone = project?.worksOfProject.every(
-			(workOfPrj) => !!workOfPrj.finishDate,
+			(workOfPrj) =>
+				workOfPrj.finishDate ||
+				workOfPrj.work?.state?.name === WorkStateNames.Canceled,
 		);
 
 		if (!allWorkDone) {

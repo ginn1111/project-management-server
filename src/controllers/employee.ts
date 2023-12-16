@@ -266,6 +266,9 @@ export const getDetail = async (req: IEmployeeRequest, res: Response) => {
 					},
 				},
 				positions: {
+					where: {
+						endDate: null,
+					},
 					include: {
 						position: true,
 					},

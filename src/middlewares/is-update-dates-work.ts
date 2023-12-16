@@ -41,8 +41,10 @@ export const isUpdateDatesWork = async (
 		}
 
 		const isChangeDates =
-			!dayjs(workOfProject.startDate).isSame(req.body?.startDate, "D") ||
-			!dayjs(workOfProject.finishDateET).isSame(req.body?.finishDateET, "D");
+			(req.body?.startDate &&
+				!dayjs(workOfProject.startDate).isSame(req.body?.startDate, "D")) ||
+			(req.body?.finishDateET &&
+				!dayjs(workOfProject.finishDateET).isSame(req.body?.finishDateET, "D"));
 
 		const hasTask = workOfProject.worksOfEmployee.some(
 			(wOfEmp) => wOfEmp.tasksOfWork.length,
