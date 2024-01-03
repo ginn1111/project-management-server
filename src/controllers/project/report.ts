@@ -49,6 +49,9 @@ export const getList = async (req: IReportRequest, res: Response) => {
 					},
 				},
 			},
+			orderBy: {
+				createdDate: "desc",
+			},
 		});
 
 		return res.json({
