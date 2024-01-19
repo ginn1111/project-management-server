@@ -5,15 +5,14 @@
   "scripts": {
     "build": "webpack --mode=production --node-env=production",
     "ts:watch": "tsc --watch",
-    "dev": "npx webpack serve",
+    "dev": "nodemon",
     "prisma:gen": "npx prisma generate",
     "prisma:db-push": "npx prisma db push",
     "prisma:db-pull": "npx prisma db pull",
     "prisma:fmt": "npx prisma format",
     "build:dev": "webpack --mode=development",
     "build:prod": "webpack --mode=production --node-env=production",
-    "watch": "webpack --watch",
-    "start": "node main.[contenthash].js"
+    "watch": "webpack --watch"
   },
   "dependencies": {
     "@faker-js/faker": "^8.2.0",
@@ -27,7 +26,7 @@
     "express": "^4.18.2",
     "jsonwebtoken": "^9.0.2",
     "lodash": "^4.17.21",
-    "nodemon": "^3.0.1",
+    "nodemon": "^3.0.3",
     "prettier": "^3.0.3",
     "prisma": "^5.4.2",
     "ts-node": "^10.9.2",
