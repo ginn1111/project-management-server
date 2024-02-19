@@ -1,3 +1,4 @@
+ARG NODE_ENV_BUILD development
 FROM node:18-alpine AS base
 WORKDIR /server
 
@@ -11,14 +12,16 @@ RUN yarn --frozen-lockfile
 CMD ["yarn", "dev"]
 
 FROM dev as builder
-RUN  yarn build
+ENV NODE_ENV={$NODE_ENV_BUILD}
+RUN yarn build
 
 FROM base as prod
+ENV NODE_ENV={$NODE_ENV_BUILD}
 COPY --from=dev /server/node_modules ./node_modules
-COPY --from=builder /server/dist ./
+COPY --from=builder /server ./
 
 EXPOSE 8080
 
-CMD [ "node", "main.js" ]
+CMD [ "node", "./dist/main.js" ]
 
 
