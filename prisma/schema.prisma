@@ -8,7 +8,7 @@ datasource db {
 }
 
 model Qualification {
-  id                       String                     @id(map: "idx_19080_pk_bang_cap")
+  id                       String                     @id(map: "idx_19080_pk_bang_cap") @map("id_bc")
   name                     String                     @map("ten_bc")
   url                      String?                    @map("url_bc")
   qualificationsOfEmployee QualificationsOfEmployee[]
@@ -18,7 +18,7 @@ model Qualification {
 }
 
 model Report {
-  id           String             @id(map: "idx_19085_pk_bao_cao")
+  id           String             @id(map: "idx_19085_pk_bao_cao") @map("id_bc")
   content      String             @map("noi_dung_bc")
   createdDate  DateTime           @map("ngay_tao_bc") @db.Timestamptz(6)
   idEmpProject String             @map("id_nv_bc")
@@ -28,7 +28,7 @@ model Report {
 }
 
 model Position {
-  id                  String                @id(map: "idx_19090_pk_chuc_vu")
+  id                  String                @id(map: "idx_19090_pk_chuc_vu") @map("id_chv")
   name                String                @map("ten_chv")
   note                String?               @map("ghi_chu_chv")
   isActive            Boolean               @default(true) @map("is_active_chv")
@@ -39,7 +39,7 @@ model Position {
 }
 
 model Certificate {
-  id                     String                     @id(map: "idx_19096_pk_chung_chi")
+  id                     String                     @id(map: "idx_19096_pk_chung_chi") @map("id_chch")
   name                   String                     @map("ten_chch")
   url                    String?                    @map("url_chch")
   certificatesOfEmployee CertificationsOfEmployee[]
@@ -48,20 +48,20 @@ model Certificate {
 }
 
 model Task {
-  id                 String           @id(map: "idx_19101_pk_cong_viec")
-  name               String           @map("ten_cv")
-  note               String?          @map("ghi_chu_cv")
-  isActive           Boolean          @default(true) @map("is_active_cv")
-  resourceOfTasks    ResourceOfTask[]
-  dau_viec_cong_viec TasksOfWork[]
-  lich_su_cong_viec  HistoryOfWork[]
-  HistoryOfTask      HistoryOfTask[]
+  id              String           @id(map: "idx_19101_pk_cong_viec") @map("id_cv")
+  name            String           @map("ten_cv")
+  note            String?          @map("ghi_chu_cv")
+  isActive        Boolean          @default(true) @map("is_active_cv")
+  resourceOfTasks ResourceOfTask[]
+  works           TasksOfWork[]
+  history         HistoryOfTask[]
+  HistoryOfWork   HistoryOfWork[]
 
   @@map("cong_viec")
 }
 
 model ResourceOfTask {
-  id         String           @id(map: "idx_19107_pk_cong_viec_nguon_luc")
+  id         String           @id(map: "idx_19107_pk_cong_viec_nguon_luc") @map("id_cvnl")
   idResource String?          @map("id_nlda")
   idTask     String?          @map("id_cv")
   amount     Int              @map("sl_cvnl")
@@ -73,7 +73,7 @@ model ResourceOfTask {
 }
 
 model WorkEvaluation {
-  id                 String              @id(map: "idx_19112_pk_danh_gia_dau_viec")
+  id                 String              @id(map: "idx_19112_pk_danh_gia_dau_viec") @map("id_dgdv")
   idEvaluation       String?             @map("id_mddgdv")
   idWorkOfProject    String?             @map("id_dadv")
   date               DateTime?           @map("ngay_dgdv") @db.Timestamptz(6)
@@ -87,7 +87,7 @@ model WorkEvaluation {
 }
 
 model Work {
-  id            String           @id(map: "idx_19117_pk_dau_viec")
+  id            String           @id(map: "idx_19117_pk_dau_viec") @map("id_dvc")
   name          String           @map("ten_dvc")
   note          String?          @map("ghi_chu_dvc")
   idState       String?          @map("id_ttdv")
@@ -99,7 +99,7 @@ model Work {
 }
 
 model TasksOfWork {
-  id            String           @id(map: "idx_19122_pk_dau_viec_cong_viec")
+  id            String           @id(map: "idx_19122_pk_dau_viec_cong_viec") @map("id_dvcv")
   idTask        String?          @map("id_cv")
   idEmployee    String?          @map("id_nvdv")
   percentOfDone Float?           @map("muc_do_ht")
@@ -116,7 +116,7 @@ model TasksOfWork {
 }
 
 model ProposeProject {
-  id                      String                    @id(map: "idx_19127_pk_de_xuat_du_an")
+  id                      String                    @id(map: "idx_19127_pk_de_xuat_du_an") @map("id_dxda")
   idProject               String?                   @map("id_da")
   idDeEmp                 String?                   @map("id_nvpb")
   createdDate             DateTime                  @map("ngay_tao_dxda") @db.Timestamptz(6)
@@ -132,7 +132,7 @@ model ProposeProject {
 }
 
 model ProposeResource {
-  id                       String                     @id(map: "idx_19132_pk_de_xuat_nguon_luc")
+  id                       String                     @id(map: "idx_19132_pk_de_xuat_nguon_luc") @map("id_dxnl")
   idEmpProject             String?                    @map("id_nvda")
   description              String?                    @map("mo_ta_dxnl")
   createdDate              DateTime                   @map("ngay_tao_dxnl") @db.Timestamptz(6)
@@ -144,7 +144,7 @@ model ProposeResource {
 }
 
 model Project {
-  id               String                @id(map: "idx_19137_pk_du_an")
+  id               String                @id(map: "idx_19137_pk_du_an") @map("id_da")
   name             String                @map("ten_da")
   createdDate      DateTime              @map("ngay_tao_da") @db.Timestamptz(6)
   startDate        DateTime?             @map("ngay_bat_dau_da") @db.Timestamptz(6)
@@ -165,7 +165,7 @@ model Project {
 }
 
 model WorksOfProject {
-  id                       String                      @id(map: "idx_19142_pk_du_an_dau_viec")
+  id                       String                      @id(map: "idx_19142_pk_du_an_dau_viec") @map("id_dadv")
   idProject                String?                     @map("id_da")
   idWork                   String?                     @map("id_dvc")
   startDate                DateTime                    @map("ngay_bd_dadv") @db.Timestamptz(6)
@@ -184,7 +184,7 @@ model WorksOfProject {
 }
 
 model DepartmentOfProject {
-  id           String      @id(map: "idx_19147_pk_du_an_phong_ban")
+  id           String      @id(map: "idx_19147_pk_du_an_phong_ban") @map("id_dapb")
   idProject    String?     @map("id_da")
   idDepartment String?     @map("id_pb")
   createdDate  DateTime    @map("ngay_tham_gia_dapb") @db.Timestamptz(6)
@@ -198,7 +198,7 @@ model DepartmentOfProject {
 }
 
 model ReviewingProposeProject {
-  id               String          @id(map: "idx_19152_pk_duyet_dxda")
+  id               String          @id(map: "idx_19152_pk_duyet_dxda") @map("id_ddxda")
   idProposeProject String?         @map("id_dxda")
   idState          String?         @map("id_ttdx")
   reviewingDate    DateTime?       @map("ngay_duyet") @db.Timestamptz(6)
@@ -210,7 +210,7 @@ model ReviewingProposeProject {
 }
 
 model ReviewingProposeResource {
-  id                String           @id(map: "idx_19157_pk_duyet_dxnl")
+  id                String           @id(map: "idx_19157_pk_duyet_dxnl") @map("id_ddxnl")
   idProposeResource String?          @map("id_dxnl")
   idState           String?          @map("id_ttdx")
   reviewingDate     DateTime?        @map("ngay_duyet") @db.Timestamptz(6)
@@ -222,7 +222,7 @@ model ReviewingProposeResource {
 }
 
 model District {
-  id         String     @id(map: "idx_19162_pk_huyen")
+  id         String     @id(map: "idx_19162_pk_huyen") @map("id_huyen")
   idProvince String?    @map("id_tinh")
   code       Int        @map("code_huyen")
   name       String     @map("ten_huyen")
@@ -236,7 +236,7 @@ model District {
 }
 
 model Customer {
-  id             String               @id(map: "idx_19167_pk_khach_hang")
+  id             String               @id(map: "idx_19167_pk_khach_hang") @map("id_kh")
   fullName       String?              @map("ten_kh")
   address        String?              @map("dia_chi_kh")
   phone          String?              @map("dien_thoai_kh")
@@ -258,7 +258,7 @@ model Customer {
 }
 
 model CustomersOfProject {
-  id          String    @id(map: "idx_19173_pk_khach_hang_du_an")
+  id          String    @id(map: "idx_19173_pk_khach_hang_du_an") @map("id_khda")
   idProject   String?   @map("id_da")
   idCustomer  String?   @map("id_kh")
   createdDate DateTime  @map("ngay_tao_khda") @db.Timestamptz(6)
@@ -273,19 +273,19 @@ model CustomersOfProject {
 }
 
 model HistoryOfTask {
-  id      String   @id(map: "idx_19178_pk_lich_su_cong_viec")
-  idWork  String?  @map("id_cv")
+  id      String   @id(map: "idx_19178_pk_lich_su_cong_viec") @map("id_lscv")
+  idTask  String?  @map("id_cv")
   date    DateTime @map("ngay_tao_lscv") @db.Timestamptz(6)
   content String?  @map("noi_dung_lscv")
   note    String?  @map("ghi_chu_lscv")
-  task    Task?    @relation(fields: [idWork], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_lich_su__relations_cong_vie")
+  task    Task?    @relation(fields: [idTask], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_lich_su__relations_cong_vie")
 
-  @@index([idWork], map: "idx_19178_relationship_79_fk")
+  @@index([idTask], map: "idx_19178_relationship_79_fk")
   @@map("lich_su_cong_viec")
 }
 
 model HistoryOfWork {
-  id          String   @id(map: "idx_19183_pk_lich_su_dau_viec")
+  id          String   @id(map: "idx_19183_pk_lich_su_dau_viec") @map("id_lsdv")
   idWork      String?  @map("id_dvc")
   createdDate DateTime @map("ngay_tao_lsdv") @db.Timestamptz(6)
   content     String?  @map("noi_dung_lsdv")
@@ -299,7 +299,7 @@ model HistoryOfWork {
 }
 
 model ResourceType {
-  id       String     @id(map: "idx_19188_pk_loai_nguon_luc")
+  id       String     @id(map: "idx_19188_pk_loai_nguon_luc") @map("id_lnl")
   name     String     @map("ten_lnl")
   note     String?    @map("ghi_chu_lnl")
   resource Resource[]
@@ -308,7 +308,7 @@ model ResourceType {
 }
 
 model RankWorkEvaluation {
-  id              String           @id(map: "idx_19193_pk_muc_do_danh_gia_dau_viec")
+  id              String           @id(map: "idx_19193_pk_muc_do_danh_gia_dau_viec") @map("id_mddgdv")
   name            String           @map("ten_mddgdv")
   note            String?          @map("ghi_chu_mddgdv")
   workEvaluations WorkEvaluation[]
@@ -317,7 +317,7 @@ model RankWorkEvaluation {
 }
 
 model Resource {
-  id               String             @id(map: "idx_19198_pk_nguon_luc")
+  id               String             @id(map: "idx_19198_pk_nguon_luc") @map("id_nl")
   idResourceType   String?            @map("id_lnl")
   name             String             @map("ten_nl")
   amount           Int                @default(0) @map("sl_nl")
@@ -331,36 +331,31 @@ model Resource {
 }
 
 model ResourcesPropose {
-  id                String           @id(map: "idx_19205_pk_nguon_luc_dx")
+  id                String           @id(map: "idx_19205_pk_nguon_luc_dx") @map("id_nldx")
   idResource        String           @map("id_nl")
   idProposeResource String           @map("id_dxnl")
   amount            Int              @map("sl_nl")
-  proposeResource   ProjectResource  @relation(fields: [idProposeResource], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_nguon_luc_dx_de_xuat_nguon_luc_1")
   resource          Resource         @relation(fields: [idResource], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_nguon_luc_dx_nguon_luc")
-  ProposeResource   ProposeResource? @relation(fields: [proposeResourceId], references: [id])
-  proposeResourceId String?
+  ProposeResource   ProposeResource? @relation(fields: [idResource], references: [id])
 
   @@map("nguon_luc_de_xuat")
 }
 
 model ProjectResource {
-  id                   String              @id(map: "idx_19210_pk_nguon_luc_du_an")
-  idProject            String              @map("id_da")
-  idResource           String?             @map("id_nl")
-  amount               Int                 @map("sl")
-  note                 String?             @map("ghi_chu_nlda")
-  resourceOfTasks      ResourceOfTask[]
-  project              Project             @relation(fields: [idProject], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_nguon_luc_du_an_du_an")
-  resource             Resource?           @relation(fields: [idResource], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_nguon_luc_du_an_nguon_luc")
-  ResourcesPropose     ResourcesPropose[]
-  EmployeesOfProject   EmployeesOfProject? @relation(fields: [employeesOfProjectId], references: [id])
-  employeesOfProjectId String?
+  id              String           @id(map: "idx_19210_pk_nguon_luc_du_an") @map("id_nlda")
+  idProject       String           @map("id_da")
+  idResource      String?          @map("id_nl")
+  amount          Int              @map("sl")
+  note            String?          @map("ghi_chu_nlda")
+  resourceOfTasks ResourceOfTask[]
+  project         Project          @relation(fields: [idProject], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_nguon_luc_du_an_du_an")
+  resource        Resource?        @relation(fields: [idResource], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_nguon_luc_du_an_nguon_luc")
 
   @@map("nguon_luc_du_an")
 }
 
 model Employee {
-  id             String                     @id(map: "idx_19215_pk_nhan_vien")
+  id             String                     @id(map: "idx_19215_pk_nhan_vien") @map("id_nv")
   fullName       String?                    @map("ho_ten_nv")
   address        String?                    @map("dia_chi_nv")
   phone          String?                    @map("dien_thoai_nv")
@@ -387,7 +382,7 @@ model Employee {
 }
 
 model QualificationsOfEmployee {
-  id              String         @id(map: "idx_19221_pk_nhan_vien_bang_cap")
+  id              String         @id(map: "idx_19221_pk_nhan_vien_bang_cap") @map("id_nvbc")
   idQualification String?        @map("id_bc")
   idEmployee      String?        @map("id_nv")
   date            DateTime?      @map("ngay_cap_nvbc") @db.Timestamptz(6)
@@ -401,7 +396,7 @@ model QualificationsOfEmployee {
 }
 
 model PositionsOfEmployee {
-  id         String    @id(map: "idx_19226_pk_nhan_vien_chuc_vu")
+  id         String    @id(map: "idx_19226_pk_nhan_vien_chuc_vu") @map("id_nvcv")
   idEmployee String?   @map("id_nv")
   idPosition String?   @map("id_chv")
   startDate  DateTime? @map("ngay_bd_nvcv") @db.Timestamptz(6)
@@ -416,7 +411,7 @@ model PositionsOfEmployee {
 }
 
 model CertificationsOfEmployee {
-  id              String       @id(map: "idx_19231_pk_nhan_vien_chung_chi")
+  id              String       @id(map: "idx_19231_pk_nhan_vien_chung_chi") @map("id_nvcc")
   idEmployee      String?      @map("id_nv")
   idCertification String?      @map("id_chch")
   date            DateTime?    @map("ngay_cap_nvcc") @db.Timestamptz(6)
@@ -431,7 +426,7 @@ model CertificationsOfEmployee {
 }
 
 model RolesOfEmployee {
-  id              String                 @id(map: "idx_19236_pk_nhan_vien_chuyen_mon")
+  id              String                 @id(map: "idx_19236_pk_nhan_vien_chuyen_mon") @map("id_nvcm")
   idDepartmentEmp String?                @map("id_nvpb")
   idQualification String?                @map("id_bc")
   roleName        String                 @map("ten_cm")
@@ -447,7 +442,7 @@ model RolesOfEmployee {
 }
 
 model WorksOfEmployee {
-  id             String              @id(map: "idx_19241_pk_nhan_vien_dau_viec")
+  id             String              @id(map: "idx_19241_pk_nhan_vien_dau_viec") @map("id_nvdv")
   idEmployee     String?             @map("id_nvda")
   idWorksProject String?             @map("id_dadv")
   note           String?             @map("ghi_chu_nvdv")
@@ -461,41 +456,37 @@ model WorksOfEmployee {
 }
 
 model EmployeesOfProject {
-  id               String                      @id(map: "idx_19246_pk_nhan_vien_du_an")
+  id               String                      @id(map: "idx_19246_pk_nhan_vien_du_an") @map("id_nvda")
   idProject        String?                     @map("id_da")
   idProposeProject String?                     @map("id_dxda")
   startDate        DateTime?                   @map("ngay_bat_dau_nvda") @db.Timestamptz(6)
   endDate          DateTime?                   @map("ngay_ket_thuc_nvda") @db.Timestamptz(6)
   note             String?                     @map("ghi_chu_nvda")
   reports          Report[]
-  proposeResource  ProjectResource[]
+  proposeResource  ProposeResource[]
   worksOfEmployees WorksOfEmployee[]
   project          Project?                    @relation(fields: [idProject], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_nhan_vie_relations_du_an")
   proposeProject   ProposeProject?             @relation(fields: [idProposeProject], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_nhan_vie_relations_duyet_nh")
   permissionOfWork PermissionWorksOfEmployee[]
-  ProposeResource  ProposeResource[]
 
   @@index([idProject], map: "idx_19246_relationship_10_fk")
   @@map("nhan_vien_du_an")
 }
 
 model EmployeesOfDepartment {
-  id                      String                  @id(map: "idx_19251_pk_nhan_vien_phong_ban")
-  idEmployee              String?                 @map("id_nv")
-  idHead                  String?                 @map("id_tpb")
-  idDepartment            String?                 @map("id_pb")
-  startDate               DateTime?               @map("ngay_bd_nvpb") @db.Timestamptz(6)
-  endDate                 DateTime?               @map("ngay_kt_nvpb") @db.Timestamptz(6)
-  note                    String?                 @map("ghi_chu_nvpb")
-  proposeProject          ProposeProject[]
-  roleOfEmployees         RolesOfEmployee[]
-  employee                Employee?               @relation(fields: [idEmployee], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_nhan_vie_r_nv_pn_nhan_vie")
-  headOfDepartment        EmployeesOfDepartment?  @relation("nhan_vien_phong_banTonhan_vien_phong_ban", fields: [idHead], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_nhan_vie_r_tp_nhan_vie")
-  department              Department?             @relation(fields: [idDepartment], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_nhan_vie_relations_phong_ba")
-  EmployeesOfDepartment   EmployeesOfDepartment[]
-  employeesOfDepartmentId String?
-  EmployeesOfDepartment   EmployeesOfDepartment[]
-  EmployeesOfDepartment   EmployeesOfDepartment?  @relation(fields: [employeesOfDepartmentId], references: [id])
+  id                    String                  @id(map: "idx_19251_pk_nhan_vien_phong_ban") @map("id_nvpb")
+  idEmployee            String?                 @map("id_nv")
+  idHead                String?                 @map("id_tpb")
+  idDepartment          String?                 @map("id_pb")
+  startDate             DateTime?               @map("ngay_bd_nvpb") @db.Timestamptz(6)
+  endDate               DateTime?               @map("ngay_kt_nvpb") @db.Timestamptz(6)
+  note                  String?                 @map("ghi_chu_nvpb")
+  proposeProject        ProposeProject[]
+  roleOfEmployees       RolesOfEmployee[]
+  employee              Employee?               @relation(fields: [idEmployee], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_nhan_vie_r_nv_pn_nhan_vie")
+  headOfDepartment      EmployeesOfDepartment?  @relation("nhan_vien_phong_bantonhan_vien_phong_ban", fields: [idHead], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_nhan_vie_r_tp_nhan_vie")
+  department            Department?             @relation(fields: [idDepartment], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_nhan_vie_relations_phong_ba")
+  EmployeesOfDepartment EmployeesOfDepartment[] @relation("nhan_vien_phong_bantonhan_vien_phong_ban")
 
   @@index([idEmployee], map: "idx_19251_relationship_3_fk")
   @@index([idDepartment], map: "idx_19251_relationship_4_fk")
@@ -504,7 +495,7 @@ model EmployeesOfDepartment {
 }
 
 model PermissionWorksOfEmployee {
-  id             String              @id(map: "idx_19256_pk_nhan_vien_quyen_dau_viec")
+  id             String              @id(map: "idx_19256_pk_nhan_vien_quyen_dau_viec") @map("id_nvqdv")
   idEmpProject   String?             @map("id_nvda")
   idPermission   String?             @map("id_qdv")
   idWorkProject  String?             @map("id_dadv")
@@ -519,7 +510,7 @@ model PermissionWorksOfEmployee {
 }
 
 model Department {
-  id                    String                  @id(map: "idx_19261_pk_phong_ban")
+  id                    String                  @id(map: "idx_19261_pk_phong_ban") @map("id_pb")
   name                  String?                 @map("ten_pb")
   phone                 String?                 @map("dien_thoai_pb")
   note                  String?                 @map("ghi_chu_pb")
@@ -531,7 +522,7 @@ model Department {
 }
 
 model ManageProject {
-  id        String    @id(map: "idx_19267_pk_quan_ly_du_an")
+  id        String    @id(map: "idx_19267_pk_quan_ly_du_an") @map("id_qlda")
   idProject String    @map("id_da")
   idEmpHead String    @map("id_nv")
   endDate   DateTime? @map("ngay_kt_ql") @db.Timestamptz(6)
@@ -544,7 +535,7 @@ model ManageProject {
 }
 
 model PermissionWork {
-  id               String                      @id(map: "idx_19273_pk_quyen_dau_viec")
+  id               String                      @id(map: "idx_19273_pk_quyen_dau_viec") @map("id_qdv")
   name             String                      @map("ten_qdv")
   note             String?                     @map("ghi_chu_qdv")
   code             String?
@@ -554,7 +545,7 @@ model PermissionWork {
 }
 
 model Account {
-  username   String    @id(map: "idx_19278_pk_tai_khoan")
+  username   String    @id(map: "idx_19278_pk_tai_khoan") @map("username")
   password   String    @map("mat_khau")
   isActive   Boolean   @default(true) @map("is_active_tk")
   note       String?   @map("ghi_chu_tk")
@@ -565,7 +556,7 @@ model Account {
 }
 
 model Province {
-  id        String     @id(map: "idx_19284_pk_tinh")
+  id        String     @id(map: "idx_19284_pk_tinh") @map("id_tinh")
   code      Int        @map("code_tinh")
   name      String     @map("ten_tinh")
   district  District[]
@@ -576,7 +567,7 @@ model Province {
 }
 
 model WorkState {
-  id       String  @id(map: "idx_19289_pk_trang_thai_dv")
+  id       String  @id(map: "idx_19289_pk_trang_thai_dv") @map("id_ttdv")
   name     String  @map("ten_ttdv")
   isActive Boolean @default(true) @map("is_active")
   works    Work[]
@@ -585,7 +576,7 @@ model WorkState {
 }
 
 model StatePropose {
-  id                        String                     @id(map: "idx_19295_pk_trang_thai_dx")
+  id                        String                     @id(map: "idx_19295_pk_trang_thai_dx") @map("id_ttdx")
   name                      String                     @map("ten_ttdx")
   note                      String?                    @map("ghi_chu_ttdx")
   reviewingsProposeProject  ReviewingProposeProject[]
@@ -595,7 +586,7 @@ model StatePropose {
 }
 
 model Ward {
-  id         String     @id(map: "idx_19300_pk_xa")
+  id         String     @id(map: "idx_19300_pk_xa") @map("id_xa")
   code       Int        @map("code_xa")
   name       String     @map("ten_xa")
   idDistrict String?    @map("id_huyen")
